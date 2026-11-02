@@ -46,7 +46,7 @@ export const JobsList: React.FC = () => {
   // Confirm modal state
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
-    type: 'delete_single' | 'retry_single' | 'cancel_single' | 'bulk_delete' | 'bulk_retry';
+    type: 'delete_single' | 'retry_single' | 'bulk_delete' | 'bulk_retry';
     jobId?: string;
     title: string;
     message: string;
@@ -83,7 +83,7 @@ export const JobsList: React.FC = () => {
   // Live polling for non-final jobs (queued, transcribing, translating, synthesizing)
   useEffect(() => {
     const hasNonFinalJobs = jobs.some(
-      (j) => j.status === 'queued' || j.status === 'transcribing' || j.status === 'translating' || j.status === 'synthesizing'
+      (j) => j.status === 'queued' || j.status === 'stt' || j.status === 'translating' || j.status === 'synthesizing'
     );
 
     if (hasNonFinalJobs) {
@@ -139,10 +139,6 @@ export const JobsList: React.FC = () => {
         const retried = await api.retryJob(jobId);
         setJobs((prev) => prev.map((j) => (j.job_id === jobId ? retried : j)));
         success(`Job ${jobId} queued for retry`);
-      } else if (type === 'cancel_single' && jobId) {
-        const cancelled = await api.cancelJob(jobId);
-        setJobs((prev) => prev.map((j) => (j.job_id === jobId ? cancelled : j)));
-        warning(`Job ${jobId} cancelled`);
       } else if (type === 'bulk_delete') {
         const ids = Array.from(selectedJobIds);
         await Promise.all(ids.map((id) => api.deleteJob(id)));
@@ -170,7 +166,7 @@ export const JobsList: React.FC = () => {
         return <Badge variant="danger" size="sm" dot>Failed</Badge>;
       case 'cancelled':
         return <Badge variant="neutral" size="sm">Cancelled</Badge>;
-      case 'transcribing':
+      case 'stt':
       case 'translating':
       case 'synthesizing':
         return <Badge variant="warning" size="sm" dot className="animate-pulse">{status}</Badge>;
@@ -356,7 +352,7 @@ export const JobsList: React.FC = () => {
                     const isFailed = job.status === 'failed';
                     const isInProgress =
                       job.status === 'queued' ||
-                      job.status === 'transcribing' ||
+                      job.status === 'stt' ||
                       job.status === 'translating' ||
                       job.status === 'synthesizing';
 
@@ -441,14 +437,14 @@ export const JobsList: React.FC = () => {
                         {/* Row Actions */}
                         <td className="py-4 px-4 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-1.5">
-                            {isFailed && (
+                            {(job.can_retry || job.canRetry) && (
                               <button
                                 onClick={() =>
                                   setConfirmModal({
                                     isOpen: true,
                                     type: 'retry_single',
-                                    jobId: job.job_id,
-                                    title: `Retry Job ${job.job_id}?`,
+                                    jobId: job.job_id || job.jobId,
+                                    title: `Retry Job ${job.job_id || job.jobId}?`,
                                     message: 'Re-trigger translation and voice synthesis for this audio recording.',
                                   })
                                 }
@@ -457,25 +453,6 @@ export const JobsList: React.FC = () => {
                                 aria-label="Retry job"
                               >
                                 <RotateCcw className="w-3.5 h-3.5 text-black" />
-                              </button>
-                            )}
-
-                            {isInProgress && job.kind === 'file' && (
-                              <button
-                                onClick={() =>
-                                  setConfirmModal({
-                                    isOpen: true,
-                                    type: 'cancel_single',
-                                    jobId: job.job_id,
-                                    title: `Cancel Job ${job.job_id}?`,
-                                    message: 'Abort processing of this in-progress audio translation file job.',
-                                  })
-                                }
-                                className="p-1.5 rounded-lg border border-black bg-[#fff7e6] hover:bg-amber-200 cursor-pointer"
-                                title="Cancel file job"
-                                aria-label="Cancel file job"
-                              >
-                                <Ban className="w-3.5 h-3.5 text-amber-800" />
                               </button>
                             )}
 

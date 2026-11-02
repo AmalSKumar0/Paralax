@@ -131,7 +131,7 @@ export const Login: React.FC = () => {
             </button>
             <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-bold text-gray-600">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
-              <span>Cognito JWT Authentication · Mock Supported</span>
+              <span>Admin JWT Authentication · Mock Supported</span>
             </div>
           </div>
         </div>

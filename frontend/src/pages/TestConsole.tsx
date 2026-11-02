@@ -36,7 +36,7 @@ interface AttemptResult {
   translation: string;
   audioUrl?: string;
   timings: {
-    transcribe_ms: number;
+    stt_ms: number;
     translate_ms: number;
     synthesize_ms: number;
     total_ms: number;
@@ -250,15 +250,16 @@ export const TestConsole: React.FC = () => {
         deviceId: selectedDeviceId !== 'manual' ? selectedDeviceId : undefined,
       });
 
+      const audioUrl = res.audio.url || (res.audio.base64 ? `data:audio/wav;base64,${res.audio.base64}` : undefined);
       const newAttempt: AttemptResult = {
-        id: res.job_id,
+        id: res.job_id || res.id,
         timestamp: new Date().toLocaleTimeString(),
         source: res.source_language,
         target: res.target_language,
         detectedLang: res.detected_language,
         transcript: res.transcript,
         translation: res.translation,
-        audioUrl: res.audio.url,
+        audioUrl,
         timings: res.timings,
       };
 
@@ -291,57 +292,45 @@ export const TestConsole: React.FC = () => {
       return;
     }
 
+    // Client-side 4 MB cap validation
+    if (selectedFile.size > 4 * 1024 * 1024) {
+      error(`Audio file size (${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB) exceeds 4 MB maximum limit.`);
+      return;
+    }
+
     setIsProcessing(true);
     setUploadProgress(10);
-    setFileJobStatus('Requesting presigned upload URL...');
+    setFileJobStatus('Uploading audio file and translating...');
 
     try {
-      // 1. POST /uploads
-      const uploadData = await api.createUploadUrl(selectedFile.name, selectedFile.type || 'audio/wav');
-      setUploadProgress(45);
-      setFileJobStatus('Uploading audio file to cloud storage...');
-
-      // Simulate upload progress
-      await new Promise((r) => setTimeout(r, 600));
-      setUploadProgress(100);
-      setFileJobStatus('File uploaded. Queuing batch translation job...');
-
-      // 2. POST /jobs
-      const job = await api.startFileJob({
-        job_id: uploadData.job_id,
-        source_language: sourceLang === 'auto' ? 'en-US' : sourceLang,
-        target_language: targetLang,
+      const res = await api.uploadFileUtterance({
+        file: selectedFile,
+        source: sourceLang,
+        target: targetLang,
+        onProgress: (pct) => {
+          setUploadProgress(pct);
+          if (pct === 100) {
+            setFileJobStatus('Audio uploaded. Processing speech recognition and translation...');
+          }
+        },
       });
 
-      setFileJobStatus(`Job ${job.job_id} initiated (${job.status}). Polling status...`);
+      const audioUrl = res.audio.url || (res.audio.base64 ? `data:audio/wav;base64,${res.audio.base64}` : undefined);
+      const attemptResult: AttemptResult = {
+        id: res.job_id || res.id,
+        timestamp: new Date().toLocaleTimeString(),
+        source: res.source_language,
+        target: res.target_language,
+        detectedLang: res.detected_language,
+        transcript: res.transcript,
+        translation: res.translation,
+        audioUrl,
+        timings: res.timings,
+      };
 
-      // Poll until final
-      let finalJob = job;
-      for (let attempt = 0; attempt < 8; attempt++) {
-        await new Promise((r) => setTimeout(r, 1200));
-        finalJob = await api.getJob(job.job_id);
-        setFileJobStatus(`Job status: ${finalJob.status}...`);
-        if (finalJob.status === 'completed' || finalJob.status === 'failed') break;
-      }
-
-      if (finalJob.status === 'completed') {
-        const attemptResult: AttemptResult = {
-          id: finalJob.job_id,
-          timestamp: new Date().toLocaleTimeString(),
-          source: finalJob.source_language,
-          target: finalJob.target_language,
-          detectedLang: finalJob.detected_language,
-          transcript: finalJob.transcript || 'Transcribed audio file.',
-          translation: finalJob.translation || 'Translated file audio.',
-          audioUrl: finalJob.translated_audio_url,
-          timings: finalJob.timings || { transcribe_ms: 1200, translate_ms: 220, synthesize_ms: 540, total_ms: 1960 },
-        };
-        setCurrentResult(attemptResult);
-        setHistory((prev) => [attemptResult, ...prev]);
-        success('File job completed successfully!');
-      } else {
-        error(`File job ended with status: ${finalJob.status}`);
-      }
+      setCurrentResult(attemptResult);
+      setHistory((prev) => [attemptResult, ...prev]);
+      success('File translated successfully!');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'File upload failed';
       error(msg);
@@ -700,7 +689,7 @@ export const TestConsole: React.FC = () => {
             {/* Timings Breakdown */}
             <div className="pt-2 flex flex-wrap items-center gap-4 text-xs font-mono font-bold text-gray-700 border-t border-black/10">
               <span className="text-gray-500 font-sans font-bold">Latency Breakdown:</span>
-              <span>STT Transcribe: <strong className="text-black font-black">{currentResult.timings.transcribe_ms}ms</strong></span>
+              <span>STT: <strong className="text-black font-black">{(currentResult.timings as any).stt_ms}ms</strong></span>
               <span>·</span>
               <span>Translate: <strong className="text-black font-black">{currentResult.timings.translate_ms}ms</strong></span>
               <span>·</span>

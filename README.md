@@ -1,6 +1,9 @@
-# Paralax - Serverless IoT Two-Way Voice Translator Backend on AWS
+# Paralax - IoT Two-Way Voice Translator (Node.js & React on Vercel)
 
-A production-grade, low-latency serverless backend for two-way voice translation between an ESP32 hardware device (INMP441 microphone, MAX98357A I2S amplifier, push-to-talk button) and a React admin dashboard.
+A low-latency, serverless IoT two-way voice translator system deployed as **one single Vercel project** on the free Hobby plan. Connects an ESP32 hardware device (INMP441 I2S microphone, MAX98357A I2S amplifier, push-to-talk button) to modern free-first AI providers with an interactive React admin dashboard.
+
+> [!NOTE]
+> **Migration Note**: The backend was migrated from Python 3.12 / AWS SAM (Lambda, DynamoDB, S3, Cognito) to Node.js (TypeScript) + Hono on Vercel Functions. The original Python AWS implementation is preserved in git tag `pre-node-migration`. Streaming translation is out of scope on serverless Vercel Functions (would require a persistent WebSocket host).
 
 ---
 
@@ -8,225 +11,230 @@ A production-grade, low-latency serverless backend for two-way voice translation
 
 ```mermaid
 flowchart TD
-    subgraph Edge[ESP32 Hardware Client]
-        MIC[INMP441 I2S Mic] -->|16kHz 16-bit PCM| ESP32[ESP32-WROOM-32]
-        ESP32 -->|I2S Mono Direct Stream| DAC[MAX98357A Amp / Speaker]
-        PTT[Push-to-Talk Button] -->|GPIO| ESP32
+    subgraph ClientLayer[Clients]
+        ESP32[ESP32-WROOM-32 Hardware<br/>INMP441 Mic + MAX98357A Amp]
+        ReactUI[React 19 Admin Dashboard<br/>Vite + TailwindCSS]
+        Sim[tools/device-sim.mjs<br/>Node.js Device Simulator]
     end
 
-    subgraph APITier[Amazon API Gateway HTTP API v1]
-        APIGW[HTTP API Gateway]
-        DevAuth[Lambda Authorizer: X-Device-Key]
-        CognitoAuth[Cognito JWT Authorizer]
+    subgraph VercelEdge[Vercel Serverless Hosting]
+        Router[Vercel Function: api/index.ts<br/>Hono + Zod Validation]
+        SPA[Vite Static Frontend SPA<br/>/frontend/dist]
+        Cron[Daily Retention Cron<br/>0 0 * * *]
     end
 
-    subgraph ComputeTier[AWS Lambda & AI Services]
-        PathA[Path A: TranslateUtteranceFunction]
-        TranscribeStream[Amazon Transcribe Streaming]
-        Translate[Amazon Translate]
-        Polly[Amazon Polly]
-        Heartbeat[DeviceHeartbeatFunction]
-        AdminCtrl[Admin Management Lambdas]
+    subgraph ProviderLayer[AI Fallback Chains (Free-First)]
+        Groq[Groq Cloud<br/>Whisper-large-v3-turbo & Llama 3.3]
+        EdgeTTS[Microsoft Edge ReadAloud<br/>Free Native PCM Resampling]
+        xAI[xAI Grok<br/>Fallback STT / Chat / TTS]
     end
 
-    subgraph BatchTier[AWS Step Functions: Path B]
-        SFN[Step Functions State Machine]
-        TranscribeBatch[Transcribe Batch]
-        TranslateBatch[Translate Text]
-        PollyBatch[Polly Synthesize]
-        Finalize[PathB Finalizer]
+    subgraph DataLayer[Cloud Persistence (Vercel Marketplace)]
+        Upstash[(Upstash Redis<br/>Hot State, Quotas, Rate Limits)]
+        Neon[(Neon Postgres<br/>Drizzle ORM: Jobs & Conversations)]
+        Blob[(Vercel Blob<br/>Optional Audio Storage)]
     end
 
-    subgraph StorageTier[Persistence & Telemetry]
-        DDB_Jobs[(ParalaxJobs Table)]
-        DDB_Dev[(ParalaxDevices Table)]
-        DDB_Idemp[(ParalaxIdempotency Table)]
-        DDB_Telem[(ParalaxTelemetry Table)]
-        S3[(ParalaxAudioBucket)]
-    end
+    ESP32 -->|POST /api/v1/device/translate<br/>Single HTTPS Round-Trip (PCM/WAV)| Router
+    ESP32 -->|POST /api/v1/device/heartbeat| Router
+    ReactUI -->|/api/v1/admin/* & /api/v1/utterances| Router
+    Sim -->|Heartbeat & Translate| Router
 
-    ESP32 -->|POST /v1/device/translate<br>Single HTTPS Round-Trip| APIGW
-    ESP32 -->|POST /v1/device/heartbeat| APIGW
-    APIGW --> DevAuth
-    APIGW --> CognitoAuth
-    APIGW --> PathA
-    APIGW --> Heartbeat
-    APIGW --> AdminCtrl
-
-    PathA --> TranscribeStream
-    PathA --> Translate
-    PathA --> Polly
-    PathA --> DDB_Jobs
-    PathA --> DDB_Idemp
-    PathA --> S3
-
-    Heartbeat --> DDB_Dev
-    Heartbeat --> DDB_Telem
-
-    APIGW -->|POST /v1/jobs| SFN
-    SFN --> TranscribeBatch
-    SFN --> TranslateBatch
-    SFN --> PollyBatch
-    SFN --> Finalize
-    Finalize --> DDB_Jobs
-    Finalize --> S3
+    Router --> Groq
+    Router -.->|Fallback if 429| xAI
+    Router --> EdgeTTS
+    Router --> Upstash
+    Router --> Neon
+    Router --> Blob
+    Cron -->|CRON_SECRET| Router
 ```
 
 ---
 
-## 2. Key Highlights & Architectural Decisions
+## 2. Key Features
 
-- **Single HTTP Round-Trip for Devices**:
-  When the device requests `Accept: application/octet-stream`, the cloud returns raw 16 kHz 16-bit PCM audio bytes directly with translation metadata in `X-*` headers. The device receives playable audio without any presigned S3 download step.
-- **Direct I2S Playback (Zero Codec Overhead)**:
-  Polly generates raw 16 kHz 16-bit mono PCM, enabling the ESP32 to stream bytes directly to the MAX98357A I2S DAC without an MP3/AAC decoder.
-- **Two-Way Auto Detection**:
-  In `mode = auto`, Amazon Transcribe Streaming utilizes `IdentifyLanguage` restricted strictly to the device's language pair (`language_a`, `language_b`). Once the spoken language is identified, target translation is automatically dispatched to the other language.
-- **Deterministic Resource Naming**:
-  Path B Step Functions workflows and Polly outputs use deterministic keys (`paralax-{job_id}`, `jobs/{job_id}/synthesized.mp3`) so state machine retries never duplicate resources.
-- **Idempotency & Resiliency**:
-  Every device request includes an `Idempotency-Key` header with 24-hour DynamoDB TTL. Replaying an identical key returns the cached response or HTTP 409 `in_progress`.
+- **Single Vercel Project**: Frontend (`/frontend`) and backend (`/api`) deploy and run together under one domain.
+- **Zero Cost Free-Tier Guarantee**: `ALLOW_PAID_FALLBACK=false` ensures only 100% free providers are invoked ($0.00 / month).
+- **Single HTTPS Round-Trip for Hardware**: ESP32 posts 16 kHz 16-bit mono PCM/WAV with `Accept: application/octet-stream` and receives raw playable PCM audio bytes directly with metadata in `X-*` headers.
+- **Pure WASM Audio Decoding**: Pure JavaScript/WASM decoding (`mpg123-decoder`) with linear float32 resampling. **No ffmpeg binary required**.
+- **Dual-Mode Persistence**: Automatically connects to Upstash Redis and Neon Postgres in production; transparently falls back to in-memory stores for zero-config offline local development and automated testing.
+- **Idempotency & Resiliency**: Required `Idempotency-Key` header on device translation. Duplicate submissions return cached transcript and translation, re-synthesizing only TTS.
+- **Robust Auth**: Admin uses httpOnly SameSite=Lax JWT cookies (`jose`, HS256) and CSRF protection (`X-Requested-With`). Devices authenticate via `X-Device-Key` with constant-time SHA-256 verification.
 
 ---
 
-## 3. Deployment Guide
+## 3. Free-Tier Budget & Quotas
 
-Full step-by-step instructions are available in [docs/deployment-guide.md](docs/deployment-guide.md).
+All services run permanently on free tiers with no credit card required:
 
-### Quick Build and Deploy with AWS SAM
-```bash
-# 1. Build Lambda packages and dependencies
-make build
-# (or: sam build --use-container)
+| Service | Free Tier Allocation | Paralax Usage | Safety Margin |
+| :--- | :--- | :--- | :--- |
+| **Vercel Hobby** | 100 GB-hrs function execution, 100k requests/day | ~1.5k requests/day | >98% free headroom |
+| **Upstash Redis** | 10,000 commands/day | ~3,000 commands/day | 70% headroom |
+| **Neon Postgres** | 0.5 GB storage, serverless compute | ~10 MB / month (30-day retention) | 98% headroom |
+| **Groq STT** | 20 requests/minute, 2,000 requests/day | Default rate limit: 10 req/min/device | Stays below org limit |
+| **Microsoft Edge TTS** | Unlimited free ReadAloud requests | Unofficial native WebSocket stream | $0.00 |
 
-# 2. Deploy to AWS (guided first-time setup)
-make deploy-guided
-# (or: sam deploy --guided)
-
-# 3. Subsequent automated deploys using samconfig.toml
-make deploy
-```
-
+For complete calculations, see [docs/free-tier-budget.md](docs/free-tier-budget.md).
 
 ---
 
-## 4. Initial Setup & Operations
+## 4. Local Development Setup
 
-### 4.1 Creating the First Cognito Admin User
+### Prerequisites
+- Node.js >= 20.10.0
+- npm >= 10.0.0
+
+### Installation
 ```bash
-USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name paralax-backend-dev \
-  --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" --output text)
+# Clone and checkout migration branch
+git clone https://github.com/AmalSKumar0/Paralax.git
+cd Paralax
+git checkout migrate-node
 
-aws cognito-idp admin-create-user \
-  --user-pool-id "$USER_POOL_ID" \
-  --username "admin@yourdomain.com" \
-  --user-attributes Email="admin@yourdomain.com",EmailVerified=true \
-  --temporary-password "TemporaryPass123!"
-
-aws cognito-idp admin-set-user-password \
-  --user-pool-id "$USER_POOL_ID" \
-  --username "admin@yourdomain.com" \
-  --password "SecureAdminPassword2026!" \
-  --permanent
+# Install all dependencies (root and frontend)
+npm install
+cd frontend && npm install && cd ..
 ```
 
-### 4.2 Provisioning a New Device
-Authenticate via Cognito or temporary credentials to provision a device:
+### Environment Configuration
+Copy `.env.example` to `.env`:
 ```bash
-API_URL=$(aws cloudformation describe-stacks --stack-name paralax-backend-dev \
-  --query "Stacks[0].Outputs[?OutputKey=='HttpApiUrl'].OutputValue" --output text)
+cp .env.example .env
+```
 
-curl -X POST "$API_URL/v1/admin/devices" \
-  -H "Authorization: Bearer <COGNITO_JWT_TOKEN>" \
+Generate a secure admin password hash:
+```bash
+npm run hash-password -- "YourStrongPassword123"
+```
+Paste the printed hash into `ADMIN_PASSWORD_HASH` in `.env`.
+
+### Running Locally
+```bash
+# Option A: Run via Vercel CLI (matches production routing)
+npm i -g vercel
+vercel dev
+
+# Option B: Run API tests & dev server directly
+npm run dev
+```
+
+The frontend dashboard will be available at `http://localhost:3000`.
+
+---
+
+## 5. Deployment to Vercel
+
+### Step 1: Push to GitHub & Link to Vercel
+```bash
+vercel link
+```
+
+### Step 2: Add Marketplace Integrations
+From the Vercel Dashboard Marketplace, add:
+1. **Upstash Redis** (creates `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`)
+2. **Neon Postgres** (creates `DATABASE_URL`)
+
+### Step 3: Configure Environment Variables
+Add remaining variables using the Vercel CLI:
+```bash
+vercel env add ADMIN_EMAIL production
+# Enter: admin@paralax.io
+
+vercel env add ADMIN_PASSWORD_HASH production
+# Enter the bcrypt hash from npm run hash-password
+
+vercel env add JWT_SECRET production
+# Enter a 32+ character random string
+
+vercel env add CRON_SECRET production
+# Enter a secure random token for cron retention
+
+vercel env add GROQ_API_KEY production
+# Enter your free key from https://console.groq.com
+```
+
+### Step 4: Deploy
+```bash
+vercel --prod
+```
+
+---
+
+## 6. Device Simulator & CLI Examples
+
+### 1. Provision a New Device
+Log in to the dashboard at `/devices` or register via curl:
+```bash
+curl -X POST https://your-paralax-app.vercel.app/api/v1/admin/devices \
+  -H "Authorization: Bearer <ADMIN_JWT>" \
+  -H "X-Requested-With: XMLHttpRequest" \
   -H "Content-Type: application/json" \
   -d '{
-    "device_id": "esp32-wroom-01",
+    "name": "Lobby ESP32 Translator",
     "config": {
       "language_a": "en-US",
-      "language_b": "es-US",
-      "mode": "auto",
-      "heartbeat_interval_sec": 30
+      "language_b": "es-ES",
+      "mode": "buttons"
     }
   }'
 ```
-*Save the returned `device_key`. It is only shown once.*
+Save the returned `device_key` (displayed only once).
 
----
-
-## 5. Device Curl Walkthrough
-
-### 5.1 Device Heartbeat
+### 2. Run the Node.js Device Simulator
+The device simulator performs the full hardware lifecycle:
 ```bash
-curl -X POST "$API_URL/v1/device/heartbeat" \
-  -H "X-Device-Key: <DEVICE_KEY>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "firmware_version": "1.0.0",
-    "rssi": -58,
-    "free_heap": 154200,
-    "uptime_sec": 3600,
-    "config_version": 1
-  }'
+node tools/device-sim.mjs \
+  --api-url "https://your-paralax-app.vercel.app/api/v1" \
+  --device-key "px_dev_sec_your_key_here" \
+  --source "en-US" \
+  --target "es-ES" \
+  --out "output_translated.wav"
 ```
+The simulator sends simulated 16 kHz PCM audio, receives the binary response, and writes a playable WAV file `output_translated.wav`.
 
-### 5.2 Device Single Round-Trip Translation
+### 3. Direct Translation via curl
 ```bash
-curl -X POST "$API_URL/v1/device/translate?source=auto&format=pcm" \
-  -H "X-Device-Key: <DEVICE_KEY>" \
-  -H "Idempotency-Key: $(uuidgen)" \
+curl -X POST "https://your-paralax-app.vercel.app/api/v1/device/translate?source=en-US&target=es-ES&format=pcm" \
+  -H "X-Device-Key: px_dev_sec_your_key_here" \
   -H "Content-Type: audio/L16;rate=16000" \
   -H "Accept: application/octet-stream" \
-  --data-binary @sample_speech_16k_mono.pcm \
-  --output translated_speech.pcm -v
+  -H "Idempotency-Key: $(uuidgen)" \
+  --data-binary @sample_speech_16k.pcm \
+  --output translated.pcm
 ```
 
 ---
 
-## 6. End-to-End Simulation & Verification
+## 7. Known Limits & Architecture Constraints
 
-Test the entire backend without hardware using the built-in simulator:
+- **4.5 MB Request/Response Cap**: Vercel Serverless Functions limit payload sizes to 4.5 MB. Audio utterances are capped at 20 seconds (< 700 KB). File uploads in the Test Console enforce a 4 MB client-side check.
+- **No Inbound WebSockets on Vercel Functions**: Vercel does not support persistent WebSocket connections. Device audio is handled through low-overhead synchronous HTTPS POST requests. Streaming translation is out of scope.
+- **Microsoft Edge TTS**: Edge TTS uses Microsoft's ReadAloud WebSocket API. While 100% free and high quality, it is an unofficial public interface. If it ever encounters upstream disruption, set `ALLOW_PAID_FALLBACK=true` to enable xAI Grok TTS fallback.
+- **Vercel Hobby License**: The Vercel Hobby plan is intended for non-commercial personal and evaluation projects.
+
+---
+
+## 8. Troubleshooting
+
+| Issue | Cause | Resolution |
+| :--- | :--- | :--- |
+| **HTTP 401 on /api/v1/device/\*** | Missing or invalid `X-Device-Key` header | Verify device key against the Admin Dashboard under `/devices`. |
+| **HTTP 422 no_speech_detected** | RMS audio amplitude below silence threshold | Check microphone gain on INMP441 or ensure audio input is not silent. |
+| **HTTP 422 low_confidence_language** | Spoken language is not in device's `language_a` or `language_b` | Speak in one of the configured device languages or switch mode to `buttons`. |
+| **HTTP 429 provider_rate_limited** | Free-tier rate limit reached across all providers | Wait for `retry_after_sec` to expire, or configure additional fallback keys in `.env`. |
+| **HTTP 403 on state-changing Admin routes** | Missing `X-Requested-With` header | Include `X-Requested-With: XMLHttpRequest` on POST/PUT/DELETE admin requests. |
+| **CORS Errors in Local Dev** | Frontend trying to connect directly to different port | Use `/api` proxy or run through `vercel dev`. |
+
+---
+
+## 9. Development Scripts
+
 ```bash
-# Run simulator against local or deployed endpoint
-python3 tools/device_sim.py \
-  --api-url "$API_URL" \
-  --device-key "<DEVICE_KEY>" \
-  --device-id "esp32-wroom-01" \
-  --action full-sim
+npm test            # Run Vitest test suite with MSW mocks
+npm run lint        # Typecheck backend and frontend
+npm run typecheck   # Typecheck backend TypeScript
+npm run db:migrate  # Run Neon Postgres schema migrations
+npm run hash-password -- "password"  # Hash an admin password
+npm run registry:check  # Validate language registry and voices
 ```
-
-Run test suite:
-```bash
-make test
-```
-
----
-
-## 7. Alternatives Considered: AWS IoT Core with MQTT & X.509
-
-During initial architecture design, **AWS IoT Core** using MQTT over TLS with X.509 client certificates was evaluated:
-- **Why Deferred**:
-  - The ESP32-WROOM-32 has only ~320 KB usable SRAM and no external PSRAM.
-  - Storing X.509 certificates and performing complete mTLS handshakes consumes significant flash and memory.
-  - MQTT requires packet fragmentation for 128 KB audio frames and dual round trips (uploading chunks, waiting for pub/sub notifications, and receiving download chunks).
-  - A single HTTPS POST request with hashed secret headers and binary octet-stream responses achieves lower latency, smaller firmware footprint, and simpler connection pooling.
-
----
-
-## 8. Future Streaming Design (Phase 2 WebSocket Architecture)
-
-> **Documented for future roadmap. Not part of this build.**
-
-### High-Level Architecture
-For real-time full-duplex simultaneous voice translation, AWS Lambda's execution lifecycle and API Gateway WebSocket payload limits cannot maintain an ongoing bidirectional stream with Amazon Transcribe.
-- **Hosting**: WebSocket server deployed as a containerized service on **AWS ECS Fargate**.
-- **Bidirectional Streaming**:
-  - The ESP32 opens a persistent WebSocket connection (`wss://stream.yourdomain.com/v1/stream`).
-  - Sends chunked audio with sequence numbers (`chunk_seq`).
-  - Server maintains an active HTTP/2 bidirectional session with Amazon Transcribe Streaming.
-- **Voice Activity Detection (VAD) & Interruption Handling**:
-  - Server uses WebRTC VAD or Silero VAD to detect user speech boundaries.
-  - If the user starts speaking while audio is being played back, the server sends an `interrupt` command, and the ESP32 flushes its I2S DAC buffer immediately.
-- **Half-Duplex Speaker Muting**:
-  - While the MAX98357A speaker is playing, the INMP441 microphone stream is muted locally in hardware to avoid acoustic feedback loops.
-- **Database Schema**:
-  - The `ParalaxJobs` table includes a reserved nullable `session_id` column to correlate streaming utterances within a live session.

@@ -118,7 +118,7 @@ export const Sidebar: React.FC = () => {
               {session?.email || 'Admin'}
             </p>
             <p className="text-[10px] font-bold text-gray-500 uppercase">
-              {session?.isMock ? 'Mock Session' : 'Cognito User'}
+              {session?.isMock ? 'Mock Session' : 'Admin User'}
             </p>
           </div>
         </div>

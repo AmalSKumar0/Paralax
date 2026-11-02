@@ -39,7 +39,7 @@ export const JobDetail: React.FC = () => {
   // Confirm Modal
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
-    type: 'retry' | 'cancel' | 'delete';
+    type: 'retry' | 'delete';
     title: string;
     message: string;
   }>({ isOpen: false, type: 'retry', title: '', message: '' });
@@ -72,7 +72,7 @@ export const JobDetail: React.FC = () => {
     if (!job) return;
     const isNonFinal =
       job.status === 'queued' ||
-      job.status === 'transcribing' ||
+      job.status === 'stt' ||
       job.status === 'translating' ||
       job.status === 'synthesizing';
 
@@ -94,10 +94,6 @@ export const JobDetail: React.FC = () => {
         const retried = await api.retryJob(id);
         setJob(retried);
         success('Job retried successfully');
-      } else if (type === 'cancel') {
-        const cancelled = await api.cancelJob(id);
-        setJob(cancelled);
-        warning('Job cancelled');
       } else if (type === 'delete') {
         await api.deleteJob(id);
         success('Job deleted permanently');
@@ -149,13 +145,13 @@ export const JobDetail: React.FC = () => {
 
   const isInProgress =
     job.status === 'queued' ||
-    job.status === 'transcribing' ||
+    job.status === 'stt' ||
     job.status === 'translating' ||
     job.status === 'synthesizing';
 
   const stages = [
     { key: 'queued', label: 'Queued' },
-    { key: 'transcribing', label: 'Transcribing (STT)' },
+    { key: 'stt', label: 'STT Speech-to-Text' },
     { key: 'translating', label: 'Translating' },
     { key: 'synthesizing', label: 'Synthesizing (TTS)' },
     { key: 'completed', label: 'Completed' },
@@ -168,7 +164,7 @@ export const JobDetail: React.FC = () => {
       ? 3
       : job.status === 'translating'
       ? 2
-      : job.status === 'transcribing'
+      : job.status === 'stt'
       ? 1
       : 0;
 
@@ -220,7 +216,7 @@ export const JobDetail: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {job.status === 'failed' && (
+            {(job.can_retry || job.canRetry) && (
               <Button
                 variant="primary"
                 size="sm"
@@ -228,31 +224,13 @@ export const JobDetail: React.FC = () => {
                   setConfirmModal({
                     isOpen: true,
                     type: 'retry',
-                    title: `Retry Job ${job.job_id}?`,
+                    title: `Retry Job ${job.job_id || job.jobId}?`,
                     message: 'Re-trigger this audio job through the translation and synthesis pipeline.',
                   })
                 }
                 icon={<RotateCcw className="w-3.5 h-3.5" />}
               >
                 Retry Job
-              </Button>
-            )}
-
-            {isInProgress && job.kind === 'file' && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() =>
-                  setConfirmModal({
-                    isOpen: true,
-                    type: 'cancel',
-                    title: `Cancel Job ${job.job_id}?`,
-                    message: 'Abort processing for this job.',
-                  })
-                }
-                icon={<Ban className="w-3.5 h-3.5" />}
-              >
-                Cancel Job
               </Button>
             )}
 
@@ -418,8 +396,8 @@ export const JobDetail: React.FC = () => {
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-1">
               <div className="p-3.5 rounded-xl border-[2px] border-black bg-white text-center shadow-[2px_2px_0px_#000]">
-                <span className="text-[10px] font-black uppercase text-gray-600 block">1. Transcribe (STT)</span>
-                <span className="text-xl font-mono font-black text-black">{job.timings.transcribe_ms} ms</span>
+                <span className="text-[10px] font-black uppercase text-gray-600 block">1. STT Speech-to-Text</span>
+                <span className="text-xl font-mono font-black text-black">{(job.timings as any).stt_ms} ms</span>
               </div>
               <div className="p-3.5 rounded-xl border-[2px] border-black bg-white text-center shadow-[2px_2px_0px_#000]">
                 <span className="text-[10px] font-black uppercase text-gray-600 block">2. Translate</span>

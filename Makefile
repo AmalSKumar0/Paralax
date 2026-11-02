@@ -1,43 +1,35 @@
-.PHONY: help registry test test-coverage lint format build deploy deploy-guided clean serve sim
-
-VENV ?= .venv
-PYTHON ?= $(VENV)/bin/python3
-PYTEST ?= $(VENV)/bin/pytest
-SAM ?= sam
+.PHONY: help dev test lint build migrate clean sim registry
 
 help:
-	@echo "Available make commands:"
-	@echo "  make serve         - Start local IoT translation backend server (0.0.0.0:8000)"
-	@echo "  make sim           - Run ESP32 device hardware simulator against local server"
-	@echo "  make test          - Run full test suite"
-	@echo "  make build         - Build SAM deployment artifacts (sam build)"
-	@echo "  make deploy        - Deploy stack to AWS using samconfig.toml (sam deploy)"
-	@echo "  make deploy-guided - Guided interactive deployment to AWS (sam deploy --guided)"
-	@echo "  make registry      - Rebuild data/language_registry.json"
-	@echo "  make clean         - Clean build artifacts and caches"
+	@echo "Paralax Node.js / Vercel targets:"
+	@echo "  make dev      - Start local development server (vercel dev)"
+	@echo "  make test     - Run Vitest test suite"
+	@echo "  make lint     - Run TypeScript type checks"
+	@echo "  make build    - Build frontend production bundle"
+	@echo "  make sim      - Run ESP32 device simulator"
+	@echo "  make migrate  - Run database migrations"
+	@echo "  make registry - Validate language registry"
 
-serve:
-	$(PYTHON) tools/local_server.py
-
-sim:
-	$(PYTHON) tools/device_sim.py --api-url http://localhost:8000 --device-key dev_secret_key_12345
-
-registry:
-	$(PYTHON) scripts/build_registry.py data/language_registry.json
+dev:
+	npm run dev
 
 test:
-	$(PYTEST) tests/ -v
+	npm test
+
+lint:
+	npm run lint
 
 build:
-	$(SAM) build
+	npm run build
 
-deploy:
-	$(SAM) deploy
+sim:
+	node tools/device-sim.mjs
 
-deploy-guided:
-	$(SAM) deploy --guided
+migrate:
+	npm run db:migrate
+
+registry:
+	npm run registry:check
 
 clean:
-	rm -rf .pytest_cache __pycache__ src/**/__pycache__ tests/__pycache__ .aws-sam
-
-
+	rm -rf dist frontend/dist

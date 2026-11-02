@@ -3,7 +3,7 @@ import { LatencyMetric } from '../../types';
 
 interface LatencyData {
   total: LatencyMetric;
-  transcribe: LatencyMetric;
+  stt: LatencyMetric;
   translate: LatencyMetric;
   synthesize: LatencyMetric;
 }
@@ -11,7 +11,7 @@ interface LatencyData {
 export const LatencyChart: React.FC<{ data: LatencyData }> = ({ data }) => {
   const stages = [
     { key: 'total', label: 'End-to-End Total', p50: data.total.p50, p95: data.total.p95 },
-    { key: 'transcribe', label: '1. Transcribe (STT)', p50: data.transcribe.p50, p95: data.transcribe.p95 },
+    { key: 'stt', label: '1. STT Speech-to-Text', p50: data.stt.p50, p95: data.stt.p95 },
     { key: 'translate', label: '2. Translate', p50: data.translate.p50, p95: data.translate.p95 },
     { key: 'synthesize', label: '3. Synthesize (TTS)', p50: data.synthesize.p50, p95: data.synthesize.p95 },
   ];

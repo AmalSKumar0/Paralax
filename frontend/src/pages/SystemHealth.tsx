@@ -75,7 +75,7 @@ export const SystemHealth: React.FC = () => {
     <div className="flex-1 flex flex-col pb-16">
       <Topbar
         title="System Health"
-        subtitle="Upstream AWS cloud services, offline hardware watch, and recent failure diagnostics"
+        subtitle="AI provider health, database connections, and hardware diagnostics"
         onRefresh={() => fetchHealth(true)}
         isRefreshing={isRechecking}
         onToggleMobileNav={onToggleMobileNav}
@@ -93,7 +93,7 @@ export const SystemHealth: React.FC = () => {
                 </h2>
               </div>
               <p className="text-xs font-semibold text-gray-600">
-                Live heartbeat verification of AWS Transcribe, Translate, Polly, S3, and DynamoDB
+                Live health verification of Groq, xAI, Edge TTS, Upstash Redis, and Neon Postgres
               </p>
             </div>
 
