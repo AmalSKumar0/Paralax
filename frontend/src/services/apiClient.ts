@@ -86,7 +86,9 @@ class ApiClient {
 
     if (response.status === 401) {
       authService.logout();
-      window.location.href = '/login';
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
       throw new ApiError('unauthorized', 'Session expired or required. Please log in.', 401);
     }
 

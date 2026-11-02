@@ -48,34 +48,34 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <ToastProvider>
-          <ServiceStatusProvider>
-            <BrowserRouter>
-              <Routes>
-                {/* Public Route */}
-                <Route path="/login" element={<Login />} />
+          <BrowserRouter>
+            <Routes>
+              {/* Public Route */}
+              <Route path="/login" element={<Login />} />
 
-                {/* Protected Admin Routes */}
-                <Route
-                  path="/"
-                  element={
-                    <ProtectedRoute>
+              {/* Protected Admin Routes */}
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <ServiceStatusProvider>
                       <AppLayout />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route index element={<Overview />} />
-                  <Route path="devices" element={<DevicesList />} />
-                  <Route path="devices/:id" element={<DeviceDetail />} />
-                  <Route path="test-console" element={<TestConsole />} />
-                  <Route path="languages" element={<LanguageSupport />} />
-                  <Route path="settings" element={<Settings />} />
-                  <Route path="health" element={<SystemHealth />} />
-                  <Route path="streaming" element={<StreamingSessions />} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Route>
-              </Routes>
-            </BrowserRouter>
-          </ServiceStatusProvider>
+                    </ServiceStatusProvider>
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Overview />} />
+                <Route path="devices" element={<DevicesList />} />
+                <Route path="devices/:id" element={<DeviceDetail />} />
+                <Route path="test-console" element={<TestConsole />} />
+                <Route path="languages" element={<LanguageSupport />} />
+                <Route path="settings" element={<Settings />} />
+                <Route path="health" element={<SystemHealth />} />
+                <Route path="streaming" element={<StreamingSessions />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
         </ToastProvider>
       </AuthProvider>
     </QueryClientProvider>

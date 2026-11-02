@@ -1,17 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Lock, Mail, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
+import { Lock, Mail, ArrowRight } from 'lucide-react';
 import { Button } from '../components/Common/Button';
 
 export const Login: React.FC = () => {
-  const [email, setEmail] = useState('admin@paralax.io');
-  const [password, setPassword] = useState('Paralax123!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const { success, error } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,22 +33,6 @@ export const Login: React.FC = () => {
       navigate('/');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Authentication failed';
-      error(msg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDemoLogin = async () => {
-    setEmail('admin@paralax.io');
-    setPassword('Paralax123!');
-    setIsLoading(true);
-    try {
-      await login('admin@paralax.io', 'Paralax123!');
-      success('Signed in as Demo Administrator');
-      navigate('/');
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Demo sign in failed';
       error(msg);
     } finally {
       setIsLoading(false);
@@ -117,28 +107,6 @@ export const Login: React.FC = () => {
               Sign In to Dashboard
             </Button>
           </form>
-
-          {/* Quick Demo Login Preset Button */}
-          <div className="mt-6 pt-5 border-t border-[#ded7cc]">
-            <button
-              type="button"
-              onClick={handleDemoLogin}
-              disabled={isLoading}
-              className="w-full py-2.5 px-4 rounded-xl border border-[#ded7cc] bg-[#f7f5f0] hover:bg-[#eae5dd] transition-all text-xs font-semibold text-[#2b1d16] flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#855b14]" />
-              <span>Instant Demo Admin Login</span>
-            </button>
-            <div className="mt-3 flex flex-col items-center justify-center gap-1 text-[11px] text-[#8a776a]">
-              <div className="flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Admin JWT Authentication</span>
-              </div>
-              <p className="text-[#8a776a]">
-                Default: <span className="font-mono text-[#2b1d16] font-semibold">admin@paralax.io</span> / <span className="font-mono text-[#2b1d16] font-semibold">Paralax123!</span>
-              </p>
-            </div>
-          </div>
         </div>
       </div>
     </div>

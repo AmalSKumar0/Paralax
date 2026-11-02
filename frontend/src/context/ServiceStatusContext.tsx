@@ -16,7 +16,10 @@ export const ServiceStatusProvider: React.FC<{ children: React.ReactNode }> = ({
   const [showBanner, setShowBanner] = useState<boolean>(false);
 
   useEffect(() => {
-    // Initial fetch of settings
+    // Only fetch settings if authenticated
+    const stored = localStorage.getItem('paralax_auth_session');
+    if (!stored) return;
+
     api.getSettings()
       .then((settings) => {
         setIsServiceEnabled(settings.service_enabled);
