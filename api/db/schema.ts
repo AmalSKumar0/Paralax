@@ -26,7 +26,7 @@ export const jobs = pgTable(
     audioOutputBlobPath: text('audio_output_blob_path'),
     canRetry: boolean('can_retry').notNull().default(false),
     durationSec: real('duration_sec'),
-    transcribeMs: real('transcribe_ms'),
+    sttMs: real('stt_ms'),
     translateMs: real('translate_ms'),
     synthesizeMs: real('synthesize_ms'),
     totalMs: real('total_ms'),

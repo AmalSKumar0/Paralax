@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authService, AuthSession } from '../services/cognitoAuth';
+import { authService, AuthSession } from '../services/authService';
 
 interface AuthContextType {
   session: AuthSession | null;

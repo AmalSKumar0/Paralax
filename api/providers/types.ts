@@ -38,7 +38,7 @@ export interface STTProvider {
   readonly name: string;
   readonly isPaid: boolean;
   isAvailable(): boolean;
-  transcribe(audioWav: Buffer, options?: STTOptions): Promise<STTResult>;
+  speechToText(audioWav: Buffer, options?: STTOptions): Promise<STTResult>;
 }
 
 export interface TranslatorProvider {

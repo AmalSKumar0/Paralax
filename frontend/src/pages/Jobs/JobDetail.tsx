@@ -72,7 +72,7 @@ export const JobDetail: React.FC = () => {
     if (!job) return;
     const isNonFinal =
       job.status === 'queued' ||
-      job.status === 'transcribing' ||
+      job.status === 'stt' ||
       job.status === 'translating' ||
       job.status === 'synthesizing';
 
@@ -145,13 +145,13 @@ export const JobDetail: React.FC = () => {
 
   const isInProgress =
     job.status === 'queued' ||
-    job.status === 'transcribing' ||
+    job.status === 'stt' ||
     job.status === 'translating' ||
     job.status === 'synthesizing';
 
   const stages = [
     { key: 'queued', label: 'Queued' },
-    { key: 'transcribing', label: 'Transcribing (STT)' },
+    { key: 'stt', label: 'STT Speech-to-Text' },
     { key: 'translating', label: 'Translating' },
     { key: 'synthesizing', label: 'Synthesizing (TTS)' },
     { key: 'completed', label: 'Completed' },
@@ -164,7 +164,7 @@ export const JobDetail: React.FC = () => {
       ? 3
       : job.status === 'translating'
       ? 2
-      : job.status === 'transcribing'
+      : job.status === 'stt'
       ? 1
       : 0;
 
@@ -396,8 +396,8 @@ export const JobDetail: React.FC = () => {
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-1">
               <div className="p-3.5 rounded-xl border-[2px] border-black bg-white text-center shadow-[2px_2px_0px_#000]">
-                <span className="text-[10px] font-black uppercase text-gray-600 block">1. Transcribe (STT)</span>
-                <span className="text-xl font-mono font-black text-black">{job.timings.transcribe_ms} ms</span>
+                <span className="text-[10px] font-black uppercase text-gray-600 block">1. STT Speech-to-Text</span>
+                <span className="text-xl font-mono font-black text-black">{(job.timings as any).stt_ms} ms</span>
               </div>
               <div className="p-3.5 rounded-xl border-[2px] border-black bg-white text-center shadow-[2px_2px_0px_#000]">
                 <span className="text-[10px] font-black uppercase text-gray-600 block">2. Translate</span>

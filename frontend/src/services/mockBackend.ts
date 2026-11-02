@@ -455,7 +455,7 @@ class MockBackendState {
         translated_audio_url: `https://mock.paralax.io/audio/${jobId}_trans.wav`,
         duration_sec: 3.4 + (index % 3) * 0.8,
         timings: {
-          transcribe_ms: 180 + (index * 25) % 80,
+          stt_ms: 180 + (index * 25) % 80,
           translate_ms: 65 + (index * 15) % 40,
           synthesize_ms: 110 + (index * 20) % 50,
           total_ms: 355 + (index * 60) % 150,
@@ -737,7 +737,7 @@ class MockBackendState {
     translation: string;
     can_retry: boolean;
     audio: { url: string; format: string; sample_rate: number; duration_ms: number; expires_in: number };
-    timings: { transcribe_ms: number; translate_ms: number; synthesize_ms: number; total_ms: number };
+    timings: { stt_ms: number; translate_ms: number; synthesize_ms: number; total_ms: number };
   } {
     if (!this.settings.service_enabled) {
       const err = new Error('Service disabled');
@@ -787,10 +787,10 @@ class MockBackendState {
     const jobId = `job_utt_${Date.now().toString(36)}_${Math.floor(100 + Math.random() * 900)}`;
     const convId = `conv_${devId.replace(/[^a-z0-9]/g, '_')}_${Date.now().toString(36).slice(-4)}`;
 
-    const transcribe_ms = 145 + Math.floor(Math.random() * 60);
+    const stt_ms = 145 + Math.floor(Math.random() * 60);
     const translate_ms = 48 + Math.floor(Math.random() * 30);
     const synthesize_ms = 95 + Math.floor(Math.random() * 45);
-    const total_ms = transcribe_ms + translate_ms + synthesize_ms;
+    const total_ms = stt_ms + translate_ms + synthesize_ms;
 
     const audioUrl = `https://mock.paralax.io/audio/${jobId}_translated.wav`;
     const origAudioUrl = `https://mock.paralax.io/audio/${jobId}_orig.wav`;
@@ -811,7 +811,7 @@ class MockBackendState {
       translated_audio_url: audioUrl,
       duration_sec: 3.2,
       timings: {
-        transcribe_ms,
+        stt_ms,
         translate_ms,
         synthesize_ms,
         total_ms,
@@ -855,7 +855,7 @@ class MockBackendState {
         expires_in: 3600,
       },
       timings: {
-        transcribe_ms,
+        stt_ms,
         translate_ms,
         synthesize_ms,
         total_ms,
@@ -872,7 +872,7 @@ class MockBackendState {
       throw err;
     }
     const jobId = `job_file_${Date.now().toString(36)}_${Math.floor(100 + Math.random() * 900)}`;
-    const upload_url = `https://paralax-storage-bucket.s3.amazonaws.com/uploads/${jobId}/${filename}?presigned=mock_token`;
+    const upload_url = `https://paralax-blob.vercel-storage.com/uploads/${jobId}/${filename}`;
 
     // Create initial queued job
     const newJob: ApiJob = {
@@ -896,7 +896,7 @@ class MockBackendState {
 
     job.source_language = params.source_language;
     job.target_language = params.target_language;
-    job.status = 'transcribing';
+    job.status = 'stt';
     job.updated_at = new Date().toISOString();
 
     // Progress through pipeline
@@ -915,7 +915,7 @@ class MockBackendState {
           job.status = 'completed';
           job.duration_sec = 8.5;
           job.timings = {
-            transcribe_ms: 1200,
+            stt_ms: 1200,
             translate_ms: 220,
             synthesize_ms: 540,
             total_ms: 1960,
@@ -942,13 +942,13 @@ class MockBackendState {
     job.updated_at = new Date().toISOString();
 
     setTimeout(() => {
-      job.status = 'transcribing';
+      job.status = 'stt';
       setTimeout(() => {
         job.status = 'completed';
-        job.transcript = 'Retried speech segment successfully transcribed.';
-        job.translation = 'Segmento de voz reintentado transcrito con éxito.';
+        job.transcript = 'Retried speech segment successfully recognized.';
+        job.translation = 'Segmento de voz reintentado reconocido con éxito.';
         job.duration_sec = 2.8;
-        job.timings = { transcribe_ms: 190, translate_ms: 55, synthesize_ms: 120, total_ms: 365 };
+        job.timings = { stt_ms: 190, translate_ms: 55, synthesize_ms: 120, total_ms: 365 };
         job.original_audio_url = `https://mock.paralax.io/audio/${job.job_id}_retry.wav`;
         job.translated_audio_url = `https://mock.paralax.io/audio/${job.job_id}_retry_trans.wav`;
         job.updated_at = new Date().toISOString();
@@ -1004,7 +1004,7 @@ class MockBackendState {
   public getStats(): AdminStats {
     const counts_by_status = {
       queued: 0,
-      transcribing: 0,
+      stt: 0,
       translating: 0,
       synthesizing: 0,
       completed: 0,
@@ -1051,10 +1051,10 @@ class MockBackendState {
       ],
       total_audio_minutes: 1845,
       utterances_today: 489,
-      jobs_in_progress: counts_by_status.queued + counts_by_status.transcribing + counts_by_status.translating + counts_by_status.synthesizing,
+      jobs_in_progress: (counts_by_status.queued || 0) + (counts_by_status.stt || 0) + (counts_by_status.translating || 0) + (counts_by_status.synthesizing || 0),
       latency: {
         total: { p50: 345, p95: 580 },
-        transcribe: { p50: 175, p95: 290 },
+        stt: { p50: 175, p95: 290 },
         translate: { p50: 55, p95: 95 },
         synthesize: { p50: 115, p95: 195 },
       },
@@ -1079,8 +1079,8 @@ class MockBackendState {
 
   // --- API Keys ---
   public createApiKey(name: string): { key: ApiKey; secret: string } {
-    const rawSecret = `px_live_${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 10)}`;
-    const prefix = rawSecret.slice(0, 11);
+    const generatedSecretKey = `px_live_${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 10)}`;
+    const prefix = generatedSecretKey.slice(0, 11);
     const newKey: ApiKey = {
       id: `key_${Date.now().toString(36)}_${Math.floor(Math.random() * 1000)}`,
       name,
@@ -1089,7 +1089,7 @@ class MockBackendState {
       status: 'active',
     };
     this.apiKeys.unshift(newKey);
-    return { key: newKey, secret: rawSecret };
+    return { key: newKey, secret: generatedSecretKey };
   }
 
   public revokeApiKey(id: string): void {

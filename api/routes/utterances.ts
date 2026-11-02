@@ -147,7 +147,7 @@ utteranceRoutes.post('/', async (c) => {
   // STT
   let sttRes;
   try {
-    sttRes = await providerManager.transcribe(
+    sttRes = await providerManager.speechToText(
       wavAudioForStt,
       sourceLang !== 'auto' ? normalizeLocale(sourceLang) || undefined : undefined
     );
@@ -251,7 +251,7 @@ utteranceRoutes.post('/', async (c) => {
         audioOutputBlobPath: outputBlobPath,
         canRetry: Boolean(settings.store_audio && inputBlobPath),
         durationSec: durationSec || Math.round((ttsRes.durationMs / 1000) * 10) / 10,
-        transcribeMs: sttRes.latencyMs,
+        sttMs: sttRes.latencyMs,
         translateMs: transRes.latencyMs,
         synthesizeMs: ttsRes.latencyMs,
         totalMs,
@@ -278,7 +278,7 @@ utteranceRoutes.post('/', async (c) => {
     },
     duration_ms: ttsRes.durationMs,
     timings: {
-      transcribe_ms: sttRes.latencyMs,
+      stt_ms: sttRes.latencyMs,
       translate_ms: transRes.latencyMs,
       synthesize_ms: ttsRes.latencyMs,
       total_ms: totalMs,

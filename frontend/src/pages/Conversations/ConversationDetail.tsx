@@ -263,7 +263,7 @@ export const ConversationDetail: React.FC = () => {
                 {turn.timings && (
                   <div className="pt-2 flex flex-wrap items-center gap-3 text-[11px] font-mono font-bold text-gray-700 border-t border-black/10">
                     <span className="text-gray-500">Stage Timings:</span>
-                    <span>Transcribe: <strong className="text-black font-black">{turn.timings.transcribe_ms}ms</strong></span>
+                    <span>STT: <strong className="text-black font-black">{(turn.timings as any).stt_ms}ms</strong></span>
                     <span>·</span>
                     <span>Translate: <strong className="text-black font-black">{turn.timings.translate_ms}ms</strong></span>
                     <span>·</span>

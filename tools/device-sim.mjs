@@ -256,7 +256,7 @@ async function main() {
       console.log(`  Translation:      "${translation}"`);
       console.log(`  Audio Received:   ${pcmBuffer.length} bytes PCM (~${(pcmBuffer.length / 32000).toFixed(2)}s audio)`);
       console.log(`  Saved Playable:   ${path.resolve(opts.outputWav)}`);
-      console.log(`  Stage Timings:    Transcribe: ${trRes.headers.get('x-timings-transcribe-ms') || '-'}ms | Translate: ${trRes.headers.get('x-timings-translate-ms') || '-'}ms | Synthesize: ${trRes.headers.get('x-timings-synthesize-ms') || '-'}ms`);
+      console.log(`  Stage Timings:    STT: ${trRes.headers.get('x-stt-ms') || trRes.headers.get('x-timings-stt-ms') || '-'}ms | Translate: ${trRes.headers.get('x-translate-ms') || '-'}ms | Synthesize: ${trRes.headers.get('x-synthesize-ms') || '-'}ms`);
       console.log(`  Total Processing: ${totalTimingsMs} ms (Network RTT: ${elapsedMs} ms)`);
       console.log('='.repeat(60) + '\n');
     } else {

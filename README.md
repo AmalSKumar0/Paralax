@@ -59,7 +59,7 @@ flowchart TD
 - **Pure WASM Audio Decoding**: Pure JavaScript/WASM decoding (`mpg123-decoder`) with linear float32 resampling. **No ffmpeg binary required**.
 - **Dual-Mode Persistence**: Automatically connects to Upstash Redis and Neon Postgres in production; transparently falls back to in-memory stores for zero-config offline local development and automated testing.
 - **Idempotency & Resiliency**: Required `Idempotency-Key` header on device translation. Duplicate submissions return cached transcript and translation, re-synthesizing only TTS.
-- **Robust Auth**: Removed Cognito. Admin uses httpOnly SameSite=Lax JWT cookies (`jose`, HS256) and CSRF protection (`X-Requested-With`). Devices authenticate via `X-Device-Key` with constant-time SHA-256 verification.
+- **Robust Auth**: Admin uses httpOnly SameSite=Lax JWT cookies (`jose`, HS256) and CSRF protection (`X-Requested-With`). Devices authenticate via `X-Device-Key` with constant-time SHA-256 verification.
 
 ---
 

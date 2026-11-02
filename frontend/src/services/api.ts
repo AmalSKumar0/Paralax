@@ -145,7 +145,7 @@ export const api = {
       translation: string;
       can_retry?: boolean;
       audio: { url?: string; base64?: string; format: string; sample_rate: number; duration_ms: number; expires_in?: number };
-      timings: { transcribe_ms: number; translate_ms: number; synthesize_ms: number; total_ms: number };
+      timings: { stt_ms: number; translate_ms: number; synthesize_ms: number; total_ms: number };
     }>(`/utterances?${sp.toString()}`, {
       method: 'POST',
       body: params.audioBlob,
@@ -171,7 +171,7 @@ export const api = {
     translation: string;
     can_retry?: boolean;
     audio: { url?: string; base64?: string; format: string; sample_rate: number; duration_ms: number };
-    timings: { transcribe_ms: number; translate_ms: number; synthesize_ms: number; total_ms: number };
+    timings: { stt_ms: number; translate_ms: number; synthesize_ms: number; total_ms: number };
   }> => {
     return new Promise((resolve, reject) => {
       const sp = new URLSearchParams({

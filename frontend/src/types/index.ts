@@ -74,10 +74,10 @@ export interface Language {
 }
 
 export type JobKind = 'utterance' | 'file';
-export type JobStatus = 'queued' | 'transcribing' | 'translating' | 'synthesizing' | 'completed' | 'failed' | 'cancelled';
+export type JobStatus = 'queued' | 'stt' | 'translating' | 'synthesizing' | 'completed' | 'failed' | 'cancelled';
 
 export interface JobTimings {
-  transcribe_ms: number;
+  stt_ms: number;
   translate_ms: number;
   synthesize_ms: number;
   total_ms: number;
@@ -118,7 +118,7 @@ export interface ApiJob {
   duration_sec?: number;
   durationSec?: number;
   timings?: JobTimings;
-  transcribeMs?: number;
+  sttMs?: number;
   translateMs?: number;
   synthesizeMs?: number;
   totalMs?: number;
@@ -199,7 +199,7 @@ export interface AdminStats {
   jobs_in_progress: number;
   latency: {
     total: LatencyMetric;
-    transcribe: LatencyMetric;
+    stt: LatencyMetric;
     translate: LatencyMetric;
     synthesize: LatencyMetric;
   };

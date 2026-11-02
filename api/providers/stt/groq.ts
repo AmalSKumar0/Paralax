@@ -8,7 +8,7 @@ export class GroqSTTProvider implements STTProvider {
     return Boolean(process.env.GROQ_API_KEY && process.env.GROQ_API_KEY.trim().length > 0);
   }
 
-  public async transcribe(audioWav: Buffer, options?: STTOptions): Promise<STTResult> {
+  public async speechToText(audioWav: Buffer, options?: STTOptions): Promise<STTResult> {
     const apiKey = process.env.GROQ_API_KEY?.trim();
     if (!apiKey) {
       throw new ProviderError(this.name, 'GROQ_API_KEY is not configured');

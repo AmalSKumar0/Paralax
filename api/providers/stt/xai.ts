@@ -10,7 +10,7 @@ export class XAISTTProvider implements STTProvider {
     return paidAllowed && hasKey;
   }
 
-  public async transcribe(audioWav: Buffer, options?: STTOptions): Promise<STTResult> {
+  public async speechToText(audioWav: Buffer, options?: STTOptions): Promise<STTResult> {
     if (!this.isAvailable()) {
       throw new ProviderError(this.name, 'xAI paid provider is not enabled or missing XAI_API_KEY');
     }

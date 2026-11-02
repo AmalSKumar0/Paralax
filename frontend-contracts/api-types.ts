@@ -102,7 +102,7 @@ export interface Device {
 }
 
 export interface JobTimings {
-  transcribe_ms: number;
+  stt_ms: number;
   translate_ms: number;
   synthesize_ms: number;
   total_ms: number;
@@ -129,7 +129,7 @@ export interface Job {
   translation?: string;
   canRetry: boolean;
   durationSec?: number;
-  transcribeMs?: number;
+  sttMs?: number;
   translateMs?: number;
   synthesizeMs?: number;
   totalMs?: number;
@@ -202,7 +202,7 @@ export interface AdminStats {
   jobs_in_progress: number;
   latency: {
     total: LatencyMetric;
-    transcribe: LatencyMetric;
+    stt: LatencyMetric;
     translate: LatencyMetric;
     synthesize: LatencyMetric;
   };

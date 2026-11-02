@@ -1,4 +1,4 @@
-import { authService } from './cognitoAuth';
+import { authService } from './authService';
 import { mockBackend } from './mockBackend';
 
 // Helper to normalize backend base URL from VITE_API_BASE_URL

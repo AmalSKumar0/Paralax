@@ -110,7 +110,7 @@ deviceRoutes.post('/translate', async (c) => {
             'X-Detected-Language': existingRecord.source_language,
             'X-Target-Language': targetLang,
             'X-Duration-Ms': String(ttsRes.durationMs),
-            'X-Transcribe-Ms': String(existingRecord.transcribe_ms || 0),
+            'X-STT-Ms': String((existingRecord as any).stt_ms || 0),
             'X-Translate-Ms': String(existingRecord.translate_ms || 0),
             'X-Synthesize-Ms': String(synthMs),
             'X-Total-Ms': String(totalMs),
@@ -135,7 +135,7 @@ deviceRoutes.post('/translate', async (c) => {
         },
         duration_ms: ttsRes.durationMs,
         timings: {
-          transcribe_ms: existingRecord.transcribe_ms || 0,
+          stt_ms: (existingRecord as any).stt_ms || 0,
           translate_ms: existingRecord.translate_ms || 0,
           synthesize_ms: synthMs,
           total_ms: totalMs,
@@ -244,7 +244,7 @@ deviceRoutes.post('/translate', async (c) => {
   const wavAudio = pcmToWav(parsedAudio.pcm, 16000, 1, 16);
   let sttRes;
   try {
-    sttRes = await providerManager.transcribe(
+    sttRes = await providerManager.speechToText(
       wavAudio,
       sourceLang !== 'auto' ? normalizeLocale(sourceLang) || undefined : undefined
     );
@@ -368,7 +368,7 @@ deviceRoutes.post('/translate', async (c) => {
         audioOutputBlobPath: outputBlobPath,
         canRetry: Boolean(settings.store_audio && inputBlobPath),
         durationSec: parsedAudio.durationSec,
-        transcribeMs: sttRes.latencyMs,
+        sttMs: sttRes.latencyMs,
         translateMs: transRes.latencyMs,
         synthesizeMs: ttsRes.latencyMs,
         totalMs,
@@ -385,7 +385,7 @@ deviceRoutes.post('/translate', async (c) => {
           target_language: targetLang,
           transcript: sttRes.text,
           translation: transRes.text,
-          transcribe_ms: sttRes.latencyMs,
+          stt_ms: sttRes.latencyMs,
           translate_ms: transRes.latencyMs,
           synthesize_ms: ttsRes.latencyMs,
           total_ms: totalMs,
@@ -407,7 +407,7 @@ deviceRoutes.post('/translate', async (c) => {
         'X-Detected-Language': normalizeLocale(sttRes.detectedLanguage || '') || sttRes.detectedLanguage || sourceLang,
         'X-Target-Language': targetLang,
         'X-Duration-Ms': String(ttsRes.durationMs),
-        'X-Transcribe-Ms': String(sttRes.latencyMs),
+        'X-STT-Ms': String(sttRes.latencyMs),
         'X-Translate-Ms': String(transRes.latencyMs),
         'X-Synthesize-Ms': String(ttsRes.latencyMs),
         'X-Total-Ms': String(totalMs),
@@ -433,7 +433,7 @@ deviceRoutes.post('/translate', async (c) => {
     },
     duration_ms: ttsRes.durationMs,
     timings: {
-      transcribe_ms: sttRes.latencyMs,
+      stt_ms: sttRes.latencyMs,
       translate_ms: transRes.latencyMs,
       synthesize_ms: ttsRes.latencyMs,
       total_ms: totalMs,

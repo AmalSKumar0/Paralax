@@ -102,7 +102,7 @@ class ProviderManager {
     };
   }
 
-  public async transcribe(audioWav: Buffer, options?: STTOptions | string): Promise<STTExecutionResult> {
+  public async speechToText(audioWav: Buffer, options?: STTOptions | string): Promise<STTExecutionResult> {
     const opt: STTOptions | undefined = typeof options === 'string' ? { language: options } : options;
     const chain = this.getActiveChains().stt;
     let maxRetryAfterSec = 60;
@@ -115,7 +115,7 @@ class ProviderManager {
 
       const start = Date.now();
       try {
-        const res = await p.transcribe(audioWav, opt);
+        const res = await p.speechToText(audioWav, opt);
         const latencyMs = Date.now() - start;
         this.recordSuccess(name);
         return {

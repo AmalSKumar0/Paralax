@@ -21,9 +21,9 @@ adminApiKeyRoutes.post('/', async (c) => {
 
   const name = body?.name || 'Machine API Key';
   const id = `key_${crypto.randomBytes(8).toString('hex')}`;
-  const rawSecret = `paralax_sk_${crypto.randomBytes(24).toString('hex')}`;
-  const keyPrefix = rawSecret.slice(0, 15);
-  const keyHash = hashSecret(rawSecret);
+  const generatedSecretKey = `paralax_sk_${crypto.randomBytes(24).toString('hex')}`;
+  const keyPrefix = generatedSecretKey.slice(0, 15);
+  const keyHash = hashSecret(generatedSecretKey);
 
   const keyRecord: ApiKeyRecord = {
     id,
@@ -39,7 +39,7 @@ adminApiKeyRoutes.post('/', async (c) => {
   return c.json(
     {
       key: keyRecord,
-      secret: rawSecret, // Only returned once!
+      secret: generatedSecretKey, // Only returned once!
     },
     201
   );

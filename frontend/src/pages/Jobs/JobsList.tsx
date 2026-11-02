@@ -83,7 +83,7 @@ export const JobsList: React.FC = () => {
   // Live polling for non-final jobs (queued, transcribing, translating, synthesizing)
   useEffect(() => {
     const hasNonFinalJobs = jobs.some(
-      (j) => j.status === 'queued' || j.status === 'transcribing' || j.status === 'translating' || j.status === 'synthesizing'
+      (j) => j.status === 'queued' || j.status === 'stt' || j.status === 'translating' || j.status === 'synthesizing'
     );
 
     if (hasNonFinalJobs) {
@@ -166,7 +166,7 @@ export const JobsList: React.FC = () => {
         return <Badge variant="danger" size="sm" dot>Failed</Badge>;
       case 'cancelled':
         return <Badge variant="neutral" size="sm">Cancelled</Badge>;
-      case 'transcribing':
+      case 'stt':
       case 'translating':
       case 'synthesizing':
         return <Badge variant="warning" size="sm" dot className="animate-pulse">{status}</Badge>;
@@ -352,7 +352,7 @@ export const JobsList: React.FC = () => {
                     const isFailed = job.status === 'failed';
                     const isInProgress =
                       job.status === 'queued' ||
-                      job.status === 'transcribing' ||
+                      job.status === 'stt' ||
                       job.status === 'translating' ||
                       job.status === 'synthesizing';
 

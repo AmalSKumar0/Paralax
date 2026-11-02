@@ -36,7 +36,7 @@ interface AttemptResult {
   translation: string;
   audioUrl?: string;
   timings: {
-    transcribe_ms: number;
+    stt_ms: number;
     translate_ms: number;
     synthesize_ms: number;
     total_ms: number;
@@ -689,7 +689,7 @@ export const TestConsole: React.FC = () => {
             {/* Timings Breakdown */}
             <div className="pt-2 flex flex-wrap items-center gap-4 text-xs font-mono font-bold text-gray-700 border-t border-black/10">
               <span className="text-gray-500 font-sans font-bold">Latency Breakdown:</span>
-              <span>STT Transcribe: <strong className="text-black font-black">{currentResult.timings.transcribe_ms}ms</strong></span>
+              <span>STT: <strong className="text-black font-black">{(currentResult.timings as any).stt_ms}ms</strong></span>
               <span>·</span>
               <span>Translate: <strong className="text-black font-black">{currentResult.timings.translate_ms}ms</strong></span>
               <span>·</span>

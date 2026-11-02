@@ -32,7 +32,7 @@ async function migrate() {
       audio_output_blob_path TEXT,
       can_retry BOOLEAN NOT NULL DEFAULT FALSE,
       duration_sec REAL,
-      transcribe_ms REAL,
+      stt_ms REAL,
       translate_ms REAL,
       synthesize_ms REAL,
       total_ms REAL,

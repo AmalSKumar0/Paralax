@@ -79,7 +79,7 @@ adminJobRoutes.post('/:id/retry', async (c) => {
   const startTime = Date.now();
 
   // Re-run STT
-  const sttRes = await providerManager.transcribe(inputAudio, job.sourceLanguage);
+  const sttRes = await providerManager.speechToText(inputAudio, job.sourceLanguage);
 
   // Re-run Translation
   const transRes = await providerManager.translate(sttRes.text, job.sourceLanguage, job.targetLanguage);
@@ -103,7 +103,7 @@ adminJobRoutes.post('/:id/retry', async (c) => {
     transcript: sttRes.text,
     translation: transRes.text,
     audioOutputBlobPath: outputBlobPath || job.audioOutputBlobPath,
-    transcribeMs: sttRes.latencyMs,
+    sttMs: sttRes.latencyMs,
     translateMs: transRes.latencyMs,
     synthesizeMs: ttsRes.latencyMs,
     totalMs,

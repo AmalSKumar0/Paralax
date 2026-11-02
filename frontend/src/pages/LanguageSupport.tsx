@@ -179,7 +179,7 @@ export const LanguageSupport: React.FC = () => {
 
               {pairEvaluation.isValid ? (
                 <p className="mt-1 text-xs font-semibold text-emerald-900 ml-7">
-                  Speech recognition, neural translation model, and Polly voice synthesis are verified and ready for hardware deployment.
+                  Speech recognition, neural translation model, and TTS voice synthesis are verified and ready for hardware deployment.
                 </p>
               ) : (
                 <ul className="mt-2 text-xs font-semibold text-rose-900 list-disc list-inside ml-7 space-y-1">

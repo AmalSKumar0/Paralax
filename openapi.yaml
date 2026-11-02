@@ -149,7 +149,7 @@ paths:
             X-Duration-Ms:
               schema:
                 type: string
-            X-Transcribe-Ms:
+            X-STT-Ms:
               schema:
                 type: string
             X-Translate-Ms:
@@ -896,7 +896,7 @@ components:
         timings:
           type: object
           properties:
-            transcribe_ms:
+            stt_ms:
               type: number
             translate_ms:
               type: number
@@ -942,7 +942,7 @@ components:
         timings:
           type: object
           properties:
-            transcribe_ms:
+            stt_ms:
               type: number
             translate_ms:
               type: number
@@ -978,7 +978,7 @@ components:
           type: boolean
         durationSec:
           type: number
-        transcribeMs:
+        sttMs:
           type: number
         translateMs:
           type: number
@@ -1248,7 +1248,7 @@ components:
                   type: number
                 p95:
                   type: number
-            transcribe:
+            stt:
               type: object
               properties:
                 p50:

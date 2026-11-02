@@ -51,7 +51,7 @@ class PostgresStore {
       audioOutputBlobPath: jobData.audioOutputBlobPath || null,
       canRetry: jobData.canRetry || false,
       durationSec: jobData.durationSec || null,
-      transcribeMs: jobData.transcribeMs || null,
+      sttMs: (jobData as any).sttMs ?? null,
       translateMs: jobData.translateMs || null,
       synthesizeMs: jobData.synthesizeMs || null,
       totalMs: jobData.totalMs || null,
@@ -352,7 +352,7 @@ class PostgresStore {
     jobs_in_progress: number;
     latency: {
       total: { p50: number; p95: number };
-      transcribe: { p50: number; p95: number };
+      stt: { p50: number; p95: number };
       translate: { p50: number; p95: number };
       synthesize: { p50: number; p95: number };
     };
@@ -383,7 +383,7 @@ class PostgresStore {
     let inProgress = 0;
 
     const totalLatencies: number[] = [];
-    const transcribeLatencies: number[] = [];
+    const sttLatencies: number[] = [];
     const translateLatencies: number[] = [];
     const synthLatencies: number[] = [];
 
@@ -393,7 +393,7 @@ class PostgresStore {
       counts_by_status[j.status] = (counts_by_status[j.status] || 0) + 1;
       counts_by_kind[j.kind] = (counts_by_kind[j.kind] || 0) + 1;
 
-      if (['QUEUED', 'TRANSCRIBING', 'TRANSLATING', 'SYNTHESIZING'].includes(j.status)) {
+      if (['QUEUED', 'STT', 'TRANSLATING', 'SYNTHESIZING'].includes(j.status)) {
         inProgress++;
       }
 
@@ -415,7 +415,7 @@ class PostgresStore {
 
       if (j.createdAt >= twentyFourHoursAgo) {
         if (j.totalMs != null) totalLatencies.push(j.totalMs);
-        if (j.transcribeMs != null) transcribeLatencies.push(j.transcribeMs);
+        if (j.sttMs != null) sttLatencies.push(j.sttMs);
         if (j.translateMs != null) translateLatencies.push(j.translateMs);
         if (j.synthesizeMs != null) synthLatencies.push(j.synthesizeMs);
       }
@@ -460,7 +460,7 @@ class PostgresStore {
       jobs_in_progress: inProgress,
       latency: {
         total: { p50: calcP(totalLatencies, 50), p95: calcP(totalLatencies, 95) },
-        transcribe: { p50: calcP(transcribeLatencies, 50), p95: calcP(transcribeLatencies, 95) },
+        stt: { p50: calcP(sttLatencies, 50), p95: calcP(sttLatencies, 95) },
         translate: { p50: calcP(translateLatencies, 50), p95: calcP(translateLatencies, 95) },
         synthesize: { p50: calcP(synthLatencies, 50), p95: calcP(synthLatencies, 95) },
       },

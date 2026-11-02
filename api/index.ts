@@ -49,7 +49,7 @@ app.use(
       'X-Source-Language',
       'X-Target-Language',
       'X-Duration-Ms',
-      'X-Transcribe-Ms',
+      'X-STT-Ms',
       'X-Translate-Ms',
       'X-Synthesize-Ms',
       'X-Total-Ms',

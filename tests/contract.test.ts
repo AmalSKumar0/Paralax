@@ -143,7 +143,7 @@ describe('OpenAPI Contract Verification against openapi.yaml', () => {
     expect(data.latency).toBeDefined();
     expect(typeof data.latency.total.p50).toBe('number');
     expect(typeof data.latency.total.p95).toBe('number');
-    expect(typeof data.latency.transcribe.p50).toBe('number');
+    expect(typeof data.latency.stt.p50).toBe('number');
     expect(typeof data.latency.translate.p50).toBe('number');
     expect(typeof data.latency.synthesize.p50).toBe('number');
   });

@@ -87,7 +87,7 @@ X-Job-Id: job_98a3f8b0a29d42bc
 X-Source-Language: en-US
 X-Target-Language: es-US
 X-Duration-Ms: 2400
-X-Transcribe-Ms: 380
+X-STT-Ms: 380
 X-Translate-Ms: 210
 X-Synthesize-Ms: 420
 X-Total-Ms: 1040

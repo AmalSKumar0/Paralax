@@ -4,7 +4,6 @@ __pycache__/
 .pytest_cache/
 *.wav
 *.pcm
-.aws-sam/
 .env
 *.env
 .env.local
