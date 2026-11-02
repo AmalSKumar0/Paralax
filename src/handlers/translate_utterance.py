@@ -326,6 +326,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     )
 
     # 4. Transcribe Execution
+    ai_provider = settings.get("ai_provider") or os.environ.get("AI_PROVIDER", "aws").lower()
+    if os.environ.get("GROQ_API_KEY") and not settings.get("ai_provider"):
+        ai_provider = "groq"
+
     t_transcribe_start = time.perf_counter()
     try:
         # Check if running in mocked/stubbed test environment
@@ -334,8 +338,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             # Test hook for deterministic mock testing
             hook_data = json.loads(mock_hook)
             transcript_text = hook_data.get("transcript", "Hello world")
-            detected_lang = hook_data.get("detected_language", transcribe_lang or language_options[0])
+            detected_lang = hook_data.get("detected_language", transcribe_lang or (language_options[0] if language_options else "en-US"))
             confidence = float(hook_data.get("confidence", 0.95))
+        elif ai_provider == "groq":
+            from src.shared.ai_providers import _transcribe_with_groq
+            transcript_text, detected_lang, confidence = _transcribe_with_groq(
+                raw_pcm, sample_rate, transcribe_lang, language_options
+            )
         else:
             loop = asyncio.get_event_loop()
             if loop.is_running():
@@ -383,19 +392,23 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     else:
         norm_detected = source_lang
 
-    # 5. Amazon Translate Execution
+    # 5. Translation Execution
     t_translate_start = time.perf_counter()
     source_translate_code = get_translate_code(source_lang)
     target_translate_code = get_translate_code(target_lang)
 
     try:
-        translate_client = get_translate()
-        translate_resp = translate_client.translate_text(
-            Text=transcript_text,
-            SourceLanguageCode=source_translate_code,
-            TargetLanguageCode=target_translate_code,
-        )
-        translated_text = translate_resp.get("TranslatedText", "")
+        if _TRANSLATE_CLIENT is not None or ai_provider != "groq":
+            translate_client = get_translate()
+            translate_resp = translate_client.translate_text(
+                Text=transcript_text,
+                SourceLanguageCode=source_translate_code,
+                TargetLanguageCode=target_translate_code,
+            )
+            translated_text = translate_resp.get("TranslatedText", "")
+        else:
+            from src.shared.ai_providers import _translate_with_groq
+            translated_text = _translate_with_groq(transcript_text, source_lang, target_lang)
     except Exception as e:
         logger.error(f"Translate step failed: {str(e)}", exc_info=True)
         update_job(job_id, {"status": "FAILED", "error": {"code": "translate_failed", "message": str(e)}})
@@ -404,7 +417,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     t_translate_end = time.perf_counter()
     translate_ms = round((t_translate_end - t_translate_start) * 1000, 2)
 
-    # 6. Amazon Polly Speech Synthesis Execution
+    # 6. Speech Synthesis Execution
     t_synth_start = time.perf_counter()
     voice_id, engine = resolve_polly_voice(target_lang, preferred_voice_id=None, engine_preference="neural")
 
@@ -412,20 +425,26 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     polly_sample_rate = "16000"
 
     try:
-        polly_client = get_polly()
-        synth_kwargs = {
-            "Text": translated_text,
-            "OutputFormat": polly_format,
-            "VoiceId": voice_id,
-            "Engine": engine,
-        }
-        if polly_format == "pcm":
-            synth_kwargs["SampleRate"] = polly_sample_rate
+        if _POLLY_CLIENT is not None or ai_provider != "groq":
+            polly_client = get_polly()
+            synth_kwargs = {
+                "Text": translated_text,
+                "OutputFormat": polly_format,
+                "VoiceId": voice_id,
+                "Engine": engine,
+            }
+            if polly_format == "pcm":
+                synth_kwargs["SampleRate"] = polly_sample_rate
 
-        synth_resp = polly_client.synthesize_speech(**synth_kwargs)
-        output_audio_bytes = synth_resp["AudioStream"].read()
+            synth_resp = polly_client.synthesize_speech(**synth_kwargs)
+            output_audio_bytes = synth_resp["AudioStream"].read()
+        else:
+            from src.shared.ai_providers import _synthesize_with_edge_tts
+            output_audio_bytes = _synthesize_with_edge_tts(
+                translated_text, target_lang, output_format=output_format
+            )
     except Exception as e:
-        logger.error(f"Polly synthesis failed: {str(e)}", exc_info=True)
+        logger.error(f"Synthesis failed: {str(e)}", exc_info=True)
         update_job(job_id, {"status": "FAILED", "error": {"code": "synthesize_failed", "message": str(e)}})
         return build_error_response(500, "synthesize_failed", "Speech synthesis error.", job_id=job_id, device_id=device_id or "-")
 

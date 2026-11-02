@@ -154,6 +154,7 @@ def complete_idempotency_record(
 DEFAULT_SETTINGS: Dict[str, Any] = {
     "setting_id": "global",
     "service_enabled": True,
+    "ai_provider": os.environ.get("AI_PROVIDER", "groq"),
     "max_utterance_sec": 15,
     "max_file_size_mb": 50,
     "max_duration_sec": 300,

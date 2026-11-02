@@ -15,6 +15,7 @@ logger = setup_logger("admin_settings")
 
 ALLOWED_SETTINGS_KEYS = {
     "service_enabled",
+    "ai_provider",
     "max_utterance_sec",
     "max_file_size_mb",
     "max_duration_sec",
