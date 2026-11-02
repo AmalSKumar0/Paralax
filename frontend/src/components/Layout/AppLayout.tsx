@@ -11,7 +11,7 @@ export const AppLayout: React.FC = () => {
       <ServiceBanner />
       <div className="flex-1 flex flex-col md:flex-row w-full">
         {/* Desktop Sidebar */}
-        <div className="hidden md:block">
+        <div className="hidden md:block shrink-0">
           <Sidebar />
         </div>
 
@@ -22,7 +22,7 @@ export const AppLayout: React.FC = () => {
               className="fixed inset-0 bg-black/40 backdrop-blur-sm"
               onClick={() => setMobileNavOpen(false)}
             />
-            <div className="relative z-10 w-72 bg-[#f7f5f0] h-full shadow-xl flex flex-col">
+            <div className="relative z-10 w-64 bg-[#f7f5f0] h-full shadow-xl flex flex-col">
               <Sidebar />
             </div>
           </div>

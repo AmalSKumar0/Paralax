@@ -219,7 +219,7 @@ export const DeviceDetail: React.FC = () => {
         isRefreshing={isRefreshing}
       />
 
-      <div className="p-6 md:p-8 space-y-8 max-w-[1400px]">
+      <div className="p-6 md:p-8 space-y-6 w-full">
         {/* Navigation Breadcrumb & Header Bar */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">

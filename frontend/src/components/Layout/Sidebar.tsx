@@ -50,42 +50,42 @@ export const Sidebar: React.FC = () => {
   }
 
   return (
-    <aside className="w-64 shrink-0 bg-[#f7f5f0] border-r border-[#ded7cc] flex flex-col justify-between min-h-screen">
-      <div>
-        {/* Brand Header */}
-        <div className="p-5 border-b border-[#ded7cc] bg-white">
+    <aside className="w-64 shrink-0 bg-[#f7f5f0] border-r border-[#ded7cc] flex flex-col justify-between sticky top-0 h-screen select-none">
+      <div className="flex flex-col min-h-0 flex-1">
+        {/* Brand Header: Exactly h-[72px] matching Topbar */}
+        <div className="h-[72px] px-6 border-b border-[#ded7cc] bg-white flex flex-col justify-center shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-[#2b1d16] tracking-tight">
+              <span className="text-xl font-bold text-[#2b1d16] tracking-tight leading-none">
                 paralax
               </span>
-              <span className="w-2 h-2 rounded-full bg-[#e9b140] inline-block" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#e9b140] inline-block shrink-0" />
             </div>
             {IS_MOCK_MODE && (
               <span
                 title="Mock mode active with simulated IoT devices and cloud endpoints"
                 className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-[#e9b140]/50 bg-[#fcf8ee] text-[#855b14]"
               >
-                Mock Mode
+                Mock
               </span>
             )}
           </div>
-          <p className="mt-0.5 text-xs text-[#8a776a]">
+          <p className="mt-1 text-xs text-[#8a776a] leading-none">
             IoT Voice Translator Cloud
           </p>
         </div>
 
         {/* Navigation list */}
-        <nav className="p-3 space-y-1" aria-label="Main Navigation">
+        <nav className="flex-1 overflow-y-auto p-3 space-y-1" aria-label="Main Navigation">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.to === '/'}
               className={({ isActive }) =>
-                `flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-medium transition-all select-none ${
+                `flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
                   isActive
-                    ? 'bg-[#e9b140] text-[#2b1d16] font-semibold shadow-sm'
+                    ? 'bg-[#e9b140] text-[#2b1d16] font-semibold shadow-xs'
                     : 'text-[#5c4a3e] hover:bg-[#edeae4]/70 hover:text-[#2b1d16]'
                 }`
               }
@@ -95,7 +95,7 @@ export const Sidebar: React.FC = () => {
                 <span>{item.label}</span>
               </div>
               {item.badge && (
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-white/70 text-[#2b1d16] border border-[#ded7cc]">
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-white/80 text-[#2b1d16] border border-[#ded7cc]">
                   {item.badge}
                 </span>
               )}
@@ -105,7 +105,7 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* User / Session footer */}
-      <div className="p-4 border-t border-[#ded7cc] bg-white space-y-2.5">
+      <div className="p-4 border-t border-[#ded7cc] bg-white space-y-2.5 shrink-0">
         <div className="flex items-center gap-2.5 p-2 rounded-xl bg-[#f7f5f0] border border-[#ded7cc]">
           <div className="w-7 h-7 rounded-full bg-[#e9b140] text-[#2b1d16] flex items-center justify-center font-bold text-xs shrink-0">
             {session?.email ? session.email[0].toUpperCase() : 'A'}

@@ -16,7 +16,7 @@ export const StreamingSessions: React.FC = () => {
         onToggleMobileNav={onToggleMobileNav}
       />
 
-      <div className="p-6 md:p-8 space-y-6 max-w-[1000px]">
+      <div className="p-6 md:p-8 space-y-6 w-full max-w-3xl mx-auto">
         <Card variant="light" className="text-center p-12 space-y-4">
           <div className="w-14 h-14 rounded-2xl border border-[#ded7cc] bg-[#f7f5f0] flex items-center justify-center mx-auto shadow-sm">
             <Radio className="w-6 h-6 text-[#e9b140]" />

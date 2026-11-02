@@ -87,10 +87,10 @@ export const LanguageSupport: React.FC = () => {
         onToggleMobileNav={onToggleMobileNav}
       />
 
-      <div className="p-6 md:p-8 space-y-8 max-w-[1400px]">
+      <div className="p-6 md:p-8 space-y-6 w-full">
         {/* Pair Checker Interactive Widget */}
         <Card variant="light" className="space-y-6">
-          <div className="flex items-center gap-2 pb-3 border-b border-[#ded7cc]">
+          <div className="flex items-center gap-2 pb-4 border-b border-[#ded7cc]">
             <Sparkles className="w-5 h-5 text-[#e9b140]" />
             <h2 className="text-lg font-bold text-[#2b1d16]">
               Language Pair Verification Tool

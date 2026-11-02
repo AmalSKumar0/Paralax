@@ -109,7 +109,7 @@ export const Settings: React.FC = () => {
         onToggleMobileNav={onToggleMobileNav}
       />
 
-      <form onSubmit={handleSave} className="p-6 md:p-8 space-y-6 max-w-[1200px]">
+      <form onSubmit={handleSave} className="p-6 md:p-8 space-y-6 w-full">
         {/* Floating / Sticky Bar for Unsaved Changes */}
         {hasUnsavedChanges && (
           <div className="p-4 rounded-xl border border-[#d89e2c] bg-[#fcf7ec] shadow-sm flex items-center justify-between animate-in slide-in-from-top-2">

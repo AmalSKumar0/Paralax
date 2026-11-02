@@ -55,33 +55,33 @@ export const Topbar: React.FC<TopbarProps> = ({
   };
 
   return (
-    <header className="bg-white border-b border-[#ded7cc] px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sticky top-0 z-30">
-      <div className="flex items-center gap-3">
+    <header className="h-[72px] bg-white border-b border-[#ded7cc] px-6 md:px-8 flex items-center justify-between sticky top-0 z-30 shrink-0 w-full">
+      <div className="flex items-center gap-3 min-w-0">
         {onToggleMobileNav && (
           <button
             onClick={onToggleMobileNav}
-            className="md:hidden p-2 rounded-xl border border-[#ded7cc] bg-[#f7f5f0] text-[#2b1d16] cursor-pointer"
+            className="md:hidden p-2 rounded-xl border border-[#ded7cc] bg-[#f7f5f0] text-[#2b1d16] cursor-pointer shrink-0"
             aria-label="Toggle menu"
           >
             <Menu className="w-4 h-4" />
           </button>
         )}
-        <div>
-          <h1 className="text-xl font-bold text-[#2b1d16] tracking-tight leading-tight">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold text-[#2b1d16] tracking-tight leading-none truncate">
             {title}
           </h1>
           {subtitle && (
-            <p className="text-xs text-[#8a776a] mt-0.5">
+            <p className="text-xs text-[#8a776a] mt-1 leading-none truncate max-w-xl">
               {subtitle}
             </p>
           )}
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-end">
+      <div className="flex items-center gap-3 shrink-0">
         {/* Auto refresh counter badge & Manual refresh */}
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-mono text-[#8a776a] hidden md:inline">
+          <span className="text-[11px] font-mono text-[#8a776a] hidden lg:inline">
             Auto-refresh: {secondsUntilRefresh}s
           </span>
           <button
@@ -92,23 +92,27 @@ export const Topbar: React.FC<TopbarProps> = ({
             aria-label="Refresh data"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span>Refresh</span>
+            <span className="hidden sm:inline">Refresh</span>
           </button>
         </div>
 
         {/* Service on/off toggle button */}
-        <div className="flex items-center gap-2 pl-2 border-l border-[#ded7cc]">
+        <div className="flex items-center gap-2 pl-3 border-l border-[#ded7cc]">
           <button
             onClick={() => setShowConfirmModal(true)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${
               isServiceEnabled
-                ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200'
-                : 'bg-rose-50 hover:bg-rose-100 text-rose-800 border-rose-200'
+                ? 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
+                : 'border-rose-300 bg-rose-50 text-rose-800 hover:bg-rose-100'
             }`}
-            aria-label="Toggle service state"
+            title={
+              isServiceEnabled
+                ? 'Click to pause translator service (returns 503 service_disabled)'
+                : 'Click to enable translator service'
+            }
           >
             <Power className="w-3.5 h-3.5" />
-            <span>{isServiceEnabled ? 'Service Active' : 'Service Paused'}</span>
+            <span className="hidden sm:inline">{isServiceEnabled ? 'Online' : 'Paused'}</span>
           </button>
         </div>
       </div>

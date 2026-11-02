@@ -59,48 +59,48 @@ export const Overview: React.FC = () => {
         onToggleMobileNav={onToggleMobileNav}
       />
 
-      <div className="p-6 md:p-8 space-y-8 max-w-[1400px]">
+      <div className="p-6 md:p-8 space-y-6 w-full">
         {/* KPI Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <StatCard
             label="Devices Online"
             value={`${stats.devices_online} / ${stats.devices_total}`}
             subValue={`${Math.round((stats.devices_online / Math.max(1, stats.devices_total)) * 100)}% fleet operational`}
-            icon={<Cpu className="w-5 h-5 text-black" />}
+            icon={<Cpu className="w-5 h-5 text-[#855b14]" />}
             badge={stats.devices_online === stats.devices_total ? '100%' : undefined}
           />
           <StatCard
             label="Utterances Today"
             value={stats.utterances_today.toLocaleString()}
             subValue="Spoken voice turns recorded"
-            icon={<Mic className="w-5 h-5 text-black" />}
+            icon={<Mic className="w-5 h-5 text-[#855b14]" />}
             variant="accent"
           />
           <StatCard
             label="Jobs in Progress"
             value={stats.jobs_in_progress}
             subValue="Active audio pipeline tasks"
-            icon={<Activity className="w-5 h-5 text-black" />}
+            icon={<Activity className="w-5 h-5 text-[#855b14]" />}
             variant={stats.jobs_in_progress > 0 ? 'warning' : 'default'}
           />
           <StatCard
             label="Failure Rate"
             value={`${stats.failure_rate}%`}
             subValue="Target SLA: < 2.0%"
-            icon={<AlertOctagon className="w-5 h-5 text-black" />}
+            icon={<AlertOctagon className="w-5 h-5 text-[#855b14]" />}
             variant={stats.failure_rate > 2.5 ? 'danger' : 'default'}
           />
           <StatCard
             label="Total Audio Minutes"
             value={`${stats.total_audio_minutes.toLocaleString()}m`}
             subValue="Processed audio duration"
-            icon={<Clock className="w-5 h-5 text-black" />}
+            icon={<Clock className="w-5 h-5 text-[#855b14]" />}
           />
         </div>
 
         {/* Latency Card & Chart */}
-        <Card variant="light" className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-3 border-b border-[#ded7cc] gap-2">
+        <Card variant="light" className="space-y-5">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-[#ded7cc] gap-2">
             <div>
               <div className="flex items-center gap-2">
                 <Gauge className="w-4 h-4 text-[#855b14]" />
@@ -108,7 +108,7 @@ export const Overview: React.FC = () => {
                   Cloud Latency Profile (p50 & p95)
                 </h2>
               </div>
-              <p className="text-xs text-[#8a776a]">
+              <p className="text-xs text-[#8a776a] mt-0.5">
                 End-to-end speech ingestion, Groq Whisper STT, Groq/xAI Translation, and Edge TTS breakdown
               </p>
             </div>
@@ -129,11 +129,11 @@ export const Overview: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <Card variant="light" className="space-y-4">
-              <div className="pb-3 border-b border-[#ded7cc]">
+              <div className="pb-4 border-b border-[#ded7cc]">
                 <h2 className="text-base font-bold text-[#2b1d16] tracking-tight">
                   Jobs Volume (Last 30 Days)
                 </h2>
-                <p className="text-xs text-[#8a776a]">
+                <p className="text-xs text-[#8a776a] mt-0.5">
                   Daily processed voice utterances and batch audio file translation requests
                 </p>
               </div>
@@ -144,11 +144,11 @@ export const Overview: React.FC = () => {
           <div>
             <Card variant="sand" className="space-y-4 h-full flex flex-col justify-between">
               <div>
-                <div className="pb-3 border-b border-[#ded7cc]">
+                <div className="pb-4 border-b border-[#ded7cc]">
                   <h2 className="text-base font-bold text-[#2b1d16] tracking-tight">
                     Top Language Pairs
                   </h2>
-                  <p className="text-xs text-[#8a776a]">
+                  <p className="text-xs text-[#8a776a] mt-0.5">
                     Highest volume translation routes across the network
                   </p>
                 </div>

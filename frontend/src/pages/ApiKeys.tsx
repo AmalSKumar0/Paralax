@@ -104,7 +104,7 @@ export const ApiKeys: React.FC = () => {
         onToggleMobileNav={onToggleMobileNav}
       />
 
-      <div className="p-6 md:p-8 space-y-6 max-w-[1200px]">
+      <div className="p-6 md:p-8 space-y-6 w-full">
         {/* Header Bar */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
           <div>

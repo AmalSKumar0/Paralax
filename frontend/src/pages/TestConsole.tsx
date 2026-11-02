@@ -349,7 +349,7 @@ export const TestConsole: React.FC = () => {
         onToggleMobileNav={onToggleMobileNav}
       />
 
-      <div className="p-6 md:p-8 space-y-6 max-w-[1400px]">
+      <div className="p-6 md:p-8 space-y-6 w-full">
         {/* Warning on Insecure Origin or Mic Error */}
         {micPermissionError && (
           <div className="p-4 rounded-xl border border-rose-200 bg-rose-50 flex items-start gap-3">
@@ -366,25 +366,25 @@ export const TestConsole: React.FC = () => {
         )}
 
         {/* Configuration Bar */}
-        <Card variant="light" className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-3 border-b border-[#ded7cc] gap-2">
+        <Card variant="light" className="space-y-5">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-[#ded7cc] gap-3">
             <div>
-              <h2 className="text-lg font-bold text-[#2b1d16] tracking-tight">
+              <h2 className="text-base font-bold text-[#2b1d16] tracking-tight">
                 Translator Simulation Setup
               </h2>
-              <p className="text-xs text-[#8a776a]">
+              <p className="text-xs text-[#8a776a] mt-0.5">
                 Choose a registered device configuration or manually specify source and target language parameters
               </p>
             </div>
-            <span className="text-xs font-medium px-2.5 py-1 rounded-full border border-[#ded7cc] bg-[#f7f5f0] text-[#5c4a3e]">
+            <span className="text-xs font-medium px-2.5 py-1 rounded-full border border-[#ded7cc] bg-[#f7f5f0] text-[#5c4a3e] shrink-0">
               Format: 16 kHz Mono 16-bit WAV
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Pick device config */}
             <div>
-              <label htmlFor="test-device-select" className="block text-xs font-semibold text-[#5c4a3e] mb-1">
+              <label htmlFor="test-device-select" className="block text-xs font-semibold text-[#5c4a3e] mb-1.5">
                 Hardware Preset
               </label>
               <select
@@ -405,7 +405,7 @@ export const TestConsole: React.FC = () => {
 
             {/* Source language (including auto-detect) */}
             <div>
-              <label htmlFor="test-source-lang-select" className="block text-xs font-semibold text-[#5c4a3e] mb-1">
+              <label htmlFor="test-source-lang-select" className="block text-xs font-semibold text-[#5c4a3e] mb-1.5">
                 Source Language
               </label>
               <select
@@ -426,7 +426,7 @@ export const TestConsole: React.FC = () => {
 
             {/* Target language */}
             <div>
-              <label htmlFor="test-target-lang-select" className="block text-xs font-semibold text-[#5c4a3e] mb-1">
+              <label htmlFor="test-target-lang-select" className="block text-xs font-semibold text-[#5c4a3e] mb-1.5">
                 Target Language
               </label>
               <select
@@ -450,8 +450,8 @@ export const TestConsole: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Microphone Hold-to-Record Panel */}
           <Card variant="light" className="space-y-5 flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between pb-3 border-b border-[#ded7cc]">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-4 border-b border-[#ded7cc]">
                 <div className="flex items-center gap-2">
                   <Mic className="w-4 h-4 text-[#855b14]" />
                   <h3 className="text-base font-bold text-[#2b1d16] tracking-tight">
@@ -489,7 +489,7 @@ export const TestConsole: React.FC = () => {
                 </button>
 
                 {/* Live Audio Level Meter */}
-                <div className="w-full max-w-xs space-y-1">
+                <div className="w-full max-w-xs space-y-1.5 text-center">
                   <div className="flex justify-between text-[10px] font-semibold text-[#8a776a] uppercase">
                     <span>Input Level</span>
                     <span>{isRecording ? `${audioLevel}%` : '0%'}</span>
@@ -538,7 +538,7 @@ export const TestConsole: React.FC = () => {
             </div>
 
             {/* Alternative: Instant Demo Speech Simulator */}
-            <div className="pt-3 border-t border-[#ded7cc] flex items-center justify-between">
+            <div className="pt-4 border-t border-[#ded7cc] flex items-center justify-between">
               <span className="text-xs text-[#8a776a]">
                 No physical microphone available?
               </span>
@@ -557,7 +557,7 @@ export const TestConsole: React.FC = () => {
           {/* Batch Audio File Job Upload Panel */}
           <Card variant="sand" className="space-y-5 flex flex-col justify-between">
             <div className="space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-[#ded7cc]">
+              <div className="flex items-center justify-between pb-4 border-b border-[#ded7cc]">
                 <div className="flex items-center gap-2">
                   <Upload className="w-4 h-4 text-[#855b14]" />
                   <h3 className="text-base font-bold text-[#2b1d16] tracking-tight">
@@ -574,7 +574,7 @@ export const TestConsole: React.FC = () => {
               </p>
 
               {/* File Drop / Select Area */}
-              <div className="border border-dashed border-[#ded7cc] rounded-2xl p-6 bg-white hover:border-[#e9b140] hover:bg-[#fcf8ee] transition-all flex flex-col items-center justify-center gap-2.5 text-center">
+              <div className="border border-dashed border-[#ded7cc] rounded-2xl p-6 bg-white hover:border-[#e9b140] hover:bg-[#fcf8ee] transition-all flex flex-col items-center justify-center gap-2.5 text-center min-h-[160px]">
                 <FileAudio className="w-8 h-8 text-[#8a776a]" />
                 <div>
                   <label className="cursor-pointer">
@@ -617,7 +617,7 @@ export const TestConsole: React.FC = () => {
               )}
             </div>
 
-            <div className="pt-3 border-t border-[#ded7cc] flex items-center justify-end">
+            <div className="pt-4 border-t border-[#ded7cc] flex items-center justify-end">
               <Button
                 variant="dark"
                 size="sm"
@@ -635,7 +635,7 @@ export const TestConsole: React.FC = () => {
         {/* Latest Translation Result Output */}
         {currentResult && (
           <Card variant="light" className="space-y-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-3 border-b border-[#ded7cc] gap-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-[#ded7cc] gap-2">
               <div>
                 <span className="text-xs font-mono text-[#8a776a]">
                   Job ID: {currentResult.id} · Completed at {currentResult.timestamp}
@@ -688,7 +688,7 @@ export const TestConsole: React.FC = () => {
             </div>
 
             {/* Timings Breakdown */}
-            <div className="pt-2 flex flex-wrap items-center gap-3 text-xs font-mono text-[#736154] border-t border-[#ded7cc]">
+            <div className="pt-3 flex flex-wrap items-center gap-3 text-xs font-mono text-[#736154] border-t border-[#ded7cc]">
               <span className="font-sans font-medium">Latency Breakdown:</span>
               <span>STT: <strong className="text-[#2b1d16]">{(currentResult.timings as any).stt_ms}ms</strong></span>
               <span>·</span>
@@ -706,7 +706,7 @@ export const TestConsole: React.FC = () => {
         {/* Session Attempt History */}
         {history.length > 0 && (
           <Card variant="sand" className="space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#ded7cc]">
+            <div className="flex items-center justify-between pb-4 border-b border-[#ded7cc]">
               <h3 className="text-base font-bold text-[#2b1d16] tracking-tight">
                 Session Attempts Log ({history.length})
               </h3>

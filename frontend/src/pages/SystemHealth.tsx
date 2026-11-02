@@ -81,7 +81,7 @@ export const SystemHealth: React.FC = () => {
         onToggleMobileNav={onToggleMobileNav}
       />
 
-      <div className="p-6 md:p-8 space-y-8 max-w-[1400px]">
+      <div className="p-6 md:p-8 space-y-6 w-full">
         {/* Core Cloud Services Health Header & Re-check Button */}
         <Card variant="light" className="space-y-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-[#ded7cc] gap-3">

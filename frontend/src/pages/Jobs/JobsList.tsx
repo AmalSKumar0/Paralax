@@ -186,7 +186,7 @@ export const JobsList: React.FC = () => {
         onToggleMobileNav={onToggleMobileNav}
       />
 
-      <div className="p-6 md:p-8 space-y-6 max-w-[1400px]">
+      <div className="p-6 md:p-8 space-y-6 w-full">
         {/* Filter & Search Bar */}
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">

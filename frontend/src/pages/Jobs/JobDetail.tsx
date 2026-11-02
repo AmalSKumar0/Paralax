@@ -177,7 +177,7 @@ export const JobDetail: React.FC = () => {
         isRefreshing={isRefreshing}
       />
 
-      <div className="p-6 md:p-8 space-y-8 max-w-[1200px]">
+      <div className="p-6 md:p-8 space-y-6 w-full">
         {/* Navigation Breadcrumb & Actions Bar */}
         <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#ded7cc]">
           <div className="flex items-center gap-3">
