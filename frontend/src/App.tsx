@@ -10,15 +10,10 @@ import { Login } from './pages/Login';
 import { Overview } from './pages/Overview';
 import { DevicesList } from './pages/Devices/DevicesList';
 import { DeviceDetail } from './pages/Devices/DeviceDetail';
-import { ConversationsList } from './pages/Conversations/ConversationsList';
-import { ConversationDetail } from './pages/Conversations/ConversationDetail';
 import { TestConsole } from './pages/TestConsole';
-import { JobsList } from './pages/Jobs/JobsList';
-import { JobDetail } from './pages/Jobs/JobDetail';
 import { LanguageSupport } from './pages/LanguageSupport';
 import { Settings } from './pages/Settings';
 import { SystemHealth } from './pages/SystemHealth';
-import { ApiKeys } from './pages/ApiKeys';
 import { StreamingSessions } from './pages/StreamingSessions';
 
 const queryClient = new QueryClient({
@@ -71,15 +66,10 @@ export default function App() {
                   <Route index element={<Overview />} />
                   <Route path="devices" element={<DevicesList />} />
                   <Route path="devices/:id" element={<DeviceDetail />} />
-                  <Route path="conversations" element={<ConversationsList />} />
-                  <Route path="conversations/:id" element={<ConversationDetail />} />
                   <Route path="test-console" element={<TestConsole />} />
-                  <Route path="jobs" element={<JobsList />} />
-                  <Route path="jobs/:id" element={<JobDetail />} />
                   <Route path="languages" element={<LanguageSupport />} />
                   <Route path="settings" element={<Settings />} />
                   <Route path="health" element={<SystemHealth />} />
-                  <Route path="api-keys" element={<ApiKeys />} />
                   <Route path="streaming" element={<StreamingSessions />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Route>

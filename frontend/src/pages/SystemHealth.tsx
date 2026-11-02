@@ -224,8 +224,7 @@ export const SystemHealth: React.FC = () => {
                   {healthData.recent_failures.map((job) => (
                     <div
                       key={job.job_id}
-                      onClick={() => navigate(`/jobs/${job.job_id}`)}
-                      className="p-3.5 rounded-xl border border-rose-200 bg-white flex flex-col gap-1 shadow-sm hover:bg-rose-50/50 cursor-pointer transition-colors group"
+                      className="p-3.5 rounded-xl border border-rose-200 bg-white flex flex-col gap-1 shadow-sm"
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-mono font-medium text-xs text-[#2b1d16]">

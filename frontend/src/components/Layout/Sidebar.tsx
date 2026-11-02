@@ -3,13 +3,10 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   Cpu,
-  MessagesSquare,
   Mic,
-  Activity,
   Globe2,
   Settings,
   HeartPulse,
-  KeyRound,
   Radio,
   LogOut,
 } from 'lucide-react';
@@ -31,13 +28,10 @@ export const Sidebar: React.FC = () => {
   const navItems: NavItem[] = [
     { to: '/', label: 'Overview', icon: <LayoutDashboard className="w-4 h-4" /> },
     { to: '/devices', label: 'Devices', icon: <Cpu className="w-4 h-4" /> },
-    { to: '/conversations', label: 'Conversations', icon: <MessagesSquare className="w-4 h-4" /> },
     { to: '/test-console', label: 'Test Console', icon: <Mic className="w-4 h-4" />, badge: 'Live' },
-    { to: '/jobs', label: 'Jobs', icon: <Activity className="w-4 h-4" /> },
     { to: '/languages', label: 'Language Matrix', icon: <Globe2 className="w-4 h-4" /> },
     { to: '/settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
     { to: '/health', label: 'System Health', icon: <HeartPulse className="w-4 h-4" /> },
-    { to: '/api-keys', label: 'API Keys', icon: <KeyRound className="w-4 h-4" /> },
   ];
 
   if (ENABLE_STREAMING) {
