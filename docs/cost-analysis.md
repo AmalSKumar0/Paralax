@@ -38,7 +38,24 @@ This document details the cost structure, pricing models, and operational econom
 | **API Gateway HTTP API** | 1,000 requests × $0.000001 | **$0.0010** |
 | **DynamoDB Writes & Reads** | ~3 WRUs + 2 RRUs per utterance × 1,000 | **$0.0042** |
 | **S3 Storage & PUTs** | 2,000 PUTs (input + output) + 256 MB storage (30 days) | **$0.0159** |
-| **TOTAL COST PER 1,000 UTTERANCES** | | **$1.653** |
+| **TOTAL COST PER 1,000 UTTERANCES (AWS NATIVE)** | | **$1.653** |
+
+---
+
+## 2.1 Zero-Cost Free Tier Stack (Groq + Microsoft Edge-TTS)
+
+When `ai_provider: "groq"` is selected:
+- **Speech-to-Text (STT)**: Groq Cloud LPU `whisper-large-v3-turbo` (**$0.00 - Free Tier**)
+- **Translation**: Groq Cloud LPU `llama-3.3-70b-versatile` / `llama-3.1-8b-instant` (**$0.00 - Free Tier**)
+- **Text-to-Speech (TTS)**: Microsoft Edge Neural TTS (**$0.00 - 100% Free, No API Key**)
+- **Decoded Audio**: Transcoded in-memory directly to 16 kHz 16-bit mono PCM via `miniaudio`.
+
+| Provider Mode | STT Cost / 1k | Translation Cost / 1k | TTS Cost / 1k | Total Cost / 1,000 Utterances |
+| :--- | :--- | :--- | :--- | :--- |
+| **AWS Native (Transcribe + Translate + Polly)** | $1.60 | $0.0009 | $0.0010 | **$1.653** |
+| **Free Stack (Groq Whisper + LLaMA + Edge-TTS)** | **$0.00** | **$0.00** | **$0.00** | **$0.00** |
+
+> **Firmware Contract Transparency**: Switching to the free provider stack requires **zero changes to the ESP32 firmware**. The device sends and receives the exact same 16 kHz 16-bit PCM bytes with identical single round-trip HTTP semantics.
 
 > **Key Economic Takeaway**: Amazon Transcribe Streaming accounts for **~96.8%** of the total cost. All compute, database, API gateway, and translation costs combined are **less than $0.06 per 1,000 utterances**.
 
