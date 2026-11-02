@@ -25,6 +25,10 @@ from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
 import boto3
 from botocore.exceptions import ClientError
 
+from src.shared.env import load_env
+
+load_env()
+
 from src.shared.audio import AudioValidationError, parse_and_validate_audio
 from src.shared.db import (
     IdempotencyInProgress,
@@ -326,9 +330,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     )
 
     # 4. Transcribe Execution
-    ai_provider = settings.get("ai_provider") or os.environ.get("AI_PROVIDER", "aws").lower()
-    if os.environ.get("GROQ_API_KEY") and not settings.get("ai_provider"):
-        ai_provider = "groq"
+    ai_provider = settings.get("ai_provider") or os.environ.get("AI_PROVIDER", "").strip().lower()
+    if not ai_provider:
+        if os.environ.get("GROQ_API_KEY"):
+            ai_provider = "groq"
+        else:
+            ai_provider = "aws"
 
     t_transcribe_start = time.perf_counter()
     try:
@@ -406,7 +413,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     target_translate_code = get_translate_code(target_lang)
 
     try:
-        if ai_provider == "mock":
+        if _TRANSLATE_CLIENT is not None:
+            translate_client = get_translate()
+            translate_resp = translate_client.translate_text(
+                Text=transcript_text,
+                SourceLanguageCode=source_translate_code,
+                TargetLanguageCode=target_translate_code,
+            )
+            translated_text = translate_resp.get("TranslatedText", "")
+        elif ai_provider == "mock":
             translated_text = f"Hola, esta es una prueba local ({transcript_text})"
         elif ai_provider == "groq":
             from src.shared.ai_providers import _translate_with_groq
@@ -435,7 +450,20 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     polly_sample_rate = "16000"
 
     try:
-        if ai_provider == "mock":
+        if _POLLY_CLIENT is not None:
+            polly_client = get_polly()
+            synth_kwargs = {
+                "Text": translated_text,
+                "OutputFormat": polly_format,
+                "VoiceId": voice_id,
+                "Engine": engine,
+            }
+            if polly_format == "pcm":
+                synth_kwargs["SampleRate"] = polly_sample_rate
+
+            synth_resp = polly_client.synthesize_speech(**synth_kwargs)
+            output_audio_bytes = synth_resp["AudioStream"].read()
+        elif ai_provider == "mock":
             try:
                 from src.shared.ai_providers import _synthesize_with_edge_tts
                 output_audio_bytes = _synthesize_with_edge_tts(

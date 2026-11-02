@@ -35,6 +35,10 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
+# Auto-load .env from project root
+from src.shared.env import load_env
+load_env()
+
 # Set default local AWS environment variables before boto3 loads
 os.environ.setdefault("AWS_REGION", "us-east-1")
 os.environ.setdefault("AWS_DEFAULT_REGION", "us-east-1")
@@ -56,6 +60,7 @@ import boto3
 
 # Import application handlers
 from src.handlers import (
+    admin_api_keys,
     admin_conversations,
     admin_devices,
     admin_health,
@@ -67,6 +72,7 @@ from src.handlers import (
     device_heartbeat,
     jobs,
     translate_utterance,
+    uploads,
 )
 from src.shared.db import create_device, hash_key, update_settings, get_device
 
@@ -293,8 +299,8 @@ class LocalApiGatewayHandler(BaseHTTPRequestHandler):
 
     def _dispatch_route(self, method: str, path: str, event: Dict[str, Any]) -> Dict[str, Any]:
         """Dispatch request to appropriate Lambda handler."""
-        # /v1/device/translate
-        if path == "/v1/device/translate" and method == "POST":
+        # /v1/device/translate and /v1/utterances
+        if (path == "/v1/device/translate" or path == "/v1/utterances") and method == "POST":
             return translate_utterance.handler(event, None)
 
         # /v1/device/heartbeat
@@ -315,12 +321,29 @@ class LocalApiGatewayHandler(BaseHTTPRequestHandler):
         if path == "/v1/languages" and method == "GET":
             return jobs.handler(event, None)
 
+        # /v1/uploads
+        if path == "/v1/uploads" and method == "POST":
+            return uploads.handler(event, None)
+
+        # /v1/jobs (POST create job)
+        if path == "/v1/jobs" and method == "POST":
+            return jobs.handler(event, None)
+
+        # /v1/jobs/{id}
+        job_match = re.match(r"^/v1/jobs/([^/]+)$", path)
+        if job_match:
+            event["pathParameters"] = {"id": job_match.group(1), "job_id": job_match.group(1)}
+            return jobs.handler(event, None)
+
         # /v1/admin/health
         if path == "/v1/admin/health" and method == "GET":
             return admin_health.handler(event, None)
 
-        # /v1/admin/devices
-        if path == "/v1/admin/devices":
+        # /v1/admin/devices*
+        if path.startswith("/v1/admin/devices"):
+            dev_match = re.match(r"^/v1/admin/devices/([^/]+)", path)
+            if dev_match:
+                event["pathParameters"] = {"id": dev_match.group(1)}
             return admin_devices.handler(event, None)
 
         # /v1/admin/settings
@@ -331,9 +354,26 @@ class LocalApiGatewayHandler(BaseHTTPRequestHandler):
         if path == "/v1/admin/stats" and method == "GET":
             return admin_stats.handler(event, None)
 
-        # /v1/admin/conversations
+        # /v1/admin/conversations*
         if path.startswith("/v1/admin/conversations"):
+            conv_match = re.match(r"^/v1/admin/conversations/([^/]+)", path)
+            if conv_match:
+                event["pathParameters"] = {"id": conv_match.group(1)}
             return admin_conversations.handler(event, None)
+
+        # /v1/admin/api-keys*
+        if path.startswith("/v1/admin/api-keys"):
+            key_match = re.match(r"^/v1/admin/api-keys/([^/]+)", path)
+            if key_match:
+                event["pathParameters"] = {"id": key_match.group(1), "hash": key_match.group(1)}
+            return admin_api_keys.handler(event, None)
+
+        # /v1/admin/jobs*
+        if path.startswith("/v1/admin/jobs"):
+            admin_job_match = re.match(r"^/v1/admin/jobs/([^/]+)", path)
+            if admin_job_match:
+                event["pathParameters"] = {"id": admin_job_match.group(1), "job_id": admin_job_match.group(1)}
+            return jobs.handler(event, None)
 
         # /v1/admin/commands
         if path == "/v1/admin/commands" and method == "POST":

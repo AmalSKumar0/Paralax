@@ -41,6 +41,7 @@ def mock_aws_env(monkeypatch):
         monkeypatch.setenv("SETTINGS_TABLE_NAME", "ParalaxSettings")
         monkeypatch.setenv("RATE_LIMITS_TABLE_NAME", "ParalaxRateLimits")
         monkeypatch.setenv("AUDIO_BUCKET_NAME", "paralax-audio-storage")
+        monkeypatch.setenv("AI_PROVIDER", "aws")
 
         dynamodb = boto3.resource("dynamodb", region_name=region)
         s3 = boto3.client("s3", region_name=region)
@@ -89,6 +90,9 @@ def mock_aws_env(monkeypatch):
         )
 
         yield
+
+        tr_mod._TRANSLATE_CLIENT = None
+        tr_mod._POLLY_CLIENT = None
 
 
 def test_path_a_full_flow_binary_mode(mock_aws_env, monkeypatch):

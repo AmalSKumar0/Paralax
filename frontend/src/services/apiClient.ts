@@ -1,8 +1,20 @@
 import { authService } from './cognitoAuth';
 import { mockBackend } from './mockBackend';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/v1';
-export const IS_MOCK_MODE = import.meta.env.VITE_MOCK_MODE !== 'false';
+// Helper to normalize backend base URL from VITE_API_BASE_URL
+function normalizeBaseUrl(rawUrl?: string): string {
+  if (!rawUrl || !rawUrl.trim()) {
+    return 'http://localhost:8000/v1';
+  }
+  let clean = rawUrl.trim().replace(/\/+$/, '');
+  if (!clean.endsWith('/v1')) {
+    clean = `${clean}/v1`;
+  }
+  return clean;
+}
+
+const API_BASE_URL = normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL);
+export const IS_MOCK_MODE = import.meta.env.VITE_MOCK_MODE === 'true';
 
 // Custom event to notify app of service disabled banner on 503
 export const SERVICE_DISABLED_EVENT = 'paralax:service_disabled';
@@ -25,7 +37,7 @@ class ApiClient {
   private baseUrl: string;
 
   constructor(baseUrl: string) {
-    this.baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    this.baseUrl = normalizeBaseUrl(baseUrl);
   }
 
   public async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {

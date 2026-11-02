@@ -5,3 +5,9 @@ __pycache__/
 *.wav
 *.pcm
 .aws-sam/
+.env
+*.env
+!*.env.example
+node_modules/
+dist/
+

@@ -19,6 +19,11 @@ import time
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests
+from src.shared.env import load_env
+
+# Ensure .env is loaded from project root
+load_env()
+
 from src.shared.audio import pcm_to_wav
 from src.shared.languages import (
     get_language_info,

@@ -71,7 +71,13 @@ def full_env(monkeypatch):
             BillingMode="PAY_PER_REQUEST",
         )
 
+        monkeypatch.setenv("AI_PROVIDER", "aws")
+
         yield
+
+        import src.handlers.translate_utterance as tr_mod
+        tr_mod._TRANSLATE_CLIENT = None
+        tr_mod._POLLY_CLIENT = None
 
 
 def test_path_a_full_e2e_flow(full_env, monkeypatch):

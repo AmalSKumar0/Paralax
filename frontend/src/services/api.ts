@@ -33,19 +33,48 @@ export const api = {
   getLanguages: () => apiClient.request<{ languages: Language[] }>('/languages'),
 
   // Devices
-  getDevices: () => apiClient.request<Device[]>('/admin/devices'),
+  getDevices: async () => {
+    const res = await apiClient.request<Device[] | { devices: Device[] }>('/admin/devices');
+    return Array.isArray(res) ? res : (res?.devices || []);
+  },
   getDevice: (id: string) => apiClient.request<Device>(`/admin/devices/${id}`),
-  registerDevice: (data: {
+  registerDevice: async (data: {
     name: string;
     language_a: string;
     language_b: string;
     mode: 'buttons' | 'auto_detect';
     voice_map: Record<string, string>;
-  }) =>
-    apiClient.request<{ device: Device; device_key: string }>('/admin/devices', {
+  }) => {
+    const payload = {
+      name: data.name,
+      config: {
+        language_a: data.language_a,
+        language_b: data.language_b,
+        mode: data.mode === 'auto_detect' ? 'auto' : 'buttons',
+        voice_map: data.voice_map,
+      },
+    };
+    const res = await apiClient.request<any>('/admin/devices', {
       method: 'POST',
-      body: JSON.stringify(data),
-    }),
+      body: JSON.stringify(payload),
+    });
+    if (res.device && res.device_key) {
+      return res as { device: Device; device_key: string };
+    }
+    const dev: Device = {
+      device_id: res.device_id,
+      name: res.name || data.name,
+      online: res.online ?? false,
+      last_seen: res.last_seen || res.last_heartbeat?.timestamp || new Date().toISOString(),
+      firmware_version: res.firmware_version || '1.0.0',
+      rssi: res.rssi ?? -60,
+      config_version: res.config_version || 1,
+      applied_config_version: res.applied_config_version || res.config_version || 1,
+      config: res.config || payload.config,
+      created_at: res.created_at || new Date().toISOString(),
+    };
+    return { device: dev, device_key: res.device_key };
+  },
   updateDeviceConfig: (id: string, config: Partial<DeviceConfig>) =>
     apiClient.request<Device>(`/admin/devices/${id}/config`, {
       method: 'PUT',
@@ -63,8 +92,10 @@ export const api = {
     apiClient.request<{ success: boolean }>(`/admin/devices/${id}`, {
       method: 'DELETE',
     }),
-  getDeviceCommands: (id: string) =>
-    apiClient.request<DeviceCommand[]>(`/admin/devices/${id}/commands`),
+  getDeviceCommands: async (id: string) => {
+    const res = await apiClient.request<DeviceCommand[] | { commands: DeviceCommand[] }>(`/admin/devices/${id}/commands`);
+    return Array.isArray(res) ? res : (res?.commands || []);
+  },
   sendDeviceCommand: (id: string, type: CommandType) =>
     apiClient.request<DeviceCommand>(`/admin/devices/${id}/commands`, {
       method: 'POST',
@@ -150,7 +181,10 @@ export const api = {
     apiClient.request<Conversation>(`/admin/conversations/${id}`),
 
   // API Keys
-  getApiKeys: () => apiClient.request<ApiKey[]>('/admin/api-keys'),
+  getApiKeys: async () => {
+    const res = await apiClient.request<ApiKey[] | { api_keys: ApiKey[] }>('/admin/api-keys');
+    return Array.isArray(res) ? res : (res?.api_keys || []);
+  },
   createApiKey: (name: string) =>
     apiClient.request<{ key: ApiKey; secret: string }>('/admin/api-keys', {
       method: 'POST',
