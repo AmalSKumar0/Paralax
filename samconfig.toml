@@ -1,0 +1,23 @@
+# AWS SAM configuration file for Paralax
+version = 0.1
+
+[default.build.parameters]
+cached = true
+parallel = true
+
+[default.deploy.parameters]
+stack_name = "paralax-backend"
+resolve_s3 = true
+s3_prefix = "paralax-backend"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND"
+parameter_overrides = [
+  "Environment=\"dev\"",
+  "CorsAllowOrigin=\"*\"",
+  "RetentionDays=\"30\"",
+  "MaxUtteranceSec=\"15\"",
+  "MonthlyBudgetAmount=\"50\"",
+  "BudgetNotificationEmail=\"alert@example.com\""
+]
+image_repositories = []

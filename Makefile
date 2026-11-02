@@ -1,16 +1,20 @@
-.PHONY: help registry test test-coverage lint format build clean serve sim
+.PHONY: help registry test test-coverage lint format build deploy deploy-guided clean serve sim
 
 VENV ?= .venv
 PYTHON ?= $(VENV)/bin/python3
 PYTEST ?= $(VENV)/bin/pytest
+SAM ?= sam
 
 help:
 	@echo "Available make commands:"
-	@echo "  make serve        - Start local IoT translation backend server (0.0.0.0:8000)"
-	@echo "  make sim          - Run ESP32 device hardware simulator against local server"
-	@echo "  make test         - Run full test suite"
-	@echo "  make registry     - Rebuild data/language_registry.json"
-	@echo "  make clean        - Clean build artifacts and caches"
+	@echo "  make serve         - Start local IoT translation backend server (0.0.0.0:8000)"
+	@echo "  make sim           - Run ESP32 device hardware simulator against local server"
+	@echo "  make test          - Run full test suite"
+	@echo "  make build         - Build SAM deployment artifacts (sam build)"
+	@echo "  make deploy        - Deploy stack to AWS using samconfig.toml (sam deploy)"
+	@echo "  make deploy-guided - Guided interactive deployment to AWS (sam deploy --guided)"
+	@echo "  make registry      - Rebuild data/language_registry.json"
+	@echo "  make clean         - Clean build artifacts and caches"
 
 serve:
 	$(PYTHON) tools/local_server.py
@@ -24,6 +28,16 @@ registry:
 test:
 	$(PYTEST) tests/ -v
 
+build:
+	$(SAM) build
+
+deploy:
+	$(SAM) deploy
+
+deploy-guided:
+	$(SAM) deploy --guided
+
 clean:
-	rm -rf .pytest_cache __pycache__ src/**/__pycache__ tests/__pycache__
+	rm -rf .pytest_cache __pycache__ src/**/__pycache__ tests/__pycache__ .aws-sam
+
 

@@ -91,26 +91,22 @@ flowchart TD
 
 ## 3. Deployment Guide
 
-### Prerequisites
-- Python 3.12+
-- AWS CLI configured with administrator credentials
-- AWS SAM CLI (`sam`)
-- Docker (for `sam build --use-container`)
+Full step-by-step instructions are available in [docs/deployment-guide.md](docs/deployment-guide.md).
 
-### Build and Deploy
+### Quick Build and Deploy with AWS SAM
 ```bash
-# 1. Clone repository
-git clone <repo_url>
-cd Paralax
+# 1. Build Lambda packages and dependencies
+make build
+# (or: sam build --use-container)
 
-# 2. Build SAM application with container
-sam build --use-container
+# 2. Deploy to AWS (guided first-time setup)
+make deploy-guided
+# (or: sam deploy --guided)
 
-# 3. Deploy guided stack
-sam deploy --guided \
-  --stack-name paralax-backend-dev \
-  --parameter-overrides Environment=dev CorsAllowOrigin='*' RetentionDays=30
+# 3. Subsequent automated deploys using samconfig.toml
+make deploy
 ```
+
 
 ---
 

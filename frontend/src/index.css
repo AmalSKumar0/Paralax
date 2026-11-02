@@ -1,0 +1,148 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-display: 'Caveat Brush', cursive, sans-serif;
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #fffdf8;
+    color: #1a1a1a;
+  }
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-sans {
+  font-family: var(--font-sans);
+}
+
+/* Brutal Tactile Elements */
+.brutal-border {
+  border: 3px solid #000000;
+}
+
+.brutal-border-sm {
+  border: 2px solid #000000;
+}
+
+.brutal-border-lg {
+  border: 4px solid #000000;
+}
+
+.brutal-shadow-sm {
+  box-shadow: 2px 2px 0px 0px #000000;
+}
+
+.brutal-shadow {
+  box-shadow: 4px 4px 0px 0px #000000;
+}
+
+.brutal-shadow-md {
+  box-shadow: 6px 6px 0px 0px #000000;
+}
+
+.brutal-shadow-lg {
+  box-shadow: 8px 8px 0px 0px #000000;
+}
+
+.brutal-shadow-yellow {
+  box-shadow: 4px 4px 0px 0px #ffc86b;
+}
+
+.brutal-shadow-yellow-lg {
+  box-shadow: 8px 8px 0px 0px #ffc86b;
+}
+
+.brutal-shadow-yellow-xl {
+  box-shadow: 12px 12px 0px 0px #ffc86b;
+}
+
+.brutal-btn {
+  border: 3px solid #000000;
+  box-shadow: 4px 4px 0px 0px #000000;
+  transition: all 0.12s ease-in-out;
+  cursor: pointer;
+  user-select: none;
+}
+
+.brutal-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0px 0px #000000;
+}
+
+.brutal-btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0px 0px 0px 0px #000000;
+}
+
+.brutal-btn-primary {
+  background-color: #ffc86b;
+  color: #1a1a1a;
+}
+.brutal-btn-primary:hover {
+  background-color: #f4b942;
+}
+
+.brutal-btn-dark {
+  background-color: #1a1a1a;
+  color: #ffffff;
+  box-shadow: 4px 4px 0px 0px #ffc86b;
+}
+.brutal-btn-dark:hover {
+  box-shadow: 6px 6px 0px 0px #ffc86b;
+}
+.brutal-btn-dark:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0px 0px 0px 0px #ffc86b;
+}
+
+.brutal-card {
+  background-color: #ffffff;
+  border: 3px solid #000000;
+  border-radius: 1.5rem;
+  box-shadow: 6px 6px 0px 0px #000000;
+  transition: all 0.15s ease-in-out;
+}
+
+.brutal-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 8px 8px 0px 0px #ffc86b;
+}
+
+.brutal-input {
+  border: 3px solid #000000;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  background-color: #f9f6f0;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.brutal-input:focus {
+  background-color: #ffffff;
+  outline: none;
+  box-shadow: 3px 3px 0px 0px #000000;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f9f6f0;
+  border-left: 2px solid #000000;
+}
+::-webkit-scrollbar-thumb {
+  background: #ffc86b;
+  border: 2px solid #000000;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #f4b942;
+}

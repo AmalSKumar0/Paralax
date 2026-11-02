@@ -1,0 +1,10 @@
+{
+  "name": "paralax - IoT Voice Translator Dashboard",
+  "description": "Admin dashboard for the paralax IoT two-way voice translator service, monitoring devices, telemetry, conversations, jobs, and configuration.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
