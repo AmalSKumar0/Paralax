@@ -66,7 +66,6 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       };
 
       audio.onerror = () => {
-        // Fall back to synth
         fallbackToSynth();
       };
 
@@ -101,7 +100,6 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
   const handleDownload = () => {
     if (text) {
-      // In mock mode or browser, generate mock audio wav or text
       const blob = new Blob([text], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -113,21 +111,21 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   };
 
   return (
-    <div className="p-3.5 rounded-2xl border-[2px] border-black bg-[#f9f6f0] flex flex-col gap-2">
+    <div className="p-3.5 rounded-xl border border-[#ded7cc] bg-[#f7f5f0] flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-black uppercase tracking-wider text-[#1a1a1a] flex items-center gap-1.5">
-          <Volume2 className="w-3.5 h-3.5 text-black" />
+        <span className="text-xs font-semibold text-[#2b1d16] flex items-center gap-1.5">
+          <Volume2 className="w-3.5 h-3.5 text-[#855b14]" />
           {label}
         </span>
         {isExpired ? (
           <button
             onClick={onRefreshUrl}
-            className="text-[11px] font-black text-amber-800 underline hover:text-black cursor-pointer"
+            className="text-[11px] font-semibold text-amber-800 underline hover:text-[#2b1d16] cursor-pointer"
           >
             URL Expired (Re-fetch)
           </button>
         ) : (
-          <span className="text-[11px] font-mono font-bold text-gray-700">
+          <span className="text-[11px] font-mono text-[#8a776a]">
             {durationSec ? `${durationSec.toFixed(1)}s` : 'WAV'}
           </span>
         )}
@@ -136,27 +134,27 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       <div className="flex items-center gap-3">
         <button
           onClick={handleTogglePlay}
-          className="w-9 h-9 rounded-full border-[2px] border-black bg-[#ffc86b] hover:bg-[#f4b942] active:translate-y-[1px] flex items-center justify-center shrink-0 cursor-pointer shadow-[2px_2px_0px_0px_#000]"
+          className="w-8 h-8 rounded-full border border-[#d89e2c] bg-[#e9b140] hover:bg-[#dfa32b] active:scale-95 text-[#2b1d16] flex items-center justify-center shrink-0 cursor-pointer shadow-xs transition-all"
           aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
         >
-          {isPlaying ? <Pause className="w-4 h-4 text-black" /> : <Play className="w-4 h-4 text-black ml-0.5" />}
+          {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 ml-0.5" />}
         </button>
 
         {/* Progress track */}
-        <div className="flex-1 bg-black/10 h-3 rounded-full border-[2px] border-black overflow-hidden relative">
+        <div className="flex-1 bg-[#ded7cc]/60 h-1.5 rounded-full overflow-hidden relative">
           <div
-            className="bg-[#ffc86b] h-full transition-all duration-75"
+            className="bg-[#e9b140] h-full transition-all duration-75"
             style={{ width: `${progress}%` }}
           />
         </div>
 
         <button
           onClick={handleDownload}
-          className="p-1.5 rounded-lg border-[2px] border-black bg-white hover:bg-black/5 active:translate-y-[1px] cursor-pointer"
+          className="p-1.5 rounded-lg border border-[#ded7cc] bg-white hover:bg-[#edeae4] text-[#5c4a3e] active:scale-95 transition-all cursor-pointer"
           title="Download audio / transcript"
           aria-label="Download audio"
         >
-          <Download className="w-4 h-4 text-black" />
+          <Download className="w-3.5 h-3.5" />
         </button>
       </div>
     </div>

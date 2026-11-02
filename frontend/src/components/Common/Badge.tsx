@@ -16,33 +16,35 @@ export const Badge: React.FC<BadgeProps> = ({
   className = '',
 }) => {
   const variantStyles = {
-    success: 'bg-[#4ade80] text-black border-black shadow-[2px_2px_0px_0px_#000]',
-    danger: 'bg-[#ef4444] text-white border-black shadow-[2px_2px_0px_0px_#000]',
-    warning: 'bg-[#f59e0b] text-black border-black shadow-[2px_2px_0px_0px_#000]',
-    info: 'bg-[#3b82f6] text-white border-black shadow-[2px_2px_0px_0px_#000]',
-    neutral: 'bg-white text-black border-black shadow-[2px_2px_0px_0px_#000]',
-    accent: 'bg-[#ffc86b] text-black border-black shadow-[2px_2px_0px_0px_#000]',
+    success: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    danger: 'bg-rose-50 text-rose-800 border-rose-200',
+    warning: 'bg-amber-50 text-amber-900 border-amber-200',
+    info: 'bg-sky-50 text-sky-800 border-sky-200',
+    neutral: 'bg-[#f7f5f0] text-[#5c4a3e] border-[#ded7cc]',
+    accent: 'bg-[#fcf7ec] text-[#855b14] border-[#e9b140]/60',
   };
 
   const sizeStyles = {
-    sm: 'px-2.5 py-0.5 text-[11px] font-black',
-    md: 'px-3.5 py-1 text-xs font-black',
+    sm: 'px-2 py-0.5 text-[10px] font-semibold',
+    md: 'px-2.5 py-0.5 text-[11px] font-semibold',
   };
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 uppercase tracking-wider border-[2px] rounded-full select-none ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+      className={`inline-flex items-center gap-1.5 tracking-normal border rounded-full select-none ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
     >
       {dot && (
         <span
-          className={`w-2 h-2 rounded-full border border-black ${
+          className={`w-1.5 h-1.5 rounded-full ${
             variant === 'success'
-              ? 'bg-emerald-300'
+              ? 'bg-emerald-500'
               : variant === 'danger'
-              ? 'bg-red-300'
+              ? 'bg-rose-500'
               : variant === 'warning'
-              ? 'bg-yellow-300'
-              : 'bg-current'
+              ? 'bg-amber-500'
+              : variant === 'accent'
+              ? 'bg-[#e9b140]'
+              : 'bg-[#8a776a]'
           }`}
         />
       )}

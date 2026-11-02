@@ -32,6 +32,8 @@ export interface TelemetrySample {
   uptime_sec: number;
 }
 
+export type TelemetryMetricType = 'rssi' | 'free_heap' | 'battery_pct' | 'uptime_sec';
+
 export type CommandType = 'reboot' | 'sync_config' | 'identify';
 export type CommandStatus = 'pending' | 'delivered' | 'done' | 'failed' | 'expired';
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Power, Menu, Radio } from 'lucide-react';
+import { RefreshCw, Power, Menu } from 'lucide-react';
 import { useServiceStatus } from '../../context/ServiceStatusContext';
 import { ConfirmModal } from '../Common/ConfirmModal';
 import { useToast } from '../../context/ToastContext';
@@ -55,39 +55,39 @@ export const Topbar: React.FC<TopbarProps> = ({
   };
 
   return (
-    <header className="bg-white border-b-[3px] border-black px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sticky top-0 z-30">
+    <header className="bg-white border-b border-[#ded7cc] px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sticky top-0 z-30">
       <div className="flex items-center gap-3">
         {onToggleMobileNav && (
           <button
             onClick={onToggleMobileNav}
-            className="md:hidden p-2 rounded-xl border-[2px] border-black bg-[#f0ece1] cursor-pointer"
+            className="md:hidden p-2 rounded-xl border border-[#ded7cc] bg-[#f7f5f0] text-[#2b1d16] cursor-pointer"
             aria-label="Toggle menu"
           >
-            <Menu className="w-5 h-5" />
+            <Menu className="w-4 h-4" />
           </button>
         )}
         <div>
-          <h1 className="font-display text-3xl font-black text-[#1a1a1a] tracking-wide leading-tight">
+          <h1 className="text-xl font-bold text-[#2b1d16] tracking-tight leading-tight">
             {title}
           </h1>
           {subtitle && (
-            <p className="text-xs font-semibold text-gray-600">
+            <p className="text-xs text-[#8a776a] mt-0.5">
               {subtitle}
             </p>
           )}
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
+      <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-end">
         {/* Auto refresh counter badge & Manual refresh */}
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-mono font-bold text-gray-600 hidden md:inline">
+          <span className="text-[11px] font-mono text-[#8a776a] hidden md:inline">
             Auto-refresh: {secondsUntilRefresh}s
           </span>
           <button
             onClick={handleManualRefresh}
             disabled={isRefreshing}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border-[2px] border-black bg-[#f0ece1] hover:bg-[#e5e0d3] active:translate-y-[1px] text-xs font-black text-black shadow-[2px_2px_0px_#000] cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#ded7cc] bg-[#f7f5f0] hover:bg-[#edeae4] text-xs font-medium text-[#2b1d16] transition-all cursor-pointer disabled:opacity-50"
             title="Refresh current page data"
             aria-label="Refresh data"
           >
@@ -97,18 +97,18 @@ export const Topbar: React.FC<TopbarProps> = ({
         </div>
 
         {/* Service on/off toggle button */}
-        <div className="flex items-center gap-2 pl-2 border-l-[2px] border-black/20">
+        <div className="flex items-center gap-2 pl-2 border-l border-[#ded7cc]">
           <button
             onClick={() => setShowConfirmModal(true)}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full border-[2px] border-black text-xs font-black transition-all cursor-pointer shadow-[2px_2px_0px_#000] active:translate-y-[1px] ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
               isServiceEnabled
-                ? 'bg-[#4ade80] hover:bg-emerald-400 text-black'
-                : 'bg-[#ef4444] hover:bg-rose-600 text-white'
+                ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200'
+                : 'bg-rose-50 hover:bg-rose-100 text-rose-800 border-rose-200'
             }`}
             aria-label="Toggle service state"
           >
             <Power className="w-3.5 h-3.5" />
-            <span>{isServiceEnabled ? 'Service ON' : 'Service OFF'}</span>
+            <span>{isServiceEnabled ? 'Service Active' : 'Service Paused'}</span>
           </button>
         </div>
       </div>

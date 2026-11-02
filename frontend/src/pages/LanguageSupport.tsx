@@ -90,21 +90,21 @@ export const LanguageSupport: React.FC = () => {
       <div className="p-6 md:p-8 space-y-8 max-w-[1400px]">
         {/* Pair Checker Interactive Widget */}
         <Card variant="light" className="space-y-6">
-          <div className="flex items-center gap-2 pb-3 border-b-[3px] border-black">
-            <Sparkles className="w-5 h-5 text-amber-600" />
-            <h2 className="font-display text-2xl font-black text-[#1a1a1a]">
+          <div className="flex items-center gap-2 pb-3 border-b border-[#ded7cc]">
+            <Sparkles className="w-5 h-5 text-[#e9b140]" />
+            <h2 className="text-lg font-bold text-[#2b1d16]">
               Language Pair Verification Tool
             </h2>
           </div>
 
-          <p className="text-xs font-semibold text-gray-700">
+          <p className="text-xs text-[#736154]">
             Pick a source and target language to test whether translation pipelines, voice recognition (STT), and neural voice synthesis (TTS) can link successfully.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 items-center">
             {/* Source */}
             <div className="sm:col-span-2">
-              <label htmlFor="pair-checker-source" className="block text-xs font-black uppercase tracking-wider text-black mb-1">
+              <label htmlFor="pair-checker-source" className="block text-xs font-semibold uppercase tracking-wider text-[#5c4a3e] mb-1.5">
                 Source Language (Speaker)
               </label>
               <select
@@ -112,7 +112,7 @@ export const LanguageSupport: React.FC = () => {
                 aria-label="Source Language (Speaker)"
                 value={checkSource}
                 onChange={(e) => setCheckSource(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border-[3px] border-black bg-[#f9f6f0] font-bold text-sm focus:bg-white focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[#ded7cc] bg-[#f7f5f0] text-sm text-[#2b1d16] focus:bg-white focus:outline-none focus:border-[#e9b140] transition-all cursor-pointer"
               >
                 {languages.map((l) => (
                   <option key={l.code} value={l.code}>
@@ -123,15 +123,15 @@ export const LanguageSupport: React.FC = () => {
             </div>
 
             {/* Arrow Divider */}
-            <div className="flex justify-center">
-              <div className="w-10 h-10 rounded-full border-[2px] border-black bg-[#ffc86b] flex items-center justify-center shadow-[2px_2px_0px_#000]">
-                <ArrowRight className="w-5 h-5 text-black" />
+            <div className="flex justify-center sm:pt-6">
+              <div className="w-9 h-9 rounded-full border border-[#ded7cc] bg-[#f7f5f0] flex items-center justify-center text-[#736154]">
+                <ArrowRight className="w-4 h-4" />
               </div>
             </div>
 
             {/* Target */}
             <div className="sm:col-span-2">
-              <label htmlFor="pair-checker-target" className="block text-xs font-black uppercase tracking-wider text-black mb-1">
+              <label htmlFor="pair-checker-target" className="block text-xs font-semibold uppercase tracking-wider text-[#5c4a3e] mb-1.5">
                 Target Language (Translation)
               </label>
               <select
@@ -139,7 +139,7 @@ export const LanguageSupport: React.FC = () => {
                 aria-label="Target Language (Translation)"
                 value={checkTarget}
                 onChange={(e) => setCheckTarget(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border-[3px] border-black bg-[#f9f6f0] font-bold text-sm focus:bg-white focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[#ded7cc] bg-[#f7f5f0] text-sm text-[#2b1d16] focus:bg-white focus:outline-none focus:border-[#e9b140] transition-all cursor-pointer"
               >
                 {languages.map((l) => (
                   <option key={l.code} value={l.code}>
@@ -153,23 +153,23 @@ export const LanguageSupport: React.FC = () => {
           {/* Validation Result Banner */}
           {pairEvaluation && (
             <div
-              className={`p-4 rounded-2xl border-[3px] border-black ${
+              className={`p-4 rounded-xl border ${
                 pairEvaluation.isValid
-                  ? 'bg-[#eafff1] shadow-[4px_4px_0px_#22c55e]'
-                  : 'bg-[#ffecec] shadow-[4px_4px_0px_#ef4444]'
+                  ? 'border-emerald-200 bg-emerald-50'
+                  : 'border-rose-200 bg-rose-50'
               }`}
             >
-              <div className="flex items-center gap-2 font-black text-sm">
+              <div className="flex items-center gap-2 font-semibold text-sm">
                 {pairEvaluation.isValid ? (
                   <>
-                    <CheckCircle2 className="w-5 h-5 text-emerald-700" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
                     <span className="text-emerald-950">
                       Language Pair Supported: {checkSource} ➔ {checkTarget} is Fully Operational
                     </span>
                   </>
                 ) : (
                   <>
-                    <AlertTriangle className="w-5 h-5 text-rose-700" />
+                    <AlertTriangle className="w-4 h-4 text-rose-700 shrink-0" />
                     <span className="text-rose-950">
                       Language Pair Unsupported: Capability Requirements Missing
                     </span>
@@ -178,11 +178,11 @@ export const LanguageSupport: React.FC = () => {
               </div>
 
               {pairEvaluation.isValid ? (
-                <p className="mt-1 text-xs font-semibold text-emerald-900 ml-7">
+                <p className="mt-1 text-xs text-emerald-900 ml-6">
                   Speech recognition, neural translation model, and TTS voice synthesis are verified and ready for hardware deployment.
                 </p>
               ) : (
-                <ul className="mt-2 text-xs font-semibold text-rose-900 list-disc list-inside ml-7 space-y-1">
+                <ul className="mt-2 text-xs text-rose-900 list-disc list-inside ml-6 space-y-1">
                   {pairEvaluation.reasons.map((r, i) => (
                     <li key={i}>{r}</li>
                   ))}
@@ -196,31 +196,31 @@ export const LanguageSupport: React.FC = () => {
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h2 className="font-display text-2xl font-black text-[#1a1a1a]">
+              <h2 className="text-lg font-bold text-[#2b1d16]">
                 Global Language Matrix
               </h2>
-              <p className="text-xs font-semibold text-gray-600">
+              <p className="text-xs text-[#736154]">
                 Detailed capability breakdown and neural voice profiles per supported locale
               </p>
             </div>
 
             <div className="relative min-w-[260px]">
-              <Search className="w-4 h-4 text-gray-500 absolute left-3.5 top-3" />
+              <Search className="w-4 h-4 text-[#8a776a] absolute left-3 top-2.5" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search language name or code..."
-                className="w-full pl-10 pr-4 py-2 rounded-full border-[2px] border-black bg-white font-bold text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ffc86b] shadow-[2px_2px_0px_#000]"
+                className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-[#ded7cc] bg-white text-xs text-[#2b1d16] focus:bg-white focus:outline-none focus:border-[#e9b140] focus:ring-1 focus:ring-[#e9b140] shadow-sm transition-all placeholder:text-[#8a776a]"
               />
             </div>
           </div>
 
-          <div className="bg-white border-[3px] border-black rounded-[2rem] shadow-[6px_6px_0px_0px_#000] overflow-hidden">
+          <div className="bg-white border border-[#ded7cc] rounded-2xl shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b-[3px] border-black bg-[#f9f6f0] text-[11px] font-black uppercase tracking-wider text-black">
+                  <tr className="border-b border-[#ded7cc] bg-[#f7f5f0] text-[11px] font-semibold uppercase tracking-wider text-[#736154]">
                     <th className="py-3.5 px-5">Language & Code</th>
                     <th className="py-3.5 px-4 text-center">Speech Recognition (STT)</th>
                     <th className="py-3.5 px-4 text-center">Auto-Detect (Lang ID)</th>
@@ -229,80 +229,80 @@ export const LanguageSupport: React.FC = () => {
                     <th className="py-3.5 px-5">Available Voices</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y-[2px] divide-black/10 text-xs font-semibold">
+                <tbody className="divide-y divide-[#ded7cc] text-xs">
                   {filteredLanguages.map((lang) => (
-                    <tr key={lang.code} className="hover:bg-[#ffc86b]/15 transition-colors">
+                    <tr key={lang.code} className="hover:bg-[#f7f5f0] transition-colors">
                       {/* Name & Code */}
-                      <td className="py-4 px-5">
+                      <td className="py-3.5 px-5">
                         <div className="flex items-center gap-2.5">
-                          <span className="font-extrabold text-[#1a1a1a] text-sm">
+                          <span className="font-semibold text-[#2b1d16] text-sm">
                             {lang.name}
                           </span>
-                          <span className="font-mono text-[11px] font-black px-2 py-0.5 rounded border border-black bg-[#f0ece1]">
+                          <span className="font-mono text-[11px] font-medium px-2 py-0.5 rounded border border-[#ded7cc] bg-[#f7f5f0] text-[#2b1d16]">
                             {lang.code}
                           </span>
                         </div>
                       </td>
 
                       {/* STT */}
-                      <td className="py-4 px-4 text-center">
+                      <td className="py-3.5 px-4 text-center">
                         {lang.capabilities.stt || lang.capabilities.stt_streaming || lang.capabilities.stt_batch ? (
-                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-black bg-[#4ade80] text-black">
-                            <Check className="w-3.5 h-3.5" />
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-800">
+                            <Check className="w-3 h-3" />
                           </span>
                         ) : (
-                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-black bg-gray-200 text-gray-500">
-                            <X className="w-3.5 h-3.5" />
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-100 text-[#8a776a]">
+                            <X className="w-3 h-3" />
                           </span>
                         )}
                       </td>
 
                       {/* Lang ID */}
-                      <td className="py-4 px-4 text-center">
+                      <td className="py-3.5 px-4 text-center">
                         {lang.capabilities.stt || lang.capabilities.stt_language_id ? (
-                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-black bg-[#4ade80] text-black">
-                            <Check className="w-3.5 h-3.5" />
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-800">
+                            <Check className="w-3 h-3" />
                           </span>
                         ) : (
-                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-black bg-gray-200 text-gray-500">
-                            <X className="w-3.5 h-3.5" />
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-100 text-[#8a776a]">
+                            <X className="w-3 h-3" />
                           </span>
                         )}
                       </td>
 
                       {/* Translate */}
-                      <td className="py-4 px-4 text-center">
+                      <td className="py-3.5 px-4 text-center">
                         {lang.capabilities.translate ? (
-                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-black bg-[#4ade80] text-black">
-                            <Check className="w-3.5 h-3.5" />
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-800">
+                            <Check className="w-3 h-3" />
                           </span>
                         ) : (
-                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-black bg-gray-200 text-gray-500">
-                            <X className="w-3.5 h-3.5" />
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-100 text-[#8a776a]">
+                            <X className="w-3 h-3" />
                           </span>
                         )}
                       </td>
 
                       {/* TTS */}
-                      <td className="py-4 px-4 text-center">
+                      <td className="py-3.5 px-4 text-center">
                         {lang.capabilities.tts || lang.capabilities.tts_neural ? (
-                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-black bg-[#4ade80] text-black">
-                            <Check className="w-3.5 h-3.5" />
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-800">
+                            <Check className="w-3 h-3" />
                           </span>
                         ) : (
-                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-black bg-gray-200 text-gray-500">
-                            <X className="w-3.5 h-3.5" />
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-100 text-[#8a776a]">
+                            <X className="w-3 h-3" />
                           </span>
                         )}
                       </td>
 
                       {/* Voices list */}
-                      <td className="py-4 px-5">
+                      <td className="py-3.5 px-5">
                         <div className="flex flex-wrap items-center gap-1.5">
                           {lang.voices.map((v) => (
                             <span
                               key={v.id}
-                              className="text-[11px] font-bold px-2 py-0.5 rounded-full border border-black bg-white"
+                              className="text-[11px] font-medium px-2 py-0.5 rounded-md border border-[#ded7cc] bg-[#f7f5f0] text-[#2b1d16]"
                             >
                               {v.name}
                             </span>

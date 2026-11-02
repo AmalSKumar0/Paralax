@@ -42,28 +42,28 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const getToastStyles = (type: ToastType) => {
     switch (type) {
       case 'success':
-        return 'bg-[#eafff1] shadow-[6px_6px_0px_0px_#22c55e] border-black text-[#1a1a1a]';
+        return 'bg-white border border-emerald-200 text-[#2b1d16] shadow-lg';
       case 'error':
-        return 'bg-[#ffecec] shadow-[6px_6px_0px_0px_#ef4444] border-black text-[#1a1a1a]';
+        return 'bg-white border border-rose-200 text-[#2b1d16] shadow-lg';
       case 'warning':
-        return 'bg-[#fff7e6] shadow-[6px_6px_0px_0px_#f59e0b] border-black text-[#1a1a1a]';
+        return 'bg-white border border-amber-200 text-[#2b1d16] shadow-lg';
       case 'info':
       default:
-        return 'bg-[#eef5ff] shadow-[6px_6px_0px_0px_#3b82f6] border-black text-[#1a1a1a]';
+        return 'bg-white border border-[#ded7cc] text-[#2b1d16] shadow-lg';
     }
   };
 
   const getIcon = (type: ToastType) => {
     switch (type) {
       case 'success':
-        return <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />;
+        return <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />;
       case 'error':
-        return <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />;
+        return <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />;
       case 'warning':
-        return <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />;
+        return <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />;
       case 'info':
       default:
-        return <Info className="w-5 h-5 text-blue-600 shrink-0" />;
+        return <Info className="w-4 h-4 text-[#736154] shrink-0" />;
     }
   };
 
@@ -71,24 +71,24 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     <ToastContext.Provider value={{ toast: addToast, success, error, warning, info }}>
       {children}
       {/* Toast Notification Container */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none">
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2.5 pointer-events-none">
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-center justify-between gap-3 min-w-[280px] max-w-sm px-4 py-3.5 font-bold text-sm border-[3px] rounded-2xl transition-all transform animate-in fade-in slide-in-from-bottom-2 duration-150 ${getToastStyles(
+            className={`pointer-events-auto flex items-center justify-between gap-3 min-w-[280px] max-w-sm px-4 py-3 font-medium text-xs rounded-xl transition-all transform animate-in fade-in slide-in-from-bottom-2 duration-150 ${getToastStyles(
               t.type
             )}`}
           >
             <div className="flex items-center gap-2.5">
               {getIcon(t.type)}
-              <span className="leading-snug">{t.message}</span>
+              <span className="leading-snug text-[#2b1d16]">{t.message}</span>
             </div>
             <button
               onClick={() => removeToast(t.id)}
-              className="p-1 hover:bg-black/10 rounded-lg transition-colors cursor-pointer"
+              className="p-1 hover:bg-[#f7f5f0] text-[#736154] rounded-md transition-colors cursor-pointer"
               aria-label="Dismiss toast"
             >
-              <X className="w-4 h-4 text-black" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         ))}

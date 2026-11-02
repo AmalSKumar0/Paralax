@@ -47,27 +47,27 @@ export const CopySnippet: React.FC<CopySnippetProps> = ({
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <label className="text-xs font-black uppercase tracking-wider text-[#1a1a1a]">
+        <label className="text-xs font-semibold text-[#5c4a3e]">
           {label}
         </label>
         {isSecret && (
-          <span className="text-[11px] font-black text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full border border-black">
+          <span className="text-[10px] font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
             Save now · Will not be shown again
           </span>
         )}
       </div>
 
-      <div className="flex items-center gap-2 p-2.5 rounded-xl border-[2px] border-black bg-[#f9f6f0] font-mono text-sm break-all">
-        <div className="flex-1 overflow-x-auto select-all font-semibold">
+      <div className="flex items-center gap-2 p-2.5 rounded-xl border border-[#ded7cc] bg-[#f7f5f0] font-mono text-xs break-all text-[#2b1d16]">
+        <div className="flex-1 overflow-x-auto select-all font-medium">
           {value}
         </div>
         <button
           onClick={handleCopy}
-          className="p-1.5 rounded-lg border-[2px] border-black bg-white hover:bg-[#ffc86b] active:translate-y-[1px] transition-all cursor-pointer shrink-0"
+          className="p-1.5 rounded-lg border border-[#ded7cc] bg-white hover:bg-[#edeae4] text-[#2b1d16] transition-all cursor-pointer shrink-0"
           title="Copy to clipboard"
           aria-label={`Copy ${label}`}
         >
-          {copied ? <Check className="w-4 h-4 text-emerald-700" /> : <Copy className="w-4 h-4 text-black" />}
+          {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-[#5c4a3e]" />}
         </button>
       </div>
 

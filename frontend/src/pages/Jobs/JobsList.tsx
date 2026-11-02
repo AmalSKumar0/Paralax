@@ -192,19 +192,19 @@ export const JobsList: React.FC = () => {
           <div className="flex flex-wrap items-center gap-3">
             {/* Search */}
             <div className="relative min-w-[240px] sm:min-w-[280px]">
-              <Search className="w-4 h-4 text-gray-500 absolute left-3.5 top-3" />
+              <Search className="w-4 h-4 text-[#8a776a] absolute left-3.5 top-2.5" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search job ID, filename, device..."
-                className="w-full pl-10 pr-4 py-2 rounded-full border-[2px] border-black bg-white font-bold text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ffc86b] shadow-[2px_2px_0px_#000]"
+                className="w-full pl-10 pr-4 py-2 rounded-xl border border-[#ded7cc] bg-white text-xs text-[#2b1d16] focus:bg-white focus:outline-none focus:border-[#e9b140] focus:ring-1 focus:ring-[#e9b140] shadow-sm transition-all placeholder:text-[#8a776a]"
               />
             </div>
 
             {/* Status Filter */}
             <div className="flex items-center gap-1.5">
-              <label htmlFor="job-status-filter-select" className="text-xs font-black uppercase text-gray-700 hidden sm:inline">
+              <label htmlFor="job-status-filter-select" className="text-xs font-medium text-[#736154] hidden sm:inline">
                 Status:
               </label>
               <select
@@ -212,7 +212,7 @@ export const JobsList: React.FC = () => {
                 aria-label="Filter jobs by status"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 rounded-full border-[2px] border-black bg-[#f0ece1] font-bold text-xs focus:bg-white focus:outline-none shadow-[2px_2px_0px_#000]"
+                className="px-3 py-2 rounded-xl border border-[#ded7cc] bg-white text-xs font-medium text-[#2b1d16] focus:outline-none focus:border-[#e9b140] shadow-sm cursor-pointer"
               >
                 <option value="all">All Statuses</option>
                 <option value="completed">Completed</option>
@@ -227,7 +227,7 @@ export const JobsList: React.FC = () => {
 
             {/* Kind Filter */}
             <div className="flex items-center gap-1.5">
-              <label htmlFor="job-kind-filter-select" className="text-xs font-black uppercase text-gray-700 hidden sm:inline">
+              <label htmlFor="job-kind-filter-select" className="text-xs font-medium text-[#736154] hidden sm:inline">
                 Kind:
               </label>
               <select
@@ -235,7 +235,7 @@ export const JobsList: React.FC = () => {
                 aria-label="Filter jobs by kind"
                 value={kindFilter}
                 onChange={(e) => setKindFilter(e.target.value)}
-                className="px-3 py-2 rounded-full border-[2px] border-black bg-[#f0ece1] font-bold text-xs focus:bg-white focus:outline-none shadow-[2px_2px_0px_#000]"
+                className="px-3 py-2 rounded-xl border border-[#ded7cc] bg-white text-xs font-medium text-[#2b1d16] focus:outline-none focus:border-[#e9b140] shadow-sm cursor-pointer"
               >
                 <option value="all">All Kinds</option>
                 <option value="utterance">Live Utterance</option>
@@ -245,7 +245,7 @@ export const JobsList: React.FC = () => {
 
             {/* Device Filter */}
             <div className="flex items-center gap-1.5">
-              <label htmlFor="job-device-filter-select" className="text-xs font-black uppercase text-gray-700 hidden sm:inline">
+              <label htmlFor="job-device-filter-select" className="text-xs font-medium text-[#736154] hidden sm:inline">
                 Device:
               </label>
               <select
@@ -253,7 +253,7 @@ export const JobsList: React.FC = () => {
                 aria-label="Filter jobs by device"
                 value={deviceFilter}
                 onChange={(e) => setDeviceFilter(e.target.value)}
-                className="px-3 py-2 rounded-full border-[2px] border-black bg-[#f0ece1] font-bold text-xs focus:bg-white focus:outline-none shadow-[2px_2px_0px_#000]"
+                className="px-3 py-2 rounded-xl border border-[#ded7cc] bg-white text-xs font-medium text-[#2b1d16] focus:outline-none focus:border-[#e9b140] shadow-sm cursor-pointer"
               >
                 <option value="all">All Devices</option>
                 {devices.map((d) => (
@@ -267,8 +267,8 @@ export const JobsList: React.FC = () => {
 
           {/* Bulk Actions Bar if items selected */}
           {selectedJobIds.size > 0 && (
-            <div className="flex items-center gap-2 p-1.5 rounded-full border-[2px] border-black bg-[#ffc86b] shadow-[3px_3px_0px_#000] animate-in fade-in">
-              <span className="text-xs font-black px-2.5">
+            <div className="flex items-center gap-2 p-1.5 rounded-xl border border-[#ded7cc] bg-[#f7f5f0] shadow-sm animate-in fade-in">
+              <span className="text-xs font-medium px-2.5 text-[#2b1d16]">
                 {selectedJobIds.size} Selected
               </span>
               <Button
@@ -306,17 +306,17 @@ export const JobsList: React.FC = () => {
         </div>
 
         {/* Jobs Table */}
-        <div className="bg-white border-[3px] border-black rounded-[2rem] shadow-[6px_6px_0px_0px_#000] overflow-hidden">
+        <div className="bg-white border border-[#ded7cc] rounded-2xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b-[3px] border-black bg-[#f9f6f0] text-[11px] font-black uppercase tracking-wider text-black">
+                <tr className="border-b border-[#ded7cc] bg-[#f7f5f0] text-[11px] font-semibold uppercase tracking-wider text-[#736154]">
                   <th className="py-3.5 px-4 w-10">
                     <input
                       type="checkbox"
                       checked={filteredJobs.length > 0 && selectedJobIds.size === filteredJobs.length}
                       onChange={handleToggleSelectAll}
-                      className="w-4 h-4 rounded border-2 border-black accent-black cursor-pointer"
+                      className="w-4 h-4 rounded border-[#ded7cc] text-[#2b1d16] accent-[#2b1d16] cursor-pointer"
                       aria-label="Select all jobs"
                     />
                   </th>
@@ -330,67 +330,61 @@ export const JobsList: React.FC = () => {
                   <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y-[2px] divide-black/10 text-xs font-semibold">
+              <tbody className="divide-y divide-[#ded7cc] text-xs">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={9} className="py-12 text-center text-gray-500 font-bold">
+                    <td colSpan={9} className="py-12 text-center text-[#736154]">
                       <div className="flex items-center justify-center gap-2">
-                        <RefreshCw className="w-4 h-4 animate-spin text-black" />
+                        <RefreshCw className="w-4 h-4 animate-spin text-[#736154]" />
                         <span>Loading job queue...</span>
                       </div>
                     </td>
                   </tr>
                 ) : filteredJobs.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-12 text-center text-gray-500 font-bold">
+                    <td colSpan={9} className="py-12 text-center text-[#736154]">
                       No matching translation jobs found.
                     </td>
                   </tr>
                 ) : (
                   filteredJobs.map((job) => {
                     const isSelected = selectedJobIds.has(job.job_id);
-                    const isFailed = job.status === 'failed';
-                    const isInProgress =
-                      job.status === 'queued' ||
-                      job.status === 'stt' ||
-                      job.status === 'translating' ||
-                      job.status === 'synthesizing';
 
                     return (
                       <tr
                         key={job.job_id}
                         onClick={() => navigate(`/jobs/${job.job_id}`)}
-                        className={`hover:bg-[#ffc86b]/15 transition-colors cursor-pointer group ${
-                          isSelected ? 'bg-[#ffc86b]/20' : ''
+                        className={`hover:bg-[#f7f5f0] transition-colors cursor-pointer group ${
+                          isSelected ? 'bg-[#f7f5f0]' : ''
                         }`}
                       >
                         {/* Select checkbox */}
-                        <td className="py-4 px-4" onClick={(e) => handleToggleSelectJob(job.job_id, e)}>
+                        <td className="py-3.5 px-4" onClick={(e) => handleToggleSelectJob(job.job_id, e)}>
                           <input
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => {}}
-                            className="w-4 h-4 rounded border-2 border-black accent-black cursor-pointer"
+                            className="w-4 h-4 rounded border-[#ded7cc] text-[#2b1d16] accent-[#2b1d16] cursor-pointer"
                             aria-label={`Select job ${job.job_id}`}
                           />
                         </td>
 
                         {/* ID */}
-                        <td className="py-4 px-4 font-mono font-black text-black">
+                        <td className="py-3.5 px-4 font-mono font-medium text-[#2b1d16]">
                           {job.job_id}
                         </td>
 
                         {/* Kind */}
-                        <td className="py-4 px-4">
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-black text-[11px] font-black uppercase bg-[#f0ece1]">
+                        <td className="py-3.5 px-4">
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border border-[#ded7cc] text-[11px] font-medium bg-[#f7f5f0] text-[#2b1d16]">
                             {job.kind === 'utterance' ? (
                               <>
-                                <Mic className="w-3 h-3 text-black" />
+                                <Mic className="w-3 h-3 text-[#736154]" />
                                 Utterance
                               </>
                             ) : (
                               <>
-                                <FileAudio className="w-3 h-3 text-black" />
+                                <FileAudio className="w-3 h-3 text-[#736154]" />
                                 File Job
                               </>
                             )}
@@ -398,44 +392,44 @@ export const JobsList: React.FC = () => {
                         </td>
 
                         {/* Device / Filename */}
-                        <td className="py-4 px-4">
+                        <td className="py-3.5 px-4">
                           {job.device_id ? (
-                            <span className="font-bold text-gray-800">
+                            <span className="font-medium text-[#2b1d16]">
                               {job.device_id}
                             </span>
                           ) : (
-                            <span className="font-mono text-gray-700 truncate max-w-[150px] inline-block">
+                            <span className="font-mono text-[#5c4a3e] truncate max-w-[150px] inline-block">
                               {job.filename || 'Direct upload'}
                             </span>
                           )}
                         </td>
 
                         {/* Language Pair */}
-                        <td className="py-4 px-4">
-                          <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded border border-black bg-[#f9f6f0] font-black text-[11px]">
+                        <td className="py-3.5 px-4">
+                          <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-[#ded7cc] bg-[#f7f5f0] font-medium text-[11px] text-[#2b1d16]">
                             <span>{job.source_language}</span>
-                            <span className="text-gray-400">➔</span>
+                            <span className="text-[#8a776a]">➔</span>
                             <span>{job.target_language}</span>
                           </div>
                         </td>
 
                         {/* Status */}
-                        <td className="py-4 px-4">
+                        <td className="py-3.5 px-4">
                           {getStatusBadge(job.status)}
                         </td>
 
                         {/* Total Latency */}
-                        <td className="py-4 px-4 font-mono font-bold text-gray-700">
+                        <td className="py-3.5 px-4 font-mono text-[#5c4a3e]">
                           {job.timings ? formatLatency(job.timings.total_ms) : '-'}
                         </td>
 
                         {/* Created */}
-                        <td className="py-4 px-4 font-medium text-gray-600">
+                        <td className="py-3.5 px-4 text-[#736154]">
                           {formatRelativeTime(job.created_at)}
                         </td>
 
                         {/* Row Actions */}
-                        <td className="py-4 px-4 text-right" onClick={(e) => e.stopPropagation()}>
+                        <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-1.5">
                             {(job.can_retry || job.canRetry) && (
                               <button
@@ -448,11 +442,11 @@ export const JobsList: React.FC = () => {
                                     message: 'Re-trigger translation and voice synthesis for this audio recording.',
                                   })
                                 }
-                                className="p-1.5 rounded-lg border border-black bg-white hover:bg-[#ffc86b] cursor-pointer"
+                                className="p-1.5 rounded-lg border border-[#ded7cc] bg-white hover:bg-[#f7f5f0] text-[#736154] hover:text-[#2b1d16] transition-colors cursor-pointer"
                                 title="Retry job"
                                 aria-label="Retry job"
                               >
-                                <RotateCcw className="w-3.5 h-3.5 text-black" />
+                                <RotateCcw className="w-3.5 h-3.5" />
                               </button>
                             )}
 
@@ -466,7 +460,7 @@ export const JobsList: React.FC = () => {
                                   message: 'Permanently remove this job and its audio transcripts.',
                                 })
                               }
-                              className="p-1.5 rounded-lg border border-black bg-white hover:bg-[#ffecec] text-rose-700 cursor-pointer"
+                              className="p-1.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-800 transition-colors cursor-pointer"
                               title="Delete job"
                               aria-label="Delete job"
                             >
@@ -475,7 +469,7 @@ export const JobsList: React.FC = () => {
 
                             <button
                               onClick={() => navigate(`/jobs/${job.job_id}`)}
-                              className="p-1.5 rounded-lg border border-black bg-[#f0ece1] hover:bg-black hover:text-white cursor-pointer ml-1"
+                              className="p-1.5 rounded-lg border border-[#ded7cc] bg-white hover:bg-[#f7f5f0] text-[#736154] hover:text-[#2b1d16] transition-colors cursor-pointer ml-1"
                               title="View details"
                               aria-label="View job detail"
                             >

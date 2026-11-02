@@ -7,7 +7,7 @@ export const AppLayout: React.FC = () => {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#fffdf8] flex flex-col">
+    <div className="min-h-screen bg-[#edeae4] flex flex-col">
       <ServiceBanner />
       <div className="flex-1 flex flex-col md:flex-row w-full">
         {/* Desktop Sidebar */}
@@ -19,10 +19,10 @@ export const AppLayout: React.FC = () => {
         {mobileNavOpen && (
           <div className="fixed inset-0 z-50 flex md:hidden">
             <div
-              className="fixed inset-0 bg-black/50"
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm"
               onClick={() => setMobileNavOpen(false)}
             />
-            <div className="relative z-10 w-72 bg-[#f9f6f0] h-full shadow-2xl flex flex-col">
+            <div className="relative z-10 w-72 bg-[#f7f5f0] h-full shadow-xl flex flex-col">
               <Sidebar />
             </div>
           </div>

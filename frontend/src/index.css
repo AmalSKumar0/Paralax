@@ -2,123 +2,147 @@
 
 @layer base {
   :root {
-    --font-display: 'Caveat Brush', cursive, sans-serif;
-    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --color-linen: #edeae4;
+    --color-linen-light: #f5f3ee;
+    --color-amber: #e9b140;
+    --color-amber-hover: #dfa32b;
+    --color-amber-soft: rgba(233, 177, 64, 0.15);
+    --color-brown-dark: #2b1d16;
+    --color-brown-medium: #5c4a3e;
+    --color-brown-muted: #8a776a;
+    --color-border: #ded7cc;
+    --color-border-subtle: #e8e4dc;
   }
 
   body {
     font-family: var(--font-sans);
-    background-color: #fffdf8;
-    color: #1a1a1a;
+    background-color: #edeae4;
+    color: #2b1d16;
+    letter-spacing: -0.01em;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    color: #2b1d16;
+    letter-spacing: -0.02em;
+    font-weight: 700;
   }
 }
 
 .font-display {
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
+  letter-spacing: -0.025em;
+  font-weight: 700;
 }
 
 .font-sans {
   font-family: var(--font-sans);
 }
 
-/* Brutal Tactile Elements */
+/* Minimal Refined Styling System (Replaces Brutalist Styles) */
 .brutal-border {
-  border: 3px solid #000000;
+  border: 1px solid #ded7cc;
 }
 
 .brutal-border-sm {
-  border: 2px solid #000000;
+  border: 1px solid #ded7cc;
 }
 
 .brutal-border-lg {
-  border: 4px solid #000000;
+  border: 1px solid #d5cebf;
 }
 
 .brutal-shadow-sm {
-  box-shadow: 2px 2px 0px 0px #000000;
+  box-shadow: 0 1px 2px rgba(43, 29, 22, 0.04);
 }
 
 .brutal-shadow {
-  box-shadow: 4px 4px 0px 0px #000000;
+  box-shadow: 0 1px 3px rgba(43, 29, 22, 0.04), 0 4px 12px rgba(43, 29, 22, 0.03);
 }
 
 .brutal-shadow-md {
-  box-shadow: 6px 6px 0px 0px #000000;
+  box-shadow: 0 4px 14px rgba(43, 29, 22, 0.06);
 }
 
 .brutal-shadow-lg {
-  box-shadow: 8px 8px 0px 0px #000000;
+  box-shadow: 0 8px 24px rgba(43, 29, 22, 0.08);
 }
 
 .brutal-shadow-yellow {
-  box-shadow: 4px 4px 0px 0px #ffc86b;
+  box-shadow: 0 4px 12px rgba(233, 177, 64, 0.25);
 }
 
 .brutal-shadow-yellow-lg {
-  box-shadow: 8px 8px 0px 0px #ffc86b;
+  box-shadow: 0 8px 20px rgba(233, 177, 64, 0.3);
 }
 
 .brutal-shadow-yellow-xl {
-  box-shadow: 12px 12px 0px 0px #ffc86b;
+  box-shadow: 0 12px 28px rgba(233, 177, 64, 0.35);
 }
 
 .brutal-btn {
-  border: 3px solid #000000;
-  box-shadow: 4px 4px 0px 0px #000000;
-  transition: all 0.12s ease-in-out;
+  border: 1px solid #ded7cc;
+  box-shadow: 0 1px 2px rgba(43, 29, 22, 0.05);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   user-select: none;
 }
 
 .brutal-btn:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 5px 5px 0px 0px #000000;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(43, 29, 22, 0.08);
 }
 
 .brutal-btn:active {
-  transform: translate(3px, 3px);
-  box-shadow: 0px 0px 0px 0px #000000;
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(43, 29, 22, 0.05);
 }
 
 .brutal-btn-primary {
-  background-color: #ffc86b;
-  color: #1a1a1a;
+  background-color: #e9b140;
+  color: #2b1d16;
+  border-color: #dfa32b;
 }
+
 .brutal-btn-primary:hover {
-  background-color: #f4b942;
+  background-color: #dfa32b;
 }
 
 .brutal-btn-dark {
-  background-color: #1a1a1a;
-  color: #ffffff;
-  box-shadow: 4px 4px 0px 0px #ffc86b;
+  background-color: #2b1d16;
+  color: #edeae4;
+  border-color: #2b1d16;
 }
+
 .brutal-btn-dark:hover {
-  box-shadow: 6px 6px 0px 0px #ffc86b;
+  background-color: #3d2a20;
 }
+
 .brutal-btn-dark:active {
-  transform: translate(3px, 3px);
-  box-shadow: 0px 0px 0px 0px #ffc86b;
+  transform: translateY(0);
 }
 
 .brutal-card {
   background-color: #ffffff;
-  border: 3px solid #000000;
-  border-radius: 1.5rem;
-  box-shadow: 6px 6px 0px 0px #000000;
-  transition: all 0.15s ease-in-out;
+  border: 1px solid #ded7cc;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(43, 29, 22, 0.04), 0 4px 12px rgba(43, 29, 22, 0.02);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .brutal-card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 8px 8px 0px 0px #ffc86b;
+  border-color: #d0c7b8;
+  box-shadow: 0 4px 16px rgba(43, 29, 22, 0.07);
 }
 
 .brutal-input {
-  border: 3px solid #000000;
-  border-radius: 0.75rem;
-  padding: 0.75rem 1rem;
-  background-color: #f9f6f0;
+  border: 1px solid #ded7cc;
+  border-radius: 0.625rem;
+  padding: 0.625rem 0.875rem;
+  background-color: #ffffff;
+  color: #2b1d16;
   font-weight: 500;
   transition: all 0.15s ease;
 }
@@ -126,23 +150,25 @@
 .brutal-input:focus {
   background-color: #ffffff;
   outline: none;
-  box-shadow: 3px 3px 0px 0px #000000;
+  border-color: #e9b140;
+  box-shadow: 0 0 0 3px rgba(233, 177, 64, 0.2);
 }
 
-/* Custom Scrollbar */
+/* Custom Minimal Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
+
 ::-webkit-scrollbar-track {
-  background: #f9f6f0;
-  border-left: 2px solid #000000;
+  background: #edeae4;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #ffc86b;
-  border: 2px solid #000000;
-  border-radius: 4px;
+  background: #c8bfb0;
+  border-radius: 9999px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #f4b942;
+  background: #a89e8e;
 }

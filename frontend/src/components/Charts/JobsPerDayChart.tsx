@@ -11,14 +11,14 @@ export const JobsPerDayChart: React.FC<{ data: DailyJobPoint[] }> = ({ data }) =
 
   if (!data || data.length === 0) {
     return (
-      <div className="h-64 flex items-center justify-center border-[2px] border-dashed border-black rounded-2xl bg-[#f9f6f0]">
-        <p className="text-sm font-bold text-gray-500">No job history available</p>
+      <div className="h-60 flex items-center justify-center border border-dashed border-[#ded7cc] rounded-xl bg-[#f7f5f0]">
+        <p className="text-xs text-[#8a776a]">No job history available</p>
       </div>
     );
   }
 
   const maxVal = Math.max(...data.map((d) => d.count), 50);
-  const chartHeight = 180;
+  const chartHeight = 160;
 
   return (
     <div className="w-full flex flex-col gap-3">
@@ -26,36 +26,36 @@ export const JobsPerDayChart: React.FC<{ data: DailyJobPoint[] }> = ({ data }) =
       <div className="h-7 flex items-center justify-between text-xs">
         {hoveredIdx !== null ? (
           <div className="flex items-center gap-3">
-            <span className="font-black px-2 py-0.5 rounded border border-black bg-white">
+            <span className="font-semibold px-2 py-0.5 rounded-full border border-[#ded7cc] bg-white text-[#2b1d16]">
               {data[hoveredIdx].date}
             </span>
-            <span className="font-bold text-gray-800">
-              Total: <strong className="text-black font-black">{data[hoveredIdx].count}</strong>
+            <span className="text-[#5c4a3e]">
+              Total: <strong className="text-[#2b1d16] font-semibold">{data[hoveredIdx].count}</strong>
             </span>
-            <span className="font-bold text-rose-700">
-              Failed: <strong className="font-black">{data[hoveredIdx].failed}</strong>
+            <span className="text-rose-700">
+              Failed: <strong className="font-semibold">{data[hoveredIdx].failed}</strong>
             </span>
           </div>
         ) : (
-          <span className="text-gray-500 font-semibold italic">Hover over bars for daily breakdown</span>
+          <span className="text-[#8a776a] text-xs">Hover over bars for daily breakdown</span>
         )}
-        <div className="flex items-center gap-3 font-bold">
+        <div className="flex items-center gap-3 text-xs text-[#5c4a3e]">
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 border border-black bg-[#ffc86b] rounded-sm inline-block" />
+            <span className="w-2.5 h-2.5 bg-[#e9b140] rounded-sm inline-block" />
             Completed
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 border border-black bg-[#ef4444] rounded-sm inline-block" />
+            <span className="w-2.5 h-2.5 bg-rose-500 rounded-sm inline-block" />
             Failed
           </span>
         </div>
       </div>
 
-      {/* SVG Bar Chart with Neo-brutalist ink grid */}
-      <div className="relative border-[3px] border-black rounded-2xl p-4 bg-[#f9f6f0]">
+      {/* SVG Bar Chart */}
+      <div className="relative border border-[#ded7cc] rounded-xl p-4 bg-[#f7f5f0]">
         <svg
           viewBox={`0 0 ${data.length * 24} ${chartHeight}`}
-          className="w-full h-48 overflow-visible"
+          className="w-full h-44 overflow-visible"
           preserveAspectRatio="none"
         >
           {/* Horizontal Grid lines */}
@@ -66,10 +66,9 @@ export const JobsPerDayChart: React.FC<{ data: DailyJobPoint[] }> = ({ data }) =
               y1={chartHeight * (1 - ratio)}
               x2={data.length * 24}
               y2={chartHeight * (1 - ratio)}
-              stroke="#000000"
-              strokeDasharray="4 4"
+              stroke="#ded7cc"
+              strokeDasharray="3 3"
               strokeWidth="1"
-              opacity="0.15"
             />
           ))}
 
@@ -95,9 +94,8 @@ export const JobsPerDayChart: React.FC<{ data: DailyJobPoint[] }> = ({ data }) =
                   width="16"
                   height={Math.max(4, barH)}
                   rx="3"
-                  fill={isHovered ? '#f4b942' : '#ffc86b'}
-                  stroke="#000000"
-                  strokeWidth="2"
+                  fill={isHovered ? '#dfa32b' : '#e9b140'}
+                  className="transition-colors duration-150"
                 />
                 {/* Failed overlay bar */}
                 {failH > 0 && (
@@ -107,9 +105,7 @@ export const JobsPerDayChart: React.FC<{ data: DailyJobPoint[] }> = ({ data }) =
                     width="16"
                     height={Math.max(2, failH)}
                     rx="2"
-                    fill="#ef4444"
-                    stroke="#000000"
-                    strokeWidth="1.5"
+                    fill="#f43f5e"
                   />
                 )}
               </g>
@@ -118,7 +114,7 @@ export const JobsPerDayChart: React.FC<{ data: DailyJobPoint[] }> = ({ data }) =
         </svg>
 
         {/* X-axis labels */}
-        <div className="flex justify-between mt-2 pt-2 border-t-[2px] border-black/20 text-[10px] font-black text-gray-700 uppercase">
+        <div className="flex justify-between mt-2 pt-2 border-t border-[#ded7cc] text-[10px] text-[#8a776a] font-mono">
           <span>{data[0]?.date}</span>
           <span>{data[Math.floor(data.length / 2)]?.date}</span>
           <span>{data[data.length - 1]?.date}</span>

@@ -18,8 +18,8 @@ export const StreamingSessions: React.FC = () => {
 
       <div className="p-6 md:p-8 space-y-6 max-w-[1000px]">
         <Card variant="light" className="text-center p-12 space-y-4">
-          <div className="w-16 h-16 rounded-3xl border-[3px] border-black bg-[#ffc86b] flex items-center justify-center mx-auto shadow-[4px_4px_0px_#000]">
-            <Radio className="w-8 h-8 text-black animate-pulse" />
+          <div className="w-14 h-14 rounded-2xl border border-[#ded7cc] bg-[#f7f5f0] flex items-center justify-center mx-auto shadow-sm">
+            <Radio className="w-6 h-6 text-[#e9b140]" />
           </div>
 
           <div className="inline-block">
@@ -28,16 +28,16 @@ export const StreamingSessions: React.FC = () => {
             </Badge>
           </div>
 
-          <h2 className="font-display text-4xl font-black text-[#1a1a1a]">
+          <h2 className="text-2xl font-bold tracking-tight text-[#2b1d16]">
             Streaming is not available yet
           </h2>
 
-          <p className="text-sm font-semibold text-gray-700 max-w-md mx-auto leading-relaxed">
+          <p className="text-sm font-normal text-[#5c4a3e] max-w-md mx-auto leading-relaxed">
             Real-time sub-second WebSocket audio streaming sessions with continuous chunked bidirectional translation are currently in closed beta testing for next-generation hardware.
           </p>
 
-          <div className="pt-4 flex items-center justify-center gap-2 text-xs font-mono font-bold text-gray-500">
-            <Clock className="w-4 h-4 text-black" />
+          <div className="pt-2 flex items-center justify-center gap-2 text-xs font-mono text-[#8a776a]">
+            <Clock className="w-4 h-4 text-[#736154]" />
             <span>Target release: v2.6.0 Firmware & Cloud Gateway</span>
           </div>
         </Card>

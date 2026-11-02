@@ -137,7 +137,7 @@ export const JobDetail: React.FC = () => {
       <div className="flex-1 flex flex-col">
         <Topbar title="Job Detail" subtitle="Loading pipeline details..." />
         <div className="p-8">
-          <div className="h-64 bg-[#f9f6f0] border-[3px] border-black rounded-[2rem] animate-pulse" />
+          <div className="h-64 bg-white border border-[#ded7cc] rounded-2xl animate-pulse" />
         </div>
       </div>
     );
@@ -179,18 +179,18 @@ export const JobDetail: React.FC = () => {
 
       <div className="p-6 md:p-8 space-y-8 max-w-[1200px]">
         {/* Navigation Breadcrumb & Actions Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b-[3px] border-black">
+        <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#ded7cc]">
           <div className="flex items-center gap-3">
             <Link
               to="/jobs"
-              className="p-2 rounded-xl border-[2px] border-black bg-white hover:bg-[#f0ece1] active:translate-y-[1px] transition-all cursor-pointer shadow-[2px_2px_0px_#000]"
+              className="p-2 rounded-xl border border-[#ded7cc] bg-white hover:bg-[#f7f5f0] text-[#736154] hover:text-[#2b1d16] transition-all cursor-pointer shadow-sm"
               aria-label="Back to jobs"
             >
-              <ArrowLeft className="w-5 h-5 text-black" />
+              <ArrowLeft className="w-4 h-4" />
             </Link>
             <div>
               <div className="flex items-center gap-2.5">
-                <h1 className="font-display text-3xl font-black text-[#1a1a1a]">
+                <h1 className="text-2xl font-bold tracking-tight text-[#2b1d16]">
                   Job Pipeline Detail
                 </h1>
                 <Badge
@@ -254,11 +254,11 @@ export const JobDetail: React.FC = () => {
 
         {/* Status Pipeline Timeline */}
         <Card variant="light" className="space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b-[2px] border-black/15">
-            <h3 className="font-display text-xl font-black text-[#1a1a1a]">
+          <div className="flex items-center justify-between pb-3 border-b border-[#ded7cc]">
+            <h3 className="text-base font-bold text-[#2b1d16]">
               Pipeline Execution Progress
             </h3>
-            <span className="text-xs font-mono font-bold text-gray-600">
+            <span className="text-xs font-mono text-[#736154]">
               {job.status === 'failed' ? 'Terminated on error' : `Stage ${currentStageIndex + 1} of 5`}
             </span>
           </div>
@@ -272,20 +272,22 @@ export const JobDetail: React.FC = () => {
               return (
                 <div
                   key={st.key}
-                  className={`p-3 rounded-xl border-[2px] border-black text-center transition-all ${
+                  className={`p-3 rounded-xl border text-center transition-all ${
                     isFailedAtThisStage
-                      ? 'bg-[#ffecec] border-red-600 text-rose-900 shadow-[2px_2px_0px_#ef4444]'
+                      ? 'bg-rose-50 border-rose-200 text-rose-900'
                       : isPast || job.status === 'completed'
-                      ? 'bg-[#eafff1] border-black text-emerald-900 shadow-[2px_2px_0px_#22c55e]'
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
                       : isCurrent
-                      ? 'bg-[#ffc86b] border-black text-black font-black shadow-[3px_3px_0px_#000] animate-pulse'
-                      : 'bg-[#f0ece1] border-black/30 text-gray-400'
+                      ? 'bg-[#e9b140]/15 border-[#e9b140] text-[#2b1d16] font-semibold shadow-sm'
+                      : 'bg-[#f7f5f0] border-[#ded7cc] text-[#8a776a]'
                   }`}
                 >
-                  <div className="w-6 h-6 rounded-full border border-black mx-auto mb-1 flex items-center justify-center font-black text-xs bg-white text-black">
+                  <div className={`w-5 h-5 rounded-full border mx-auto mb-1 flex items-center justify-center font-mono text-[11px] ${
+                    isCurrent ? 'bg-[#e9b140] text-white border-[#e9b140]' : 'bg-white text-[#736154] border-[#ded7cc]'
+                  }`}>
                     {idx + 1}
                   </div>
-                  <span className="text-xs font-bold block">{st.label}</span>
+                  <span className="text-xs font-medium block">{st.label}</span>
                 </div>
               );
             })}
@@ -293,16 +295,16 @@ export const JobDetail: React.FC = () => {
 
           {/* Failure Alert Box with Mapped Plain-Language Message */}
           {job.status === 'failed' && job.error && (
-            <div className="mt-4 p-4 rounded-2xl border-[3px] border-black bg-[#ffecec] shadow-[4px_4px_0px_#ef4444] space-y-1">
-              <div className="flex items-center gap-2 text-rose-800 font-black text-xs uppercase tracking-wider">
+            <div className="mt-4 p-4 rounded-xl border border-rose-200 bg-rose-50 space-y-1">
+              <div className="flex items-center gap-2 text-rose-800 font-semibold text-xs uppercase tracking-wider">
                 <AlertCircle className="w-4 h-4" />
                 Pipeline Error: {job.error.code}
               </div>
-              <p className="text-sm font-semibold text-rose-950">
+              <p className="text-sm font-medium text-rose-950">
                 {formatApiError(job.error.code, job.error.message)}
               </p>
               {job.error.retry_after_sec && (
-                <p className="text-xs font-mono font-bold text-gray-700">
+                <p className="text-xs font-mono text-[#736154]">
                   Rate limit cool-off: Retry after {job.error.retry_after_sec}s
                 </p>
               )}
@@ -314,14 +316,14 @@ export const JobDetail: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Original Audio Card */}
           <Card variant="light" className="space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b-[2px] border-black/15">
-              <span className="text-xs font-black uppercase tracking-wider text-black">
+            <div className="flex items-center justify-between pb-3 border-b border-[#ded7cc]">
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#5c4a3e]">
                 Source Audio ({job.source_language})
               </span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleCopyText(job.transcript, 'Transcript')}
-                  className="p-1 rounded border border-black bg-white hover:bg-black/5"
+                  className="p-1 rounded-md border border-[#ded7cc] bg-white hover:bg-[#f7f5f0] text-[#736154] hover:text-[#2b1d16] transition-colors"
                   title="Copy transcript"
                   aria-label="Copy transcript"
                 >
@@ -330,8 +332,8 @@ export const JobDetail: React.FC = () => {
               </div>
             </div>
 
-            <p className="text-sm font-semibold text-[#1a1a1a] leading-relaxed bg-[#f9f6f0] p-4 rounded-2xl border-[2px] border-black min-h-[90px]">
-              {job.transcript || <span className="italic text-gray-400">Audio transcript not available</span>}
+            <p className="text-sm text-[#2b1d16] leading-relaxed bg-[#f7f5f0] p-4 rounded-xl border border-[#ded7cc] min-h-[90px]">
+              {job.transcript || <span className="italic text-[#8a776a]">Audio transcript not available</span>}
             </p>
 
             <AudioPlayer
@@ -347,15 +349,15 @@ export const JobDetail: React.FC = () => {
 
           {/* Translated Audio Card */}
           <Card variant="light" className="space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b-[2px] border-black/15">
-              <span className="text-xs font-black uppercase tracking-wider text-black flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+            <div className="flex items-center justify-between pb-3 border-b border-[#ded7cc]">
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#5c4a3e] flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                 Translated Audio ({job.target_language})
               </span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleCopyText(job.translation, 'Translation')}
-                  className="p-1 rounded border border-black bg-white hover:bg-black/5"
+                  className="p-1 rounded-md border border-[#ded7cc] bg-white hover:bg-[#f7f5f0] text-[#736154] hover:text-[#2b1d16] transition-colors"
                   title="Copy translation"
                   aria-label="Copy translation"
                 >
@@ -363,7 +365,7 @@ export const JobDetail: React.FC = () => {
                 </button>
                 <button
                   onClick={handleDownloadTxt}
-                  className="p-1 rounded border border-black bg-white hover:bg-black/5"
+                  className="p-1 rounded-md border border-[#ded7cc] bg-white hover:bg-[#f7f5f0] text-[#736154] hover:text-[#2b1d16] transition-colors"
                   title="Download .txt"
                   aria-label="Download transcript"
                 >
@@ -372,8 +374,8 @@ export const JobDetail: React.FC = () => {
               </div>
             </div>
 
-            <p className="text-sm font-semibold text-[#1a1a1a] leading-relaxed bg-[#fffdf8] p-4 rounded-2xl border-[2px] border-black min-h-[90px]">
-              {job.translation || <span className="italic text-gray-400">Translation output pending synthesis...</span>}
+            <p className="text-sm text-[#2b1d16] leading-relaxed bg-[#fffdf8] p-4 rounded-xl border border-[#ded7cc] min-h-[90px]">
+              {job.translation || <span className="italic text-[#8a776a]">Translation output pending synthesis...</span>}
             </p>
 
             <AudioPlayer
@@ -390,26 +392,26 @@ export const JobDetail: React.FC = () => {
 
         {/* Stage Latency Breakdown Card */}
         {job.timings && (
-          <Card variant="sand" className="space-y-3">
-            <h3 className="font-display text-xl font-black text-[#1a1a1a]">
+          <Card variant="light" className="space-y-3">
+            <h3 className="text-base font-bold text-[#2b1d16]">
               Stage Timings & Latency Breakdown
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-1">
-              <div className="p-3.5 rounded-xl border-[2px] border-black bg-white text-center shadow-[2px_2px_0px_#000]">
-                <span className="text-[10px] font-black uppercase text-gray-600 block">1. STT Speech-to-Text</span>
-                <span className="text-xl font-mono font-black text-black">{(job.timings as any).stt_ms} ms</span>
+              <div className="p-3.5 rounded-xl border border-[#ded7cc] bg-white text-center shadow-sm">
+                <span className="text-[10px] font-semibold uppercase text-[#736154] block">1. STT Speech-to-Text</span>
+                <span className="text-xl font-mono font-bold text-[#2b1d16]">{(job.timings as any).stt_ms} ms</span>
               </div>
-              <div className="p-3.5 rounded-xl border-[2px] border-black bg-white text-center shadow-[2px_2px_0px_#000]">
-                <span className="text-[10px] font-black uppercase text-gray-600 block">2. Translate</span>
-                <span className="text-xl font-mono font-black text-black">{job.timings.translate_ms} ms</span>
+              <div className="p-3.5 rounded-xl border border-[#ded7cc] bg-white text-center shadow-sm">
+                <span className="text-[10px] font-semibold uppercase text-[#736154] block">2. Translate</span>
+                <span className="text-xl font-mono font-bold text-[#2b1d16]">{job.timings.translate_ms} ms</span>
               </div>
-              <div className="p-3.5 rounded-xl border-[2px] border-black bg-white text-center shadow-[2px_2px_0px_#000]">
-                <span className="text-[10px] font-black uppercase text-gray-600 block">3. Synthesize (TTS)</span>
-                <span className="text-xl font-mono font-black text-black">{job.timings.synthesize_ms} ms</span>
+              <div className="p-3.5 rounded-xl border border-[#ded7cc] bg-white text-center shadow-sm">
+                <span className="text-[10px] font-semibold uppercase text-[#736154] block">3. Synthesize (TTS)</span>
+                <span className="text-xl font-mono font-bold text-[#2b1d16]">{job.timings.synthesize_ms} ms</span>
               </div>
-              <div className="p-3.5 rounded-xl border-[2px] border-black bg-[#ffc86b] text-center shadow-[3px_3px_0px_#000]">
-                <span className="text-[10px] font-black uppercase text-black block">Total Roundtrip</span>
-                <span className="text-xl font-mono font-black text-black">{job.timings.total_ms} ms</span>
+              <div className="p-3.5 rounded-xl border border-[#e9b140]/40 bg-[#e9b140]/15 text-center shadow-sm">
+                <span className="text-[10px] font-semibold uppercase text-[#2b1d16] block">Total Roundtrip</span>
+                <span className="text-xl font-mono font-bold text-[#2b1d16]">{job.timings.total_ms} ms</span>
               </div>
             </div>
           </Card>

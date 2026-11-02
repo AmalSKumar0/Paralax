@@ -19,16 +19,16 @@ export const ServiceBanner: React.FC = () => {
 
   return (
     <>
-      <div className="bg-[#ffecec] border-b-[3px] border-black px-4 py-3 flex items-center justify-between shadow-[0px_4px_0px_0px_#ef4444] sticky top-0 z-40 animate-in slide-in-from-top-2 duration-150">
+      <div className="bg-rose-50 border-b border-rose-200 px-5 py-3 flex items-center justify-between shadow-sm sticky top-0 z-40">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full border-[2px] border-black bg-[#ef4444] text-white flex items-center justify-center shrink-0 shadow-[2px_2px_0px_#000]">
+          <div className="w-7 h-7 rounded-lg bg-rose-100 text-rose-800 flex items-center justify-center shrink-0">
             <AlertTriangle className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-xs sm:text-sm font-black text-[#1a1a1a]">
-              SERVICE DISABLED · 503 service_disabled
+            <p className="text-xs font-semibold text-rose-900">
+              SERVICE PAUSED · 503 service_disabled
             </p>
-            <p className="text-[11px] font-semibold text-gray-700">
+            <p className="text-[11px] text-rose-700">
               Voice transcription, translation, and device utterance ingestion are currently paused by administrator policy.
             </p>
           </div>
@@ -37,17 +37,17 @@ export const ServiceBanner: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowConfirm(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border-[2px] border-black bg-[#4ade80] hover:bg-emerald-400 text-xs font-black text-black shadow-[2px_2px_0px_#000] active:translate-y-[1px] cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-xs font-semibold text-emerald-800 cursor-pointer transition-all"
           >
             <Power className="w-3.5 h-3.5" />
             <span>Enable Service</span>
           </button>
           <button
             onClick={dismissBanner}
-            className="p-1 rounded-lg border border-black hover:bg-black/10 cursor-pointer"
+            className="p-1 rounded-lg text-rose-700 hover:bg-rose-100 cursor-pointer transition-all"
             aria-label="Dismiss banner"
           >
-            <X className="w-4 h-4 text-black" />
+            <X className="w-4 h-4" />
           </button>
         </div>
       </div>

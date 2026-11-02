@@ -16,20 +16,20 @@ export const Card: React.FC<CardProps> = ({
   onClick,
 }) => {
   const variantStyles = {
-    light: 'bg-white border-black text-[#1a1a1a] shadow-[6px_6px_0px_0px_#000000]',
-    sand: 'bg-[#f9f6f0] border-black text-[#1a1a1a] shadow-[6px_6px_0px_0px_#000000]',
-    dark: 'bg-[#1a1a1a] border-black text-white shadow-[8px_8px_0px_0px_#ffc86b]',
-    yellow: 'bg-[#ffc86b] border-black text-[#1a1a1a] shadow-[6px_6px_0px_0px_#000000]',
+    light: 'bg-white border-[#ded7cc] text-[#2b1d16] shadow-[0_1px_3px_rgba(43,29,22,0.04),0_4px_12px_rgba(43,29,22,0.02)]',
+    sand: 'bg-[#f7f5f0] border-[#ded7cc] text-[#2b1d16] shadow-[0_1px_3px_rgba(43,29,22,0.04)]',
+    dark: 'bg-[#2b1d16] border-[#3d2a20] text-[#edeae4] shadow-[0_4px_16px_rgba(43,29,22,0.12)]',
+    yellow: 'bg-[#fcf8ee] border-[#e9b140]/50 text-[#2b1d16] shadow-[0_1px_3px_rgba(43,29,22,0.04)]',
   };
 
   const hoverStyles = hoverable
-    ? 'hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_#ffc86b] transition-all cursor-pointer'
+    ? 'hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(43,29,22,0.08)] hover:border-[#cfc6b5] transition-all duration-200 cursor-pointer'
     : '';
 
   return (
     <div
       onClick={onClick}
-      className={`border-[3px] rounded-[2rem] p-6 ${variantStyles[variant]} ${hoverStyles} ${className}`}
+      className={`border rounded-2xl p-6 transition-all duration-200 ${variantStyles[variant]} ${hoverStyles} ${className}`}
     >
       {children}
     </div>

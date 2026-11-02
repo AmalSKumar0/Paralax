@@ -108,29 +108,30 @@ export const ApiKeys: React.FC = () => {
         {/* Header Bar */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
           <div>
-            <h2 className="font-display text-2xl font-black text-[#1a1a1a]">
+            <h2 className="text-base font-bold text-[#2b1d16] tracking-tight">
               Active Machine Credentials
             </h2>
-            <p className="text-xs font-semibold text-gray-600">
+            <p className="text-xs text-[#8a776a]">
               Machine-to-machine client credentials attach via <code>x-api-key</code> or Bearer tokens
             </p>
           </div>
 
           <Button
             variant="primary"
+            size="sm"
             onClick={() => setIsCreateOpen(true)}
-            icon={<Plus className="w-4 h-4" />}
+            icon={<Plus className="w-3.5 h-3.5" />}
           >
             Create API Key
           </Button>
         </div>
 
         {/* API Keys Table Card */}
-        <div className="bg-white border-[3px] border-black rounded-[2rem] shadow-[6px_6px_0px_0px_#000] overflow-hidden">
+        <div className="bg-white border border-[#ded7cc] rounded-2xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b-[3px] border-black bg-[#f9f6f0] text-[11px] font-black uppercase tracking-wider text-black">
+                <tr className="border-b border-[#ded7cc] bg-[#f7f5f0] text-[11px] font-semibold uppercase tracking-wider text-[#736154]">
                   <th className="py-3.5 px-5">Client Name & ID</th>
                   <th className="py-3.5 px-4">Key Prefix</th>
                   <th className="py-3.5 px-4">Status</th>
@@ -139,36 +140,36 @@ export const ApiKeys: React.FC = () => {
                   <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y-[2px] divide-black/10 text-xs font-semibold">
+              <tbody className="divide-y divide-[#ded7cc] text-xs">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-gray-500 font-bold">
+                    <td colSpan={6} className="py-12 text-center text-[#736154]">
                       <div className="flex items-center justify-center gap-2">
-                        <RefreshCw className="w-4 h-4 animate-spin text-black" />
+                        <RefreshCw className="w-4 h-4 animate-spin text-[#736154]" />
                         <span>Loading API keys...</span>
                       </div>
                     </td>
                   </tr>
                 ) : keys.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-gray-500 font-bold">
+                    <td colSpan={6} className="py-12 text-center text-[#736154]">
                       No machine API keys provisioned yet.
                     </td>
                   </tr>
                 ) : (
                   keys.map((k) => (
-                    <tr key={k.id} className="hover:bg-[#ffc86b]/15 transition-colors">
+                    <tr key={k.id} className="hover:bg-[#f7f5f0] transition-colors">
                       {/* Name & ID */}
-                      <td className="py-4 px-5">
+                      <td className="py-3.5 px-5">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-xl border-[2px] border-black bg-[#f0ece1] flex items-center justify-center shrink-0">
-                            <KeyRound className="w-4 h-4 text-black" />
+                          <div className="w-8 h-8 rounded-lg border border-[#ded7cc] bg-[#f7f5f0] flex items-center justify-center shrink-0">
+                            <KeyRound className="w-4 h-4 text-[#736154]" />
                           </div>
                           <div>
-                            <span className="font-extrabold text-sm text-[#1a1a1a] block">
+                            <span className="font-semibold text-sm text-[#2b1d16] block">
                               {k.name}
                             </span>
-                            <span className="font-mono text-[11px] text-gray-500">
+                            <span className="font-mono text-[11px] text-[#8a776a]">
                               {k.id}
                             </span>
                           </div>
@@ -176,14 +177,14 @@ export const ApiKeys: React.FC = () => {
                       </td>
 
                       {/* Prefix */}
-                      <td className="py-4 px-4 font-mono font-bold">
-                        <span className="px-2 py-0.5 rounded border border-black bg-[#f9f6f0]">
+                      <td className="py-3.5 px-4 font-mono font-medium">
+                        <span className="px-2 py-0.5 rounded border border-[#ded7cc] bg-[#f7f5f0] text-[#2b1d16]">
                           {k.key_prefix}••••••••
                         </span>
                       </td>
 
                       {/* Status */}
-                      <td className="py-4 px-4">
+                      <td className="py-3.5 px-4">
                         {k.status === 'active' ? (
                           <Badge variant="success" size="sm" dot>Active</Badge>
                         ) : (
@@ -192,17 +193,17 @@ export const ApiKeys: React.FC = () => {
                       </td>
 
                       {/* Created */}
-                      <td className="py-4 px-4 font-medium text-gray-600">
+                      <td className="py-3.5 px-4 text-[#5c4a3e]">
                         {formatDateTime(k.created_at)}
                       </td>
 
                       {/* Last Used */}
-                      <td className="py-4 px-4 font-medium text-gray-600">
+                      <td className="py-3.5 px-4 text-[#5c4a3e]">
                         {k.last_used_at ? formatRelativeTime(k.last_used_at) : 'Never'}
                       </td>
 
                       {/* Revoke action */}
-                      <td className="py-4 px-4 text-right">
+                      <td className="py-3.5 px-4 text-right">
                         {k.status === 'active' ? (
                           <button
                             onClick={() =>
@@ -212,12 +213,12 @@ export const ApiKeys: React.FC = () => {
                                 keyName: k.name,
                               })
                             }
-                            className="px-3 py-1.5 rounded-full border-[2px] border-black bg-[#ffecec] hover:bg-rose-200 text-rose-900 font-black text-xs shadow-[2px_2px_0px_#ef4444] active:translate-y-[1px] cursor-pointer"
+                            className="px-2.5 py-1 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-800 font-medium text-xs transition-colors cursor-pointer"
                           >
                             Revoke
                           </button>
                         ) : (
-                          <span className="text-gray-400 font-bold italic">Revoked</span>
+                          <span className="text-[#8a776a] font-normal italic">Revoked</span>
                         )}
                       </td>
                     </tr>
@@ -233,7 +234,7 @@ export const ApiKeys: React.FC = () => {
       <Modal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} title="Create Machine API Key" maxWidth="md">
         <form onSubmit={handleCreate} className="space-y-4">
           <div>
-            <label htmlFor="api-client-name-input" className="block text-xs font-black uppercase tracking-wider text-black mb-1.5">
+            <label htmlFor="api-client-name-input" className="block text-xs font-semibold uppercase tracking-wider text-[#5c4a3e] mb-1.5">
               Client / Application Name *
             </label>
             <input
@@ -243,7 +244,7 @@ export const ApiKeys: React.FC = () => {
               value={keyName}
               onChange={(e) => setKeyName(e.target.value)}
               placeholder="e.g. Android Mobile App Gateway"
-              className="w-full px-4 py-2.5 rounded-xl border-[3px] border-black bg-[#f9f6f0] font-semibold text-sm focus:bg-white focus:outline-none"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-[#ded7cc] bg-[#f7f5f0] text-sm text-[#2b1d16] focus:bg-white focus:border-[#e9b140] focus:ring-1 focus:ring-[#e9b140] focus:outline-none transition-all placeholder:text-[#8a776a]"
             />
           </div>
 
@@ -266,8 +267,8 @@ export const ApiKeys: React.FC = () => {
           title="API Key Generated"
           maxWidth="md"
         >
-          <div className="space-y-6">
-            <div className="p-3.5 rounded-xl border-[2px] border-black bg-[#eafff1] text-xs font-bold text-black flex items-center gap-2">
+          <div className="space-y-5">
+            <div className="p-3 rounded-xl border border-emerald-200 bg-emerald-50 text-xs font-medium text-emerald-900 flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-emerald-700 shrink-0" />
               <span>
                 Copy your secret key now. For security purposes, this secret key will never be visible again.

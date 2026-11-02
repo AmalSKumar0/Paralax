@@ -201,7 +201,7 @@ export const DeviceDetail: React.FC = () => {
       <div className="flex-1 flex flex-col">
         <Topbar title="Device Detail" subtitle="Loading device telemetry..." />
         <div className="p-8">
-          <div className="h-64 bg-[#f9f6f0] border-[3px] border-black rounded-[2rem] animate-pulse" />
+          <div className="h-64 bg-white border border-[#ded7cc] rounded-2xl animate-pulse" />
         </div>
       </div>
     );
@@ -225,14 +225,14 @@ export const DeviceDetail: React.FC = () => {
           <div className="flex items-center gap-3">
             <Link
               to="/devices"
-              className="p-2 rounded-xl border-[2px] border-black bg-white hover:bg-[#f0ece1] active:translate-y-[1px] transition-all cursor-pointer shadow-[2px_2px_0px_#000]"
+              className="p-2 rounded-xl border border-[#ded7cc] bg-white hover:bg-[#f7f5f0] text-[#736154] hover:text-[#2b1d16] transition-all cursor-pointer shadow-sm"
               aria-label="Back to device list"
             >
-              <ArrowLeft className="w-5 h-5 text-black" />
+              <ArrowLeft className="w-4 h-4" />
             </Link>
             <div>
               <div className="flex items-center gap-2.5">
-                <h1 className="font-display text-3xl font-black text-[#1a1a1a]">
+                <h1 className="text-2xl font-bold tracking-tight text-[#2b1d16]">
                   {device.name}
                 </h1>
                 {device.online ? (
@@ -299,28 +299,28 @@ export const DeviceDetail: React.FC = () => {
 
         {/* Live Telemetry Card */}
         <Card variant="light" className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b-[3px] border-black gap-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-[#ded7cc] gap-2">
             <div>
               <div className="flex items-center gap-2">
-                <Radio className="w-5 h-5 text-black" />
-                <h2 className="font-display text-2xl font-black text-[#1a1a1a]">
+                <Radio className="w-5 h-5 text-[#e9b140]" />
+                <h2 className="text-lg font-bold text-[#2b1d16]">
                   Live Device Telemetry
                 </h2>
               </div>
-              <p className="text-xs font-semibold text-gray-600">
+              <p className="text-xs text-[#736154]">
                 Continuous hardware metrics transmitted over secure MQTT / HTTPS heartbeats
               </p>
             </div>
 
             {/* Quick telemetry indicators */}
-            <div className="flex flex-wrap items-center gap-2 text-xs font-mono font-bold">
-              <span className={`px-2.5 py-1 rounded-full border border-black ${rssiQuality.color}`}>
+            <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
+              <span className={`px-2.5 py-1 rounded-full border ${rssiQuality.color}`}>
                 RSSI: {device.rssi} dBm ({rssiQuality.label})
               </span>
-              <span className="px-2.5 py-1 rounded-full border border-black bg-[#f0ece1]">
+              <span className="px-2.5 py-1 rounded-full border border-[#ded7cc] bg-[#f7f5f0] text-[#736154]">
                 Heap: ~196 KB free
               </span>
-              <span className="px-2.5 py-1 rounded-full border border-black bg-[#eafff1] text-emerald-800">
+              <span className="px-2.5 py-1 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-800">
                 Battery: 92%
               </span>
             </div>
@@ -340,18 +340,18 @@ export const DeviceDetail: React.FC = () => {
           {/* Config Editor Column */}
           <div className="lg:col-span-2">
             <Card variant="light" className="space-y-6">
-              <div className="flex items-center justify-between pb-4 border-b-[3px] border-black">
+              <div className="flex items-center justify-between pb-4 border-b border-[#ded7cc]">
                 <div>
                   <div className="flex items-center gap-2">
-                    <Sliders className="w-5 h-5 text-black" />
-                    <h2 className="font-display text-2xl font-black text-[#1a1a1a]">
+                    <Sliders className="w-5 h-5 text-[#e9b140]" />
+                    <h2 className="text-lg font-bold text-[#2b1d16]">
                       Hardware Configuration
                     </h2>
                   </div>
-                  <p className="text-xs font-semibold text-gray-600">
+                  <p className="text-xs text-[#736154]">
                     Deployed config version: <strong>v{device.config_version}</strong>
                     {isConfigSyncPending && (
-                      <span className="text-amber-700 ml-1 font-bold">
+                      <span className="text-amber-700 ml-1 font-semibold">
                         (pending on device v{device.applied_config_version})
                       </span>
                     )}
@@ -359,7 +359,7 @@ export const DeviceDetail: React.FC = () => {
                 </div>
 
                 {hasUnsavedChanges && (
-                  <span className="text-xs font-black px-2.5 py-1 rounded-full border border-black bg-[#ffc86b] shadow-[2px_2px_0px_#000] animate-bounce">
+                  <span className="text-xs font-medium px-2.5 py-1 rounded-full border border-[#e9b140] bg-[#e9b140]/15 text-[#2b1d16] animate-pulse">
                     Unsaved Changes
                   </span>
                 )}
@@ -368,13 +368,13 @@ export const DeviceDetail: React.FC = () => {
               {/* Language A & Language B Selectors */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-[#1a1a1a] mb-1.5">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[#5c4a3e] mb-1.5">
                     Primary Language (A)
                   </label>
                   <select
                     value={formConfig.language_a}
                     onChange={(e) => handleConfigChange('language_a', e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border-[3px] border-black bg-[#f9f6f0] font-bold text-sm focus:bg-white focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#ded7cc] bg-[#f7f5f0] text-sm text-[#2b1d16] focus:bg-white focus:outline-none focus:border-[#e9b140] transition-all cursor-pointer"
                   >
                     {languages.map((l) => (
                       <option key={l.code} value={l.code}>
@@ -385,13 +385,13 @@ export const DeviceDetail: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-[#1a1a1a] mb-1.5">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[#5c4a3e] mb-1.5">
                     Secondary Language (B)
                   </label>
                   <select
                     value={formConfig.language_b}
                     onChange={(e) => handleConfigChange('language_b', e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border-[3px] border-black bg-[#f9f6f0] font-bold text-sm focus:bg-white focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#ded7cc] bg-[#f7f5f0] text-sm text-[#2b1d16] focus:bg-white focus:outline-none focus:border-[#e9b140] transition-all cursor-pointer"
                   >
                     {languages.map((l) => (
                       <option key={l.code} value={l.code}>
@@ -404,7 +404,7 @@ export const DeviceDetail: React.FC = () => {
 
               {/* Pair validation notice */}
               {!isValidPair && (
-                <div className="flex items-center gap-2 p-3 rounded-xl border-[2px] border-black bg-[#ffecec] text-xs font-bold text-rose-800">
+                <div className="flex items-center gap-2 p-3 rounded-xl border border-rose-200 bg-rose-50 text-xs font-medium text-rose-800">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>
                     Pair {formConfig.language_a} ↔ {formConfig.language_b} is unsupported. Machine translation route is unavailable between these codes.
@@ -414,34 +414,34 @@ export const DeviceDetail: React.FC = () => {
 
               {/* Operating Mode */}
               <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-[#1a1a1a] mb-1.5">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[#5c4a3e] mb-1.5">
                   Operating Mode
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => handleConfigChange('mode', 'auto_detect')}
-                    className={`p-3 rounded-xl border-[2px] border-black text-left cursor-pointer transition-all ${
+                    className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
                       formConfig.mode === 'auto_detect'
-                        ? 'bg-[#ffc86b] font-black shadow-[3px_3px_0px_#000]'
-                        : 'bg-[#f9f6f0] font-bold text-gray-700 hover:bg-gray-100'
+                        ? 'bg-[#e9b140]/15 border-[#e9b140] font-semibold text-[#2b1d16] shadow-sm'
+                        : 'bg-[#f7f5f0] border-[#ded7cc] font-medium text-[#736154] hover:bg-white'
                     }`}
                   >
                     <div className="text-xs">Auto-Detect</div>
-                    <div className="text-[10px] font-normal text-gray-600">Dual-channel continuous speech ID</div>
+                    <div className="text-[10px] text-[#8a776a]">Dual-channel continuous speech ID</div>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => handleConfigChange('mode', 'buttons')}
-                    className={`p-3 rounded-xl border-[2px] border-black text-left cursor-pointer transition-all ${
+                    className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
                       formConfig.mode === 'buttons'
-                        ? 'bg-[#ffc86b] font-black shadow-[3px_3px_0px_#000]'
-                        : 'bg-[#f9f6f0] font-bold text-gray-700 hover:bg-gray-100'
+                        ? 'bg-[#e9b140]/15 border-[#e9b140] font-semibold text-[#2b1d16] shadow-sm'
+                        : 'bg-[#f7f5f0] border-[#ded7cc] font-medium text-[#736154] hover:bg-white'
                     }`}
                   >
                     <div className="text-xs">Physical Buttons</div>
-                    <div className="text-[10px] font-normal text-gray-600">Hold Button A or B to speak</div>
+                    <div className="text-[10px] text-[#8a776a]">Hold Button A or B to speak</div>
                   </button>
                 </div>
               </div>
@@ -518,7 +518,7 @@ export const DeviceDetail: React.FC = () => {
               </div>
 
               {/* Actions */}
-              <div className="flex items-center justify-between pt-6 border-t-[3px] border-black">
+              <div className="flex items-center justify-between pt-6 border-t border-[#ded7cc]">
                 <Button
                   variant="secondary"
                   onClick={handleResetConfig}
@@ -542,50 +542,50 @@ export const DeviceDetail: React.FC = () => {
           {/* Commands & Device Security Column */}
           <div className="space-y-6">
             {/* Command History Panel */}
-            <Card variant="sand" className="space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b-[3px] border-black">
+            <Card variant="light" className="space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-[#ded7cc]">
                 <div className="flex items-center gap-2">
-                  <Terminal className="w-5 h-5 text-black" />
-                  <h3 className="font-display text-xl font-black text-[#1a1a1a]">
+                  <Terminal className="w-5 h-5 text-[#e9b140]" />
+                  <h3 className="text-base font-bold text-[#2b1d16]">
                     Command Queue
                   </h3>
                 </div>
-                <span className="text-xs font-mono font-bold text-gray-600">
+                <span className="text-xs font-mono text-[#736154]">
                   {commands.length} total
                 </span>
               </div>
 
               <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
                 {commands.length === 0 ? (
-                  <p className="text-xs font-bold text-gray-500 italic text-center py-4">
+                  <p className="text-xs text-[#8a776a] italic text-center py-4">
                     No commands dispatched yet.
                   </p>
                 ) : (
                   commands.map((cmd) => (
                     <div
                       key={cmd.id}
-                      className="p-3 rounded-xl border-[2px] border-black bg-white space-y-1 shadow-[2px_2px_0px_#000]"
+                      className="p-3 rounded-xl border border-[#ded7cc] bg-white space-y-1 shadow-sm"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-black uppercase text-black">
+                        <span className="text-xs font-semibold uppercase text-[#2b1d16]">
                           {cmd.type.replace('_', ' ')}
                         </span>
                         <span
-                          className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${
+                          className={`text-[10px] font-medium uppercase px-2 py-0.5 rounded-full border ${
                             cmd.status === 'done'
-                              ? 'bg-[#eafff1] text-emerald-800 border-emerald-500'
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
                               : cmd.status === 'pending'
-                              ? 'bg-[#fff7e6] text-amber-800 border-amber-500'
-                              : 'bg-gray-100 text-gray-700 border-black'
+                              ? 'bg-amber-50 text-amber-800 border-amber-200'
+                              : 'bg-gray-100 text-[#736154] border-[#ded7cc]'
                           }`}
                         >
                           {cmd.status}
                         </span>
                       </div>
-                      <p className="text-[11px] text-gray-600 font-medium">
+                      <p className="text-[11px] text-[#5c4a3e] font-normal">
                         {cmd.detail || 'Executed standard command payload'}
                       </p>
-                      <div className="text-[10px] font-mono text-gray-500 flex justify-between pt-1 border-t border-black/10">
+                      <div className="text-[10px] font-mono text-[#8a776a] flex justify-between pt-1 border-t border-[#ded7cc]">
                         <span>{new Date(cmd.created_at).toLocaleTimeString()}</span>
                         {cmd.acked_at && <span>Acked {formatRelativeTime(cmd.acked_at)}</span>}
                       </div>
@@ -597,9 +597,9 @@ export const DeviceDetail: React.FC = () => {
 
             {/* Device Security & Danger Zone */}
             <Card variant="light" className="space-y-4">
-              <div className="pb-3 border-b-[3px] border-black flex items-center gap-2">
+              <div className="pb-3 border-b border-[#ded7cc] flex items-center gap-2">
                 <ShieldAlert className="w-5 h-5 text-rose-700" />
-                <h3 className="font-display text-xl font-black text-[#1a1a1a]">
+                <h3 className="text-base font-bold text-[#2b1d16]">
                   Security & Identity
                 </h3>
               </div>
@@ -609,7 +609,7 @@ export const DeviceDetail: React.FC = () => {
                   variant="secondary"
                   className="w-full justify-between"
                   onClick={handleRotateKey}
-                  icon={<RotateCw className="w-4 h-4 text-black" />}
+                  icon={<RotateCw className="w-4 h-4 text-[#736154]" />}
                 >
                   Rotate Device Secret Key
                 </Button>
@@ -673,7 +673,7 @@ export const DeviceDetail: React.FC = () => {
           maxWidth="md"
         >
           <div className="space-y-6">
-            <div className="p-3.5 rounded-xl border-[2px] border-black bg-[#eafff1] text-xs font-bold text-black">
+            <div className="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50 text-xs font-medium text-emerald-900">
               A new hardware secret has been rotated for {device.name}. Flash or update this secret on the device firmware immediately.
             </div>
 

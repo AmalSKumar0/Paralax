@@ -41,7 +41,7 @@ export const Overview: React.FC = () => {
         <div className="p-8 space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-32 bg-[#f9f6f0] border-[3px] border-black rounded-[1.75rem] animate-pulse" />
+              <div key={i} className="h-32 bg-white border border-[#ded7cc] rounded-2xl animate-pulse" />
             ))}
           </div>
         </div>
@@ -100,23 +100,23 @@ export const Overview: React.FC = () => {
 
         {/* Latency Card & Chart */}
         <Card variant="light" className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b-[3px] border-black gap-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-3 border-b border-[#ded7cc] gap-2">
             <div>
               <div className="flex items-center gap-2">
-                <Gauge className="w-5 h-5 text-black" />
-                <h2 className="font-display text-2xl font-black text-[#1a1a1a]">
+                <Gauge className="w-4 h-4 text-[#855b14]" />
+                <h2 className="text-base font-bold text-[#2b1d16] tracking-tight">
                   Cloud Latency Profile (p50 & p95)
                 </h2>
               </div>
-              <p className="text-xs font-semibold text-gray-600">
+              <p className="text-xs text-[#8a776a]">
                 End-to-end speech ingestion, Groq Whisper STT, Groq/xAI Translation, and Edge TTS breakdown
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-black px-3 py-1 rounded-full border-[2px] border-black bg-[#ffc86b] shadow-[2px_2px_0px_#000]">
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full border border-[#e9b140]/40 bg-[#fcf8ee] text-[#855b14]">
                 Total p50: {formatLatency(stats.latency.total.p50)}
               </span>
-              <span className="text-xs font-black px-3 py-1 rounded-full border-[2px] border-black bg-[#1a1a1a] text-white shadow-[2px_2px_0px_#ffc86b]">
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full border border-[#ded7cc] bg-[#2b1d16] text-[#edeae4]">
                 Total p95: {formatLatency(stats.latency.total.p95)}
               </span>
             </div>
@@ -129,11 +129,11 @@ export const Overview: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <Card variant="light" className="space-y-4">
-              <div className="pb-3 border-b-[3px] border-black">
-                <h2 className="font-display text-2xl font-black text-[#1a1a1a]">
+              <div className="pb-3 border-b border-[#ded7cc]">
+                <h2 className="text-base font-bold text-[#2b1d16] tracking-tight">
                   Jobs Volume (Last 30 Days)
                 </h2>
-                <p className="text-xs font-semibold text-gray-600">
+                <p className="text-xs text-[#8a776a]">
                   Daily processed voice utterances and batch audio file translation requests
                 </p>
               </div>
@@ -144,11 +144,11 @@ export const Overview: React.FC = () => {
           <div>
             <Card variant="sand" className="space-y-4 h-full flex flex-col justify-between">
               <div>
-                <div className="pb-3 border-b-[3px] border-black">
-                  <h2 className="font-display text-2xl font-black text-[#1a1a1a]">
+                <div className="pb-3 border-b border-[#ded7cc]">
+                  <h2 className="text-base font-bold text-[#2b1d16] tracking-tight">
                     Top Language Pairs
                   </h2>
-                  <p className="text-xs font-semibold text-gray-600">
+                  <p className="text-xs text-[#8a776a]">
                     Highest volume translation routes across the network
                   </p>
                 </div>
@@ -157,11 +157,11 @@ export const Overview: React.FC = () => {
                 </div>
               </div>
 
-              <div className="mt-6 p-3.5 rounded-xl border-[2px] border-black bg-white">
-                <span className="text-[11px] font-black uppercase text-gray-700 block mb-1">
+              <div className="mt-6 p-3.5 rounded-xl border border-[#ded7cc] bg-white">
+                <span className="text-[11px] font-semibold uppercase text-[#736154] block mb-1">
                   Language ID Threshold
                 </span>
-                <p className="text-xs font-semibold text-gray-600">
+                <p className="text-xs text-[#5c4a3e]">
                   Auto-detect confidence gate set at 85%. Review configurations in Settings.
                 </p>
               </div>

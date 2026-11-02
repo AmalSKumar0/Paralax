@@ -57,7 +57,7 @@ export const SystemHealth: React.FC = () => {
         <div className="p-8 space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-32 bg-[#f9f6f0] border-[3px] border-black rounded-[1.75rem] animate-pulse" />
+              <div key={i} className="h-32 bg-white border border-[#ded7cc] rounded-2xl animate-pulse" />
             ))}
           </div>
         </div>
@@ -84,15 +84,15 @@ export const SystemHealth: React.FC = () => {
       <div className="p-6 md:p-8 space-y-8 max-w-[1400px]">
         {/* Core Cloud Services Health Header & Re-check Button */}
         <Card variant="light" className="space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b-[3px] border-black gap-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-[#ded7cc] gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <Server className="w-5 h-5 text-black" />
-                <h2 className="font-display text-2xl font-black text-[#1a1a1a]">
+                <Server className="w-5 h-5 text-[#e9b140]" />
+                <h2 className="text-lg font-bold text-[#2b1d16]">
                   Upstream Cloud Subsystems
                 </h2>
               </div>
-              <p className="text-xs font-semibold text-gray-600">
+              <p className="text-xs text-[#736154]">
                 Live health verification of Groq, xAI, Edge TTS, Upstash Redis, and Neon Postgres
               </p>
             </div>
@@ -112,23 +112,23 @@ export const SystemHealth: React.FC = () => {
             {healthData.services.map((svc) => (
               <div
                 key={svc.name}
-                className="p-4 rounded-2xl border-[3px] border-black bg-[#f9f6f0] flex flex-col justify-between shadow-[4px_4px_0px_#000]"
+                className="p-4 rounded-xl border border-[#ded7cc] bg-[#f7f5f0] flex flex-col justify-between shadow-sm"
               >
                 <div className="flex items-start justify-between">
-                  <span className="text-xs font-black uppercase text-black tracking-wide leading-snug">
+                  <span className="text-xs font-semibold uppercase text-[#2b1d16] tracking-wide leading-snug">
                     {svc.name}
                   </span>
                   {getServiceStatusIcon(svc.status)}
                 </div>
 
-                <div className="mt-4 pt-2 border-t-[2px] border-black/15">
+                <div className="mt-4 pt-2 border-t border-[#ded7cc]">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-gray-600">Status:</span>
+                    <span className="text-[#736154]">Status:</span>
                     <Badge variant={svc.status === 'healthy' ? 'success' : 'danger'} size="sm">
                       {svc.status}
                     </Badge>
                   </div>
-                  <div className="flex items-center justify-between text-[11px] font-mono text-gray-500 mt-1">
+                  <div className="flex items-center justify-between text-[11px] font-mono text-[#8a776a] mt-1">
                     <span>Latency:</span>
                     <span>{svc.latency_ms} ms</span>
                   </div>
@@ -141,25 +141,25 @@ export const SystemHealth: React.FC = () => {
         {/* Two Columns: Offline Devices Watch & Last 20 Failed Jobs */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Offline Devices Watch */}
-          <Card variant="sand" className="space-y-4 flex flex-col justify-between">
+          <Card variant="light" className="space-y-4 flex flex-col justify-between">
             <div className="space-y-3">
-              <div className="flex items-center justify-between pb-3 border-b-[3px] border-black">
+              <div className="flex items-center justify-between pb-3 border-b border-[#ded7cc]">
                 <div className="flex items-center gap-2">
-                  <Cpu className="w-5 h-5 text-black" />
-                  <h3 className="font-display text-xl font-black text-[#1a1a1a]">
+                  <Cpu className="w-5 h-5 text-[#e9b140]" />
+                  <h3 className="text-base font-bold text-[#2b1d16]">
                     Offline Devices Watch ({healthData.offline_devices.length})
                   </h3>
                 </div>
-                <span className="text-xs font-mono font-bold text-gray-600">
+                <span className="text-xs font-mono text-[#736154]">
                   Fleet Monitor
                 </span>
               </div>
 
               {healthData.offline_devices.length === 0 ? (
-                <div className="py-8 text-center bg-white rounded-2xl border-[2px] border-black p-4">
+                <div className="py-8 text-center bg-[#f7f5f0] rounded-xl border border-[#ded7cc] p-4">
                   <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto mb-1" />
-                  <p className="text-xs font-black text-black">All Translator Devices are Online</p>
-                  <p className="text-[11px] font-semibold text-gray-500">Zero heartbeat dropouts detected.</p>
+                  <p className="text-xs font-semibold text-[#2b1d16]">All Translator Devices are Online</p>
+                  <p className="text-[11px] text-[#8a776a]">Zero heartbeat dropouts detected.</p>
                 </div>
               ) : (
                 <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
@@ -167,23 +167,23 @@ export const SystemHealth: React.FC = () => {
                     <div
                       key={dev.device_id}
                       onClick={() => navigate(`/devices/${dev.device_id}`)}
-                      className="p-3.5 rounded-xl border-[2px] border-black bg-white flex items-center justify-between shadow-[2px_2px_0px_#000] hover:bg-[#ffecec] cursor-pointer transition-colors group"
+                      className="p-3.5 rounded-xl border border-[#ded7cc] bg-white flex items-center justify-between shadow-sm hover:border-[#e9b140] cursor-pointer transition-colors group"
                     >
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-extrabold text-black">
+                          <span className="text-xs font-semibold text-[#2b1d16]">
                             {dev.name}
                           </span>
-                          <span className="font-mono text-[10px] text-gray-500">
+                          <span className="font-mono text-[10px] text-[#8a776a]">
                             {dev.device_id}
                           </span>
                         </div>
-                        <p className="text-[11px] font-semibold text-rose-800 mt-0.5">
+                        <p className="text-[11px] text-rose-800 mt-0.5">
                           Unreachable since {formatDateTime(dev.last_seen)}
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-1 text-xs font-black text-black group-hover:translate-x-1 transition-transform">
+                      <div className="flex items-center gap-1 text-xs text-[#736154] group-hover:text-[#2b1d16] transition-colors">
                         <span>Details</span>
                         <ChevronRight className="w-4 h-4" />
                       </div>
@@ -193,7 +193,7 @@ export const SystemHealth: React.FC = () => {
               )}
             </div>
 
-            <div className="pt-3 border-t-[2px] border-black/15 text-xs font-bold text-gray-600">
+            <div className="pt-3 border-t border-[#ded7cc] text-xs text-[#736154]">
               Hardware heartbeat timeout threshold is 3x device interval.
             </div>
           </Card>
@@ -201,23 +201,23 @@ export const SystemHealth: React.FC = () => {
           {/* Last 20 Failed Jobs with Errors */}
           <Card variant="light" className="space-y-4 flex flex-col justify-between">
             <div className="space-y-3">
-              <div className="flex items-center justify-between pb-3 border-b-[3px] border-black">
+              <div className="flex items-center justify-between pb-3 border-b border-[#ded7cc]">
                 <div className="flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-rose-700" />
-                  <h3 className="font-display text-xl font-black text-[#1a1a1a]">
+                  <Activity className="w-5 h-5 text-rose-600" />
+                  <h3 className="text-base font-bold text-[#2b1d16]">
                     Last Failed Jobs ({healthData.recent_failures.length})
                   </h3>
                 </div>
-                <span className="text-xs font-mono font-bold text-gray-600">
+                <span className="text-xs font-mono text-[#736154]">
                   Error Diagnostics
                 </span>
               </div>
 
               {healthData.recent_failures.length === 0 ? (
-                <div className="py-8 text-center bg-[#eafff1] rounded-2xl border-[2px] border-black p-4">
+                <div className="py-8 text-center bg-emerald-50 rounded-xl border border-emerald-200 p-4">
                   <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto mb-1" />
-                  <p className="text-xs font-black text-black">Zero Recent Failures</p>
-                  <p className="text-[11px] font-semibold text-gray-600">All recent speech translation jobs succeeded.</p>
+                  <p className="text-xs font-semibold text-emerald-950">Zero Recent Failures</p>
+                  <p className="text-[11px] text-emerald-800">All recent speech translation jobs succeeded.</p>
                 </div>
               ) : (
                 <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
@@ -225,29 +225,29 @@ export const SystemHealth: React.FC = () => {
                     <div
                       key={job.job_id}
                       onClick={() => navigate(`/jobs/${job.job_id}`)}
-                      className="p-3.5 rounded-xl border-[2px] border-black bg-white flex flex-col gap-1 shadow-[2px_2px_0px_#ef4444] hover:bg-[#fff7e6] cursor-pointer transition-colors group"
+                      className="p-3.5 rounded-xl border border-rose-200 bg-white flex flex-col gap-1 shadow-sm hover:bg-rose-50/50 cursor-pointer transition-colors group"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-mono font-black text-xs text-black">
+                        <span className="font-mono font-medium text-xs text-[#2b1d16]">
                           {job.job_id}
                         </span>
-                        <span className="text-[10px] font-mono text-gray-500">
+                        <span className="text-[10px] font-mono text-[#8a776a]">
                           {formatRelativeTime(job.created_at)}
                         </span>
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-black uppercase px-2 py-0.5 rounded border border-red-500 bg-red-100 text-rose-800">
+                        <span className="text-[11px] font-medium uppercase px-2 py-0.5 rounded border border-rose-200 bg-rose-50 text-rose-800">
                           {job.error?.code || 'error'}
                         </span>
-                        <span className="text-[11px] font-bold text-gray-800 truncate">
+                        <span className="text-[11px] text-[#5c4a3e] truncate">
                           {formatApiError(job.error?.code, job.error?.message)}
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between text-[10px] font-mono text-gray-600 pt-1 border-t border-black/10">
+                      <div className="flex items-center justify-between text-[10px] font-mono text-[#736154] pt-1 border-t border-[#ded7cc]">
                         <span>{job.source_language} ➔ {job.target_language}</span>
-                        <span className="font-sans font-black group-hover:translate-x-1 transition-transform text-black flex items-center">
+                        <span className="font-sans text-xs group-hover:text-[#2b1d16] transition-colors flex items-center">
                           Investigate <ChevronRight className="w-3 h-3 ml-0.5" />
                         </span>
                       </div>
@@ -257,7 +257,7 @@ export const SystemHealth: React.FC = () => {
               )}
             </div>
 
-            <div className="pt-3 border-t-[2px] border-black/15 text-xs font-bold text-gray-600">
+            <div className="pt-3 border-t border-[#ded7cc] text-xs text-[#736154]">
               Click any failure to view the audio diagnostic timeline and stage log.
             </div>
           </Card>
