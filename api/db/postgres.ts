@@ -11,7 +11,7 @@ class PostgresStore {
   private memoryConversations: Map<string, Conversation> = new Map();
 
   constructor() {
-    const connStr = process.env.DATABASE_URL?.trim();
+    const connStr = (process.env.DATABASE_URL || process.env.POSTGRES_URL)?.trim();
     if (connStr && !connStr.includes('ep-sample-pooler')) {
       const sqlClient = neon(connStr);
       this.db = drizzle(sqlClient, { schema });
