@@ -256,7 +256,8 @@ deviceRoutes.post('/translate', async (c) => {
   }
 
   // Silence/confidence checks on STT result
-  if (!sttRes.text || sttRes.text.trim().length === 0 || (sttRes.noSpeechProb && sttRes.noSpeechProb > 0.85)) {
+  const cleanedText = (sttRes.text || '').replace(/[^\p{L}\p{N}]+/gu, '').trim();
+  if (!cleanedText || cleanedText.length === 0 || (sttRes.noSpeechProb && sttRes.noSpeechProb > 0.85)) {
     return c.json(
       {
         error: {

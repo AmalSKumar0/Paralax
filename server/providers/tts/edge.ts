@@ -17,13 +17,18 @@ export class EdgeTTSProvider implements TTSProvider {
   }
 
   public async synthesize(text: string, targetLang: string, voiceId?: string): Promise<Buffer> {
+    const cleanText = (text || '').trim();
+    if (!cleanText) {
+      return Buffer.alloc(3200, 0); // 0.1s silence PCM
+    }
+
     const resolved = resolveTtsVoice(targetLang, voiceId, ['edge']);
     const chosenVoice = voiceId || resolved.voiceId;
 
     const tts = new MsEdgeTTS({ enableLogger: false, connectionTimeoutMs: 15000 });
     await tts.setMetadata(chosenVoice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
 
-    const { audioStream } = tts.toStream(text);
+    const { audioStream } = tts.toStream(cleanText);
     const chunks: Buffer[] = [];
 
     await new Promise<void>((resolve, reject) => {
