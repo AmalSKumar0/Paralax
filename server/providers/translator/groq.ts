@@ -35,7 +35,7 @@ async function getAvailableGroqChatModels(apiKey: string, baseUrl: string): Prom
     console.warn('[Groq] Failed to fetch live models list:', err);
   }
 
-  return ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile'];
+  return ['llama-3.1-8b-instant', 'gemma2-9b-it', 'llama-3.2-3b-preview', 'llama-3.2-1b-preview'];
 }
 
 export class GroqTranslatorProvider implements TranslatorProvider {
@@ -61,19 +61,34 @@ export class GroqTranslatorProvider implements TranslatorProvider {
     // Discover models available to this specific API key
     const availableModels = await getAvailableGroqChatModels(apiKey, baseUrl);
 
-    // Build ordered candidates: user preference -> llama-3.1-8b-instant -> other available models
-    const userPreferred = process.env.GROQ_LLAMA_MODEL?.trim();
+    // Build ordered candidates:
+    // 1. llama-3.1-8b-instant is guaranteed free, ultra-low latency, and universally accessible on Groq
+    // 2. Custom user model (if specified, valid, and not the restricted 70b model unless verified)
+    // 3. Fallback candidates from available models
     const candidateModels: string[] = [];
-    if (userPreferred && availableModels.includes(userPreferred)) {
-      candidateModels.push(userPreferred);
-    }
     if (availableModels.includes('llama-3.1-8b-instant')) {
       candidateModels.push('llama-3.1-8b-instant');
     }
+
+    const userPreferred = (process.env.GROQ_LLAMA_MODEL || process.env.GROQ_TRANSLATE_MODEL)?.trim();
+    if (
+      userPreferred &&
+      userPreferred !== 'llama-3.3-70b-versatile' &&
+      availableModels.includes(userPreferred) &&
+      !candidateModels.includes(userPreferred)
+    ) {
+      // Put custom model first if explicitly requested and not the default/restricted 70b
+      candidateModels.unshift(userPreferred);
+    }
+
     for (const m of availableModels) {
       if (!candidateModels.includes(m)) {
         candidateModels.push(m);
       }
+    }
+
+    if (candidateModels.length === 0) {
+      candidateModels.push('llama-3.1-8b-instant');
     }
 
     const srcInfo = getLanguageInfo(sourceLang);

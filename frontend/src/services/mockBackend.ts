@@ -298,7 +298,7 @@ export const INITIAL_SETTINGS: Settings = {
     allow_paid_fallback: false,
     models: {
       groq_stt_model: 'whisper-large-v3-turbo',
-      groq_chat_model: 'llama-3.3-70b-versatile',
+      groq_chat_model: 'llama-3.1-8b-instant',
       xai_chat_model: 'grok-2-latest',
     },
   },

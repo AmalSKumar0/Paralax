@@ -393,7 +393,7 @@ export const Settings: React.FC = () => {
                 {formSettings.providers?.translate_chains?.join(' ➔ ') || 'groq ➔ xai'}
               </span>
               <span className="text-[10px] text-gray-500 block mt-1">
-                Groq: {formSettings.providers?.models?.groq_chat_model || 'llama-3.3-70b-versatile'}
+                Groq: {formSettings.providers?.models?.groq_chat_model || 'llama-3.1-8b-instant'}
               </span>
             </div>
 

@@ -15,7 +15,7 @@ adminSettingsRoutes.get('/', async (c) => {
     allow_paid_fallback: process.env.ALLOW_PAID_FALLBACK === 'true',
     models: {
       groq_stt_model: process.env.GROQ_STT_MODEL || 'whisper-large-v3-turbo',
-      groq_chat_model: process.env.GROQ_TRANSLATE_MODEL || 'llama-3.3-70b-versatile',
+      groq_chat_model: process.env.GROQ_TRANSLATE_MODEL || process.env.GROQ_LLAMA_MODEL || 'llama-3.1-8b-instant',
       xai_chat_model: process.env.XAI_TRANSLATE_MODEL || 'grok-2-latest',
     },
     call_counts: providerManager.getStats(),
@@ -50,7 +50,7 @@ adminSettingsRoutes.put('/', async (c) => {
     allow_paid_fallback: process.env.ALLOW_PAID_FALLBACK === 'true',
     models: {
       groq_stt_model: process.env.GROQ_STT_MODEL || 'whisper-large-v3-turbo',
-      groq_chat_model: process.env.GROQ_TRANSLATE_MODEL || 'llama-3.3-70b-versatile',
+      groq_chat_model: process.env.GROQ_TRANSLATE_MODEL || process.env.GROQ_LLAMA_MODEL || 'llama-3.1-8b-instant',
       xai_chat_model: process.env.XAI_TRANSLATE_MODEL || 'grok-2-latest',
     },
     call_counts: providerManager.getStats(),
