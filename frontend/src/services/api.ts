@@ -1,4 +1,4 @@
-import { apiClient } from './apiClient';
+import { apiClient, API_BASE_URL } from './apiClient';
 import {
   AdminStats,
   ApiJob,
@@ -182,7 +182,7 @@ export const api = {
       });
 
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', `/api/v1/utterances?${sp.toString()}`);
+      xhr.open('POST', `${API_BASE_URL}/utterances?${sp.toString()}`);
       xhr.withCredentials = true;
       xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 

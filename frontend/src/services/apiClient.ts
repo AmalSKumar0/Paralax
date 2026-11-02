@@ -2,18 +2,27 @@ import { authService } from './authService';
 import { mockBackend } from './mockBackend';
 
 // Helper to normalize backend base URL from VITE_API_BASE_URL
-function normalizeBaseUrl(rawUrl?: string): string {
+export function normalizeBaseUrl(rawUrl?: string): string {
   if (!rawUrl || !rawUrl.trim()) {
     return '/api/v1';
   }
   let clean = rawUrl.trim().replace(/\/+$/, '');
-  if (!clean.endsWith('/v1')) {
-    clean = `${clean}/v1`;
+  if (clean === '/v1' || clean === '/api') {
+    return '/api/v1';
+  }
+  if (!clean.includes('/api/v1')) {
+    if (clean.endsWith('/api')) {
+      clean = `${clean}/v1`;
+    } else if (clean.endsWith('/v1')) {
+      clean = clean.replace(/\/v1$/, '/api/v1');
+    } else {
+      clean = `${clean}/api/v1`;
+    }
   }
   return clean;
 }
 
-const API_BASE_URL = normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL);
+export const API_BASE_URL = normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL);
 export const IS_MOCK_MODE = import.meta.env.VITE_MOCK_MODE === 'true';
 
 // Custom event to notify app of service disabled banner on 503

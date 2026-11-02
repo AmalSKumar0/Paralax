@@ -13,7 +13,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx server/db/migrate.ts",
     "hash-password": "tsx scripts/hash-password.ts",
-    "registry:check": "tsx scripts/check-registry.ts"
+    "registry:check": "tsx scripts/check-registry.ts",
+    "sim:device": "node tools/device-sim.mjs"
   },
   "dependencies": {
     "@hono/zod-openapi": "^0.18.4",

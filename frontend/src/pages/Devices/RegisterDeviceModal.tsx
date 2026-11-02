@@ -86,7 +86,9 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
     onClose();
   };
 
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.paralax.io/v1';
+  const apiBaseUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/api/v1`
+    : (import.meta.env.VITE_API_BASE_URL || '/api/v1');
 
   // If successfully registered, show the Device ID and Device Key ONCE in copy dialog
   if (registeredData) {

@@ -1,3 +1,5 @@
+import { API_BASE_URL } from './apiClient';
+
 export interface AuthSession {
   email: string;
   role?: string;
@@ -44,9 +46,7 @@ class AuthService {
     }
 
     // Call real Node.js /api/v1/auth/login
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api/v1';
-    const cleanBase = baseUrl.replace(/\/+$/, '');
-    const loginUrl = `${cleanBase}/auth/login`;
+    const loginUrl = `${API_BASE_URL}/auth/login`;
 
     const res = await fetch(loginUrl, {
       method: 'POST',
@@ -89,9 +89,7 @@ class AuthService {
     }
 
     try {
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api/v1';
-      const cleanBase = baseUrl.replace(/\/+$/, '');
-      const meUrl = `${cleanBase}/auth/me`;
+      const meUrl = `${API_BASE_URL}/auth/me`;
 
       const headers: Record<string, string> = {
         'X-Requested-With': 'XMLHttpRequest',
@@ -127,9 +125,7 @@ class AuthService {
   public async logout(): Promise<void> {
     try {
       if (!IS_MOCK_MODE) {
-        const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api/v1';
-        const cleanBase = baseUrl.replace(/\/+$/, '');
-        await fetch(`${cleanBase}/auth/logout`, {
+        await fetch(`${API_BASE_URL}/auth/logout`, {
           method: 'POST',
           headers: { 'X-Requested-With': 'XMLHttpRequest' },
           credentials: 'include',
