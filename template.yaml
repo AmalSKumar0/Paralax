@@ -1,0 +1,938 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Paralax - Serverless IoT Two-Way Voice Translator Backend on AWS.
+  Supports ESP32 push-to-talk devices (Path A synchronous streaming)
+  and dashboard batch uploads (Path B Step Functions pipeline).
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, staging, prod]
+    Description: Deployment environment name
+
+  CorsAllowOrigin:
+    Type: String
+    Default: '*'
+    Description: Allowed origin for CORS headers (e.g. https://dashboard.yourdomain.com)
+
+  RetentionDays:
+    Type: Number
+    Default: 30
+    Description: S3 audio retention days before automatic lifecycle purging
+
+  MaxUtteranceSec:
+    Type: Number
+    Default: 15
+    Description: Max duration in seconds for synchronous device utterances
+
+  MonthlyBudgetAmount:
+    Type: Number
+    Default: 50
+    Description: Monthly budget in USD for voice translation operations
+
+  BudgetNotificationEmail:
+    Type: String
+    Default: alert@example.com
+    Description: Email address for budget alert notifications
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Timeout: 15
+    MemorySize: 512
+    Tracing: Active
+    Environment:
+      Variables:
+        ENVIRONMENT: !Ref Environment
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
+        LOG_LEVEL: INFO
+        CORS_ALLOW_ORIGIN: !Ref CorsAllowOrigin
+        JOBS_TABLE_NAME: !Ref JobsTable
+        DEVICES_TABLE_NAME: !Ref DevicesTable
+        IDEMPOTENCY_TABLE_NAME: !Ref IdempotencyTable
+        COMMANDS_TABLE_NAME: !Ref DeviceCommandsTable
+        TELEMETRY_TABLE_NAME: !Ref TelemetryTable
+        SETTINGS_TABLE_NAME: !Ref SettingsTable
+        API_KEYS_TABLE_NAME: !Ref ApiKeysTable
+        RATE_LIMITS_TABLE_NAME: !Ref RateLimitsTable
+        AUDIO_BUCKET_NAME: !Ref AudioBucket
+
+Resources:
+
+  # -------------------------------------------------------------------
+  # Storage: S3 Bucket with Encryption, Private Access, and Lifecycle
+  # -------------------------------------------------------------------
+  AudioBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: PurgeAudioAfterRetentionDays
+            Status: Enabled
+            ExpirationInDays: !Ref RetentionDays
+
+  # -------------------------------------------------------------------
+  # Database: DynamoDB Tables with TTL and GSIs
+  # -------------------------------------------------------------------
+  JobsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: job_id
+          AttributeType: S
+        - AttributeName: device_id
+          AttributeType: S
+        - AttributeName: created_at
+          AttributeType: S
+        - AttributeName: conversation_id
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+      KeySchema:
+        - AttributeName: job_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: device_id-created_at-index
+          KeySchema:
+            - AttributeName: device_id
+              KeyType: HASH
+            - AttributeName: created_at
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: conversation_id-created_at-index
+          KeySchema:
+            - AttributeName: conversation_id
+              KeyType: HASH
+            - AttributeName: created_at
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: status-created_at-index
+          KeySchema:
+            - AttributeName: status
+              KeyType: HASH
+            - AttributeName: created_at
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: expires_at
+        Enabled: true
+
+  DevicesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: device_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: device_id
+          KeyType: HASH
+
+  IdempotencyTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: idempotency_key
+          AttributeType: S
+      KeySchema:
+        - AttributeName: idempotency_key
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: expires_at
+        Enabled: true
+
+  DeviceCommandsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: device_id
+          AttributeType: S
+        - AttributeName: command_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: device_id
+          KeyType: HASH
+        - AttributeName: command_id
+          KeyType: RANGE
+
+  TelemetryTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: device_id
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: S
+      KeySchema:
+        - AttributeName: device_id
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: expires_at
+        Enabled: true
+
+  SettingsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: setting_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: setting_id
+          KeyType: HASH
+
+  ApiKeysTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: api_key_hash
+          AttributeType: S
+      KeySchema:
+        - AttributeName: api_key_hash
+          KeyType: HASH
+
+  RateLimitsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: expires_at
+        Enabled: true
+
+  # -------------------------------------------------------------------
+  # Identity: Cognito User Pool and Client for Admin Dashboard
+  # -------------------------------------------------------------------
+  AdminUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub paralax-admin-users-${Environment}
+      UsernameAttributes: [email]
+      AutoVerifiedAttributes: [email]
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+
+  AdminUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub paralax-admin-dashboard-${Environment}
+      UserPoolId: !Ref AdminUserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_ADMIN_USER_PASSWORD_AUTH
+
+  # -------------------------------------------------------------------
+  # API Tier: HTTP API Gateway with Binary Support & Authorizers
+  # -------------------------------------------------------------------
+  HttpApiGateway:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins:
+          - !Ref CorsAllowOrigin
+        AllowHeaders:
+          - Content-Type
+          - X-Device-Key
+          - Idempotency-Key
+          - Authorization
+          - x-api-key
+          - x-conversation-id
+          - Accept
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - PATCH
+          - DELETE
+          - OPTIONS
+        MaxAge: 3600
+      Auth:
+        Authorizers:
+          DeviceLambdaAuthorizer:
+            FunctionArn: !GetAtt AuthDeviceFunction.Arn
+            FunctionPayloadType: REQUEST
+            Identity:
+              Headers:
+                - X-Device-Key
+              ReauthorizeEvery: 60
+            EnableSimpleResponses: false
+          CognitoJwtAuthorizer:
+            Identity:
+              Header: Authorization
+            JwtConfiguration:
+              Audience:
+                - !Ref AdminUserPoolClient
+              Issuer: !Sub https://cognito-idp.${AWS::Region}.amazonaws.com/${AdminUserPool}
+
+  # -------------------------------------------------------------------
+  # Authorizer Function
+  # -------------------------------------------------------------------
+  AuthDeviceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.handlers.auth_device.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref DevicesTable
+
+  # -------------------------------------------------------------------
+  # Compute: Path A Utterance Translator (Synchronous, Low Latency)
+  # -------------------------------------------------------------------
+  TranslateUtteranceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.handlers.translate_utterance.handler
+      Timeout: 25
+      MemorySize: 1024
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - transcribe:StartStreamTranscription
+                - transcribe:StartStreamTranscriptionWebSocket
+                - translate:TranslateText
+                - polly:SynthesizeSpeech
+              Resource: '*'
+        - DynamoDBCrudPolicy:
+            TableName: !Ref JobsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref IdempotencyTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RateLimitsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref DevicesTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref SettingsTable
+        - S3CrudPolicy:
+            BucketName: !Ref AudioBucket
+      Events:
+        DeviceTranslate:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/device/translate
+            Method: POST
+            Auth:
+              Authorizer: DeviceLambdaAuthorizer
+        AdminUtterance:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/utterances
+            Method: POST
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+
+  # -------------------------------------------------------------------
+  # Compute: Device Control Plane
+  # -------------------------------------------------------------------
+  DeviceHeartbeatFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.handlers.device_heartbeat.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DevicesTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DeviceCommandsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TelemetryTable
+      Events:
+        Heartbeat:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/device/heartbeat
+            Method: POST
+            Auth:
+              Authorizer: DeviceLambdaAuthorizer
+
+  DeviceConfigFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.handlers.device_config.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref DevicesTable
+      Events:
+        GetConfig:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/device/config
+            Method: GET
+            Auth:
+              Authorizer: DeviceLambdaAuthorizer
+
+  DeviceCommandsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.handlers.device_commands.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DeviceCommandsTable
+      Events:
+        AckCommand:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/device/commands/{id}/ack
+            Method: POST
+            Auth:
+              Authorizer: DeviceLambdaAuthorizer
+
+  # -------------------------------------------------------------------
+  # Compute: Admin Control Plane
+  # -------------------------------------------------------------------
+  AdminDevicesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.handlers.admin_devices.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DevicesTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DeviceCommandsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref TelemetryTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref JobsTable
+        - S3CrudPolicy:
+            BucketName: !Ref AudioBucket
+      Events:
+        ListDevices:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/admin/devices
+            Method: GET
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+        CreateDevice:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/admin/devices
+            Method: POST
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+        GetDevice:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/admin/devices/{id}
+            Method: GET
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+        DeleteDevice:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/admin/devices/{id}
+            Method: DELETE
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+        UpdateDeviceConfig:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/admin/devices/{id}/config
+            Method: PUT
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+        RotateDeviceKey:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/admin/devices/{id}/rotate-key
+            Method: POST
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+        RevokeDevice:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/admin/devices/{id}/revoke
+            Method: POST
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+        PostCommand:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/admin/devices/{id}/commands
+            Method: POST
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+        GetCommands:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/admin/devices/{id}/commands
+            Method: GET
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+        GetTelemetry:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/admin/devices/{id}/telemetry
+            Method: GET
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+
+  AdminConversationsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.handlers.admin_conversations.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref JobsTable
+        - S3ReadPolicy:
+            BucketName: !Ref AudioBucket
+      Events:
+        ListConversations:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/admin/conversations
+            Method: GET
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+        GetConversation:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/admin/conversations/{id}
+            Method: GET
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+
+  AdminSettingsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.handlers.admin_settings.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SettingsTable
+      Events:
+        GetSettings:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/admin/settings
+            Method: GET
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+        PutSettings:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/admin/settings
+            Method: PUT
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+
+  AdminStatsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.handlers.admin_stats.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref JobsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref DevicesTable
+      Events:
+        GetStats:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/admin/stats
+            Method: GET
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+
+  AdminHealthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.handlers.admin_health.handler
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - translate:ListLanguages
+                - polly:DescribeVoices
+                - transcribe:ListTranscriptionJobs
+              Resource: '*'
+        - DynamoDBReadPolicy:
+            TableName: !Ref JobsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref DevicesTable
+        - S3ReadPolicy:
+            BucketName: !Ref AudioBucket
+      Events:
+        GetHealth:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/admin/health
+            Method: GET
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+
+  AdminApiKeysFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.handlers.admin_api_keys.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ApiKeysTable
+      Events:
+        ListApiKeys:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/admin/api-keys
+            Method: GET
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+        CreateApiKey:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/admin/api-keys
+            Method: POST
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+        DeleteApiKey:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/admin/api-keys/{id}
+            Method: DELETE
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+
+  UploadsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.handlers.uploads.handler
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref AudioBucket
+        - DynamoDBReadPolicy:
+            TableName: !Ref SettingsTable
+      Events:
+        CreateUpload:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/uploads
+            Method: POST
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+
+  JobsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.handlers.jobs.handler
+      Environment:
+        Variables:
+          STATE_MACHINE_ARN: !Ref FileJobStateMachine
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref JobsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref SettingsTable
+        - S3CrudPolicy:
+            BucketName: !Ref AudioBucket
+        - StepFunctionsExecutionPolicy:
+            StateMachineName: !GetAtt FileJobStateMachine.Name
+      Events:
+        SubmitJob:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/jobs
+            Method: POST
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+        GetJob:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/jobs/{job_id}
+            Method: GET
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+        GetLanguages:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/languages
+            Method: GET
+        ListAdminJobs:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/admin/jobs
+            Method: GET
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+        RetryJob:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/admin/jobs/{id}/retry
+            Method: POST
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+        CancelJob:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/admin/jobs/{id}/cancel
+            Method: POST
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+        DeleteJob:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /v1/admin/jobs/{id}
+            Method: DELETE
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+
+  # -------------------------------------------------------------------
+  # Step Functions Task Lambdas (Path B)
+  # -------------------------------------------------------------------
+  PathBTranscribeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.handlers.path_b_transcribe.handler
+      Timeout: 300
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - transcribe:StartTranscriptionJob
+                - transcribe:GetTranscriptionJob
+              Resource: '*'
+        - DynamoDBCrudPolicy:
+            TableName: !Ref JobsTable
+        - S3CrudPolicy:
+            BucketName: !Ref AudioBucket
+
+  PathBTranslateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.handlers.path_b_translate.handler
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [translate:TranslateText]
+              Resource: '*'
+        - DynamoDBCrudPolicy:
+            TableName: !Ref JobsTable
+
+  PathBSynthesizeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.handlers.path_b_synthesize.handler
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [polly:SynthesizeSpeech]
+              Resource: '*'
+        - DynamoDBCrudPolicy:
+            TableName: !Ref JobsTable
+        - S3CrudPolicy:
+            BucketName: !Ref AudioBucket
+
+  PathBFinalizeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.handlers.path_b_finalize.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref JobsTable
+
+  # -------------------------------------------------------------------
+  # Step Functions State Machine (Path B Workflow)
+  # -------------------------------------------------------------------
+  FileJobStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Definition:
+        StartAt: TranscribeAudio
+        States:
+          TranscribeAudio:
+            Type: Task
+            Resource: !GetAtt PathBTranscribeFunction.Arn
+            Retry:
+              - ErrorEquals:
+                  - Lambda.ServiceException
+                  - Lambda.AWSLambdaException
+                  - Lambda.SdkClientException
+                IntervalSeconds: 2
+                MaxAttempts: 3
+                BackoffRate: 2.0
+            Catch:
+              - ErrorEquals: [States.ALL]
+                Next: HandleWorkflowFailure
+            Next: TranslateTranscript
+
+          TranslateTranscript:
+            Type: Task
+            Resource: !GetAtt PathBTranslateFunction.Arn
+            Retry:
+              - ErrorEquals: [States.ALL]
+                IntervalSeconds: 2
+                MaxAttempts: 3
+                BackoffRate: 2.0
+            Catch:
+              - ErrorEquals: [States.ALL]
+                Next: HandleWorkflowFailure
+            Next: SynthesizeSpeech
+
+          SynthesizeSpeech:
+            Type: Task
+            Resource: !GetAtt PathBSynthesizeFunction.Arn
+            Retry:
+              - ErrorEquals: [States.ALL]
+                IntervalSeconds: 2
+                MaxAttempts: 3
+                BackoffRate: 2.0
+            Catch:
+              - ErrorEquals: [States.ALL]
+                Next: HandleWorkflowFailure
+            Next: FinalizeJob
+
+          FinalizeJob:
+            Type: Task
+            Resource: !GetAtt PathBFinalizeFunction.Arn
+            End: true
+
+          HandleWorkflowFailure:
+            Type: Task
+            Resource: !GetAtt PathBFinalizeFunction.Arn
+            End: true
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref PathBTranscribeFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref PathBTranslateFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref PathBSynthesizeFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref PathBFinalizeFunction
+
+  # -------------------------------------------------------------------
+  # Observability: CloudWatch Alarms
+  # -------------------------------------------------------------------
+  ErrorRateAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub paralax-error-rate-${Environment}
+      AlarmDescription: Alarms when voice translation error count exceeds threshold
+      Namespace: Paralax/VoiceTranslator
+      MetricName: Failure
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanThreshold
+
+  P95LatencyAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub paralax-p95-latency-${Environment}
+      AlarmDescription: Alarms when p95 end-to-end utterance latency exceeds 5 seconds
+      Namespace: Paralax/VoiceTranslator
+      MetricName: TotalLatency
+      ExtendedStatistic: p95
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5000
+      ComparisonOperator: GreaterThanThreshold
+
+  LambdaThrottlesAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub paralax-lambda-throttles-${Environment}
+      AlarmDescription: Alarms when TranslateUtteranceFunction experiences throttles
+      Namespace: AWS/Lambda
+      MetricName: Throttles
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref TranslateUtteranceFunction
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+
+Outputs:
+  HttpApiUrl:
+    Description: HTTP API Gateway endpoint URL
+    Value: !Sub https://${HttpApiGateway}.execute-api.${AWS::Region}.amazonaws.com
+  UserPoolId:
+    Description: Cognito User Pool ID for Admin Dashboard
+    Value: !Ref AdminUserPool
+  UserPoolClientId:
+    Description: Cognito User Pool Client ID
+    Value: !Ref AdminUserPoolClient
+  AudioBucketName:
+    Description: S3 Audio Bucket Name
+    Value: !Ref AudioBucket

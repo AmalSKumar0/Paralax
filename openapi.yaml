@@ -1,0 +1,671 @@
+openapi: 3.0.3
+info:
+  title: IoT Two-Way Voice Translator API
+  description: Serverless backend API for ESP32 voice translator devices and React admin dashboard.
+  version: 1.0.0
+servers:
+  - url: /v1
+    description: Base API Gateway v1
+
+paths:
+  /device/translate:
+    post:
+      summary: Translate spoken audio utterance
+      description: |
+        Synchronous single round-trip translation for ESP32 push-to-talk.
+        Send raw PCM (16 kHz, 16-bit, mono) or WAV.
+        If Accept: application/octet-stream is requested, the audio stream is returned directly
+        with translation metadata in X-* response headers.
+      parameters:
+        - name: source
+          in: query
+          required: false
+          schema:
+            type: string
+            default: auto
+          description: Source language locale or 'auto' for pair identification
+        - name: target
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Target language locale
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pcm, mp3]
+            default: pcm
+          description: Desired audio output format
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Unique client key for idempotent request deduplication
+        - name: X-Device-Key
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Secret authentication key for the device
+        - name: Accept
+          in: header
+          required: false
+          schema:
+            type: string
+            default: application/octet-stream
+      requestBody:
+        required: true
+        content:
+          audio/L16;rate=16000:
+            schema:
+              type: string
+              format: binary
+          audio/wav:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Successful translation
+          headers:
+            X-Job-Id:
+              schema:
+                type: string
+            X-Conversation-Id:
+              schema:
+                type: string
+            X-Source-Language:
+              schema:
+                type: string
+            X-Detected-Language:
+              schema:
+                type: string
+            X-Target-Language:
+              schema:
+                type: string
+            X-Transcript:
+              schema:
+                type: string
+              description: Base64url encoded UTF-8 transcript text
+            X-Translation:
+              schema:
+                type: string
+              description: Base64url encoded UTF-8 translated text
+            X-Timings-Total-Ms:
+              schema:
+                type: string
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UtteranceResponse'
+        '409':
+          description: Request with Idempotency-Key already in progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Audio format or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit or daily quota exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Service disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /device/heartbeat:
+    post:
+      summary: ESP32 device heartbeat and telemetry
+      parameters:
+        - name: X-Device-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HeartbeatRequest'
+      responses:
+        '200':
+          description: Heartbeat accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeartbeatResponse'
+
+  /device/config:
+    get:
+      summary: Retrieve device runtime configuration
+      parameters:
+        - name: X-Device-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Active configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceConfig'
+
+  /device/commands/{id}/ack:
+    post:
+      summary: Acknowledge execution of a device command
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: X-Device-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [done, failed]
+                detail:
+                  type: string
+      responses:
+        '200':
+          description: Command acknowledged
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  command_id:
+                    type: string
+
+  /utterances:
+    post:
+      summary: Test console utterance translation (Cognito Auth)
+      security:
+        - CognitoAuth: []
+      parameters:
+        - name: source
+          in: query
+          schema:
+            type: string
+        - name: target
+          in: query
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          audio/wav:
+            schema:
+              type: string
+              format: binary
+          audio/L16;rate=16000:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Utterance translation response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UtteranceResponse'
+
+  /uploads:
+    post:
+      summary: Request presigned S3 upload URL for batch file translation
+      security:
+        - CognitoAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [filename, content_type]
+              properties:
+                filename:
+                  type: string
+                content_type:
+                  type: string
+      responses:
+        '200':
+          description: Presigned upload URL generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id:
+                    type: string
+                  upload_url:
+                    type: string
+                  expires_in:
+                    type: integer
+                  max_size_mb:
+                    type: integer
+
+  /jobs:
+    post:
+      summary: Submit batch file translation job (Path B)
+      security:
+        - CognitoAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [job_id, target_language]
+              properties:
+                job_id:
+                  type: string
+                source_language:
+                  type: string
+                  default: auto
+                target_language:
+                  type: string
+                voice_id:
+                  type: string
+      responses:
+        '202':
+          description: Job accepted and queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id:
+                    type: string
+                  status:
+                    type: string
+
+  /jobs/{job_id}:
+    get:
+      summary: Retrieve status and results for a job
+      security:
+        - CognitoAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobRecord'
+
+  /languages:
+    get:
+      summary: Language capability registry
+      responses:
+        '200':
+          description: Language capability matrix
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  languages:
+                    type: object
+
+  /admin/jobs:
+    get:
+      summary: List and filter jobs (Admin)
+      security:
+        - CognitoAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: kind
+          in: query
+          schema:
+            type: string
+        - name: device_id
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: cursor
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Filtered jobs list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/JobRecord'
+                  next_cursor:
+                    type: string
+
+  /admin/jobs/{id}/retry:
+    post:
+      summary: Retry failed file job
+      security:
+        - CognitoAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job retry scheduled
+
+  /admin/jobs/{id}/cancel:
+    post:
+      summary: Cancel running file job
+      security:
+        - CognitoAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job cancelled
+        '409':
+          description: Job already completed
+
+  /admin/devices:
+    get:
+      summary: List all registered devices
+      security:
+        - CognitoAuth: []
+      responses:
+        '200':
+          description: Device list
+    post:
+      summary: Provision new device
+      security:
+        - CognitoAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                device_id:
+                  type: string
+                config:
+                  $ref: '#/components/schemas/DeviceConfig'
+      responses:
+        '201':
+          description: Device provisioned (raw device_key returned once)
+
+  /admin/settings:
+    get:
+      summary: Get global runtime settings
+      security:
+        - CognitoAuth: []
+      responses:
+        '200':
+          description: Current settings
+    put:
+      summary: Update global runtime settings
+      security:
+        - CognitoAuth: []
+      responses:
+        '200':
+          description: Settings updated
+
+  /admin/stats:
+    get:
+      summary: Get system metrics and latency percentiles
+      security:
+        - CognitoAuth: []
+      responses:
+        '200':
+          description: System analytics
+
+  /admin/health:
+    get:
+      summary: Health check and AWS service reachability
+      security:
+        - CognitoAuth: []
+      responses:
+        '200':
+          description: System healthy
+
+components:
+  securitySchemes:
+    CognitoAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum:
+                - unsupported_language_pair
+                - no_speech_detected
+                - low_confidence_language
+                - audio_too_long
+                - invalid_audio_format
+                - rate_limited
+                - quota_exceeded
+                - service_disabled
+                - in_progress
+                - already_completed
+            message:
+              type: string
+            retry_after_sec:
+              type: integer
+
+    HeartbeatRequest:
+      type: object
+      required: [firmware_version, rssi, free_heap, uptime_sec, config_version]
+      properties:
+        firmware_version:
+          type: string
+        rssi:
+          type: integer
+        free_heap:
+          type: integer
+        uptime_sec:
+          type: integer
+        battery_pct:
+          type: integer
+        config_version:
+          type: integer
+
+    HeartbeatResponse:
+      type: object
+      required: [server_time, config_version, config_changed, heartbeat_interval_sec, commands]
+      properties:
+        server_time:
+          type: string
+        config_version:
+          type: integer
+        config_changed:
+          type: boolean
+        heartbeat_interval_sec:
+          type: integer
+        commands:
+          type: array
+          items:
+            type: object
+            required: [id, type, params]
+            properties:
+              id:
+                type: string
+              type:
+                type: string
+                enum: [reboot, sync_config, identify]
+              params:
+                type: object
+
+    DeviceConfig:
+      type: object
+      properties:
+        config_version:
+          type: integer
+        language_a:
+          type: string
+        language_b:
+          type: string
+        mode:
+          type: string
+          enum: [auto, buttons]
+        voice_map:
+          type: object
+        speech_rate_pct:
+          type: integer
+        volume_pct:
+          type: integer
+        max_recording_sec:
+          type: integer
+        heartbeat_interval_sec:
+          type: integer
+
+    UtteranceResponse:
+      type: object
+      required: [job_id, conversation_id, source_language, detected_language, target_language, transcript, translation, audio, timings]
+      properties:
+        job_id:
+          type: string
+        conversation_id:
+          type: string
+        source_language:
+          type: string
+        detected_language:
+          type: string
+        target_language:
+          type: string
+        transcript:
+          type: string
+        translation:
+          type: string
+        audio:
+          type: object
+          properties:
+            url:
+              type: string
+            format:
+              type: string
+            sample_rate:
+              type: integer
+            duration_ms:
+              type: integer
+            expires_in:
+              type: integer
+        timings:
+          type: object
+          properties:
+            transcribe_ms:
+              type: number
+            translate_ms:
+              type: number
+            synthesize_ms:
+              type: number
+            total_ms:
+              type: number
+
+    JobRecord:
+      type: object
+      properties:
+        job_id:
+          type: string
+        kind:
+          type: string
+          enum: [utterance, file]
+        device_id:
+          type: string
+        conversation_id:
+          type: string
+        status:
+          type: string
+          enum: [QUEUED, TRANSCRIBING, TRANSLATING, SYNTHESIZING, COMPLETED, FAILED, CANCELLED]
+        source_language:
+          type: string
+        detected_language:
+          type: string
+        target_language:
+          type: string
+        transcript:
+          type: string
+        translation:
+          type: string
+        audio_input_url:
+          type: string
+        audio_output_url:
+          type: string
+        timings:
+          type: object
+        durations:
+          type: object
+        error:
+          type: object
+        created_at:
+          type: string
+        updated_at:
+          type: string
