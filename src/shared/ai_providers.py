@@ -323,8 +323,12 @@ def _synthesize_with_edge_tts(
 
     try:
         t0 = time.perf_counter()
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+
+        if loop and loop.is_running():
             import concurrent.futures
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 mp3_bytes = pool.submit(asyncio.run, _generate_mp3()).result()

@@ -340,14 +340,22 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             transcript_text = hook_data.get("transcript", "Hello world")
             detected_lang = hook_data.get("detected_language", transcribe_lang or (language_options[0] if language_options else "en-US"))
             confidence = float(hook_data.get("confidence", 0.95))
+        elif ai_provider == "mock":
+            transcript_text = "Hello, this is a local test utterance."
+            detected_lang = transcribe_lang or (language_options[0] if language_options else "en-US")
+            confidence = 0.99
         elif ai_provider == "groq":
             from src.shared.ai_providers import _transcribe_with_groq
             transcript_text, detected_lang, confidence = _transcribe_with_groq(
                 raw_pcm, sample_rate, transcribe_lang, language_options
             )
         else:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = None
+
+            if loop and loop.is_running():
                 import concurrent.futures
                 with concurrent.futures.ThreadPoolExecutor() as pool:
                     transcript_text, detected_lang, confidence = pool.submit(
@@ -398,7 +406,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     target_translate_code = get_translate_code(target_lang)
 
     try:
-        if _TRANSLATE_CLIENT is not None or ai_provider != "groq":
+        if ai_provider == "mock":
+            translated_text = f"Hola, esta es una prueba local ({transcript_text})"
+        elif ai_provider == "groq":
+            from src.shared.ai_providers import _translate_with_groq
+            translated_text = _translate_with_groq(transcript_text, source_lang, target_lang)
+        else:
             translate_client = get_translate()
             translate_resp = translate_client.translate_text(
                 Text=transcript_text,
@@ -406,9 +419,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 TargetLanguageCode=target_translate_code,
             )
             translated_text = translate_resp.get("TranslatedText", "")
-        else:
-            from src.shared.ai_providers import _translate_with_groq
-            translated_text = _translate_with_groq(transcript_text, source_lang, target_lang)
     except Exception as e:
         logger.error(f"Translate step failed: {str(e)}", exc_info=True)
         update_job(job_id, {"status": "FAILED", "error": {"code": "translate_failed", "message": str(e)}})
@@ -425,7 +435,21 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     polly_sample_rate = "16000"
 
     try:
-        if _POLLY_CLIENT is not None or ai_provider != "groq":
+        if ai_provider == "mock":
+            try:
+                from src.shared.ai_providers import _synthesize_with_edge_tts
+                output_audio_bytes = _synthesize_with_edge_tts(
+                    translated_text, target_lang, output_format=output_format
+                )
+            except Exception:
+                from src.shared.audio import create_sine_pcm
+                output_audio_bytes = create_sine_pcm(frequency_hz=440.0, duration_sec=1.0)
+        elif ai_provider == "groq":
+            from src.shared.ai_providers import _synthesize_with_edge_tts
+            output_audio_bytes = _synthesize_with_edge_tts(
+                translated_text, target_lang, output_format=output_format
+            )
+        else:
             polly_client = get_polly()
             synth_kwargs = {
                 "Text": translated_text,
@@ -438,11 +462,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
             synth_resp = polly_client.synthesize_speech(**synth_kwargs)
             output_audio_bytes = synth_resp["AudioStream"].read()
-        else:
-            from src.shared.ai_providers import _synthesize_with_edge_tts
-            output_audio_bytes = _synthesize_with_edge_tts(
-                translated_text, target_lang, output_format=output_format
-            )
     except Exception as e:
         logger.error(f"Synthesis failed: {str(e)}", exc_info=True)
         update_job(job_id, {"status": "FAILED", "error": {"code": "synthesize_failed", "message": str(e)}})
