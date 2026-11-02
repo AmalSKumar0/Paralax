@@ -15,8 +15,14 @@ export class GroqTranslatorProvider implements TranslatorProvider {
       throw new ProviderError(this.name, 'GROQ_API_KEY is not configured');
     }
 
-    const primaryModel = process.env.GROQ_LLAMA_MODEL || 'llama-3.1-8b-instant';
-    const candidateModels = Array.from(new Set([primaryModel, 'llama-3.1-8b-instant', 'llama3-8b-8192', 'mixtral-8x7b-32768']));
+    // Filter out known decommissioned models
+    const deprecated = new Set(['llama3-8b-8192', 'llama3-70b-8192', 'mixtral-8x7b-32768']);
+    const candidateModels = Array.from(new Set([
+      'llama-3.1-8b-instant', // Active, ultra-fast production model
+      process.env.GROQ_LLAMA_MODEL,
+      'llama-3.3-70b-versatile',
+    ])).filter((m): m is string => Boolean(m && !deprecated.has(m)));
+
     const baseUrl = process.env.GROQ_BASE_URL || 'https://api.groq.com/openai/v1';
 
     const srcInfo = getLanguageInfo(sourceLang);
@@ -57,9 +63,15 @@ export class GroqTranslatorProvider implements TranslatorProvider {
 
       if (!res.ok) {
         const errText = await res.text();
-        // If model not found (404), continue to next candidate model
-        if (res.status === 404 || errText.includes('model_not_found')) {
-          lastError = new ProviderError(this.name, `HTTP 404: ${errText}`, 404);
+        // If model not found or decommissioned, continue to next candidate model
+        if (
+          res.status === 404 ||
+          res.status === 400 ||
+          errText.includes('model_not_found') ||
+          errText.includes('model_decommissioned') ||
+          errText.includes('does not exist')
+        ) {
+          lastError = new ProviderError(this.name, `HTTP ${res.status}: ${errText}`, res.status);
           continue;
         }
         throw new ProviderError(this.name, `HTTP ${res.status}: ${errText}`, res.status);
