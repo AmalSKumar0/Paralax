@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
-import { app } from '../api/index.js';
-import { redisClient } from '../api/db/redis.js';
-import { EdgeTTSProvider } from '../api/providers/tts/edge.js';
-import { pcmToWav } from '../api/shared/audio.js';
+import { app } from '../server/app.js';
+import { redisClient } from '../server/db/redis.js';
+import { EdgeTTSProvider } from '../server/providers/tts/edge.js';
+import { pcmToWav } from '../server/shared/audio.js';
 import bcrypt from 'bcryptjs';
 
 // Helper to create test PCM audio

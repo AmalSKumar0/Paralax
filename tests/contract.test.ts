@@ -2,9 +2,9 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import YAML from 'yaml';
-import { app } from '../api/index.js';
-import { redisClient } from '../api/db/redis.js';
-import { createAdminJwt } from '../api/middleware/auth.js';
+import { app } from '../server/app.js';
+import { redisClient } from '../server/db/redis.js';
+import { createAdminJwt } from '../server/middleware/auth.js';
 
 describe('OpenAPI Contract Verification against openapi.yaml', () => {
   let openapiDoc: any;

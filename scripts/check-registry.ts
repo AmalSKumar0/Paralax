@@ -1,4 +1,4 @@
-import { loadRegistry, validatePair, normalizeLocale } from '../api/shared/languages.js';
+import { loadRegistry, validatePair, normalizeLocale } from '../server/shared/languages.js';
 
 function checkRegistry() {
   console.log('--- Checking Language Registry ---');

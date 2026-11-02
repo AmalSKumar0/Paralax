@@ -11,7 +11,7 @@
     "lint": "tsc --noEmit && cd frontend && tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx api/db/migrate.ts",
+    "db:migrate": "tsx server/db/migrate.ts",
     "hash-password": "tsx scripts/hash-password.ts",
     "registry:check": "tsx scripts/check-registry.ts"
   },
