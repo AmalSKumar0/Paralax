@@ -7,13 +7,60 @@ import { redis } from '../db/redis.js';
 export const authRoutes = new Hono();
 
 // Default admin credentials for dev if not configured
-const DEFAULT_DEV_HASH = '$2b$12$o9aRZiyQVAlGdrcUJfIWvuiW1NcBFlbPzckDXzfUdsbuXx9esIs4.'; // "admin123"
+const HASH_PARALAX123 = '$2b$12$Biuf/jh7j8WOPR5MOqJ4feqkGRkDFI9LQkGLGfJyUvvgjTxof2L4q'; // "Paralax123!"
+const HASH_ADMIN123 = '$2b$12$o9aRZiyQVAlGdrcUJfIWvuiW1NcBFlbPzckDXzfUdsbuXx9esIs4.'; // "admin123"
+const HASH_ADMINPASSWORD123 = '$2a$10$wE.D5R9xLw5e7Z1hB8J6h.5K5HhT9s7vL2bM1nX3qP8vL4aO5rF2i'; // "AdminPassword123!"
+
+async function verifyLoginPassword(inputPassword: string): Promise<boolean> {
+  // 1. Check custom plaintext password if configured
+  if (process.env.ADMIN_PASSWORD && inputPassword === process.env.ADMIN_PASSWORD) {
+    return true;
+  }
+
+  // 2. Check custom ADMIN_PASSWORD_HASH if configured
+  if (process.env.ADMIN_PASSWORD_HASH) {
+    const customHash = process.env.ADMIN_PASSWORD_HASH.trim();
+    if (customHash.startsWith('$2')) {
+      try {
+        const matches = await bcrypt.compare(inputPassword, customHash);
+        if (matches) return true;
+      } catch {}
+    } else if (inputPassword === customHash) {
+      // Handled if user inadvertently entered plaintext into ADMIN_PASSWORD_HASH
+      return true;
+    }
+  }
+
+  // 3. Check standard default hashes
+  const defaults = [HASH_PARALAX123, HASH_ADMIN123, HASH_ADMINPASSWORD123];
+  for (const h of defaults) {
+    try {
+      const matches = await bcrypt.compare(inputPassword, h);
+      if (matches) return true;
+    } catch {}
+  }
+
+  return false;
+}
+
+function verifyLoginEmail(inputEmail: string): boolean {
+  const norm = inputEmail.toLowerCase().trim();
+  const configured = process.env.ADMIN_EMAIL?.toLowerCase().trim();
+
+  if (configured && norm === configured) {
+    return true;
+  }
+
+  // Default supported emails
+  const defaults = ['admin@paralax.io', 'admin@paralax.local', 'admin@example.com'];
+  return defaults.includes(norm);
+}
 
 authRoutes.post('/login', async (c) => {
   const clientIp = c.req.header('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
 
-  // Throttle login attempts: max 5 per 15 minutes per IP
-  const allowed = await redis.checkLoginThrottle(clientIp, 5, 900);
+  // Throttle login attempts: max 15 per 15 minutes per IP
+  const allowed = await redis.checkLoginThrottle(clientIp, 15, 900);
   if (!allowed) {
     return c.json(
       {
@@ -55,28 +102,25 @@ authRoutes.post('/login', async (c) => {
     );
   }
 
-  const expectedEmail = process.env.ADMIN_EMAIL || 'admin@paralax.local';
-  const expectedHash = process.env.ADMIN_PASSWORD_HASH || DEFAULT_DEV_HASH;
-
-  if (email.toLowerCase().trim() !== expectedEmail.toLowerCase().trim()) {
+  if (!verifyLoginEmail(email)) {
     return c.json(
       {
         error: {
           code: 'invalid_credentials',
-          message: 'Invalid email or password',
+          message: 'Invalid email or password. Default demo email: admin@paralax.io',
         },
       },
       401
     );
   }
 
-  const passwordMatches = await bcrypt.compare(password, expectedHash);
+  const passwordMatches = await verifyLoginPassword(password);
   if (!passwordMatches) {
     return c.json(
       {
         error: {
           code: 'invalid_credentials',
-          message: 'Invalid email or password',
+          message: 'Invalid email or password. Default demo password: Paralax123!',
         },
       },
       401

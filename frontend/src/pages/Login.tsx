@@ -129,9 +129,14 @@ export const Login: React.FC = () => {
               <Sparkles className="w-4 h-4 text-amber-600" />
               <span>Instant Demo Admin Login</span>
             </button>
-            <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-bold text-gray-600">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
-              <span>Admin JWT Authentication · Mock Supported</span>
+            <div className="mt-3 flex flex-col items-center justify-center gap-1 text-[11px] font-bold text-gray-600">
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+                <span>Admin JWT Authentication</span>
+              </div>
+              <p className="text-gray-500 font-medium">
+                Default: <span className="font-mono text-black font-bold">admin@paralax.io</span> / <span className="font-mono text-black font-bold">Paralax123!</span>
+              </p>
             </div>
           </div>
         </div>
