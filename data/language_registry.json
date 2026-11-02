@@ -1,845 +1,321 @@
 {
   "metadata": {
-    "version": "1.0.0",
-    "description": "AWS Voice Translation Capability Matrix",
-    "transcribe_reference": "https://docs.aws.amazon.com/transcribe/latest/dg/streaming.html",
-    "translate_reference": "https://docs.aws.amazon.com/translate/latest/dg/what-is-languages.html",
-    "polly_reference": "https://docs.aws.amazon.com/polly/latest/dg/voicelist.html"
+    "version": "2.0.0",
+    "description": "Multi-Provider IoT Voice Translator Capability Matrix (Whisper STT, Groq/xAI LLM, Edge/xAI TTS)"
   },
   "languages": {
     "en-US": {
       "display_name": "English (US)",
-      "transcribe_locales": [
-        "en-US"
-      ],
+      "iso_code": "en",
+      "whisper_code": "en",
       "translate_code": "en",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": true,
-        "stt_language_id": true,
-        "translate": true,
-        "tts_neural": true,
-        "tts_standard": true
-      },
-      "default_voice": "Joanna",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "en-US-JennyNeural",
       "voices": [
-        {
-          "id": "Joanna",
-          "gender": "Female",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        },
-        {
-          "id": "Matthew",
-          "gender": "Male",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        },
-        {
-          "id": "Kendra",
-          "gender": "Female",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        }
+        { "id": "en-US-JennyNeural", "name": "Jenny", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "en-US-GuyNeural", "name": "Guy", "gender": "male", "neural": true, "provider": "edge" },
+        { "id": "en-US-AriaNeural", "name": "Aria", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "xai-en-1", "name": "Grok English", "gender": "neutral", "neural": true, "provider": "xai" }
       ]
     },
     "en-GB": {
       "display_name": "English (UK)",
-      "transcribe_locales": [
-        "en-GB"
-      ],
+      "iso_code": "en",
+      "whisper_code": "en",
       "translate_code": "en",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": true,
-        "stt_language_id": true,
-        "translate": true,
-        "tts_neural": true,
-        "tts_standard": true
-      },
-      "default_voice": "Amy",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "en-GB-SoniaNeural",
       "voices": [
-        {
-          "id": "Amy",
-          "gender": "Female",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        },
-        {
-          "id": "Brian",
-          "gender": "Male",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        }
+        { "id": "en-GB-SoniaNeural", "name": "Sonia", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "en-GB-RyanNeural", "name": "Ryan", "gender": "male", "neural": true, "provider": "edge" }
       ]
     },
     "en-AU": {
       "display_name": "English (Australia)",
-      "transcribe_locales": [
-        "en-AU"
-      ],
+      "iso_code": "en",
+      "whisper_code": "en",
       "translate_code": "en",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": true,
-        "stt_language_id": true,
-        "translate": true,
-        "tts_neural": true,
-        "tts_standard": true
-      },
-      "default_voice": "Olivia",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "en-AU-NatashaNeural",
       "voices": [
-        {
-          "id": "Olivia",
-          "gender": "Female",
-          "supported_engines": [
-            "neural"
-          ]
-        },
-        {
-          "id": "Russell",
-          "gender": "Male",
-          "supported_engines": [
-            "standard"
-          ]
-        }
+        { "id": "en-AU-NatashaNeural", "name": "Natasha", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "en-AU-WilliamNeural", "name": "William", "gender": "male", "neural": true, "provider": "edge" }
       ]
     },
     "es-US": {
       "display_name": "Spanish (US)",
-      "transcribe_locales": [
-        "es-US"
-      ],
+      "iso_code": "es",
+      "whisper_code": "es",
       "translate_code": "es",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": true,
-        "stt_language_id": true,
-        "translate": true,
-        "tts_neural": true,
-        "tts_standard": true
-      },
-      "default_voice": "Lupe",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "es-US-PalomaNeural",
       "voices": [
-        {
-          "id": "Lupe",
-          "gender": "Female",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        },
-        {
-          "id": "Pedro",
-          "gender": "Male",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        }
+        { "id": "es-US-PalomaNeural", "name": "Paloma", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "es-US-AlonsoNeural", "name": "Alonso", "gender": "male", "neural": true, "provider": "edge" }
       ]
     },
     "es-ES": {
       "display_name": "Spanish (Spain)",
-      "transcribe_locales": [
-        "es-ES"
-      ],
+      "iso_code": "es",
+      "whisper_code": "es",
       "translate_code": "es",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": true,
-        "stt_language_id": true,
-        "translate": true,
-        "tts_neural": true,
-        "tts_standard": true
-      },
-      "default_voice": "Lucia",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "es-ES-ElviraNeural",
       "voices": [
-        {
-          "id": "Lucia",
-          "gender": "Female",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        },
-        {
-          "id": "Sergio",
-          "gender": "Male",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        }
+        { "id": "es-ES-ElviraNeural", "name": "Elvira", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "es-ES-AlvaroNeural", "name": "Alvaro", "gender": "male", "neural": true, "provider": "edge" }
       ]
     },
     "fr-FR": {
       "display_name": "French (France)",
-      "transcribe_locales": [
-        "fr-FR"
-      ],
+      "iso_code": "fr",
+      "whisper_code": "fr",
       "translate_code": "fr",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": true,
-        "stt_language_id": true,
-        "translate": true,
-        "tts_neural": true,
-        "tts_standard": true
-      },
-      "default_voice": "Lea",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "fr-FR-DeniseNeural",
       "voices": [
-        {
-          "id": "Lea",
-          "gender": "Female",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        },
-        {
-          "id": "Remi",
-          "gender": "Male",
-          "supported_engines": [
-            "neural"
-          ]
-        },
-        {
-          "id": "Mathieu",
-          "gender": "Male",
-          "supported_engines": [
-            "standard"
-          ]
-        }
+        { "id": "fr-FR-DeniseNeural", "name": "Denise", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "fr-FR-HenriNeural", "name": "Henri", "gender": "male", "neural": true, "provider": "edge" }
       ]
     },
     "fr-CA": {
       "display_name": "French (Canada)",
-      "transcribe_locales": [
-        "fr-CA"
-      ],
-      "translate_code": "fr-CA",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": true,
-        "stt_language_id": true,
-        "translate": true,
-        "tts_neural": true,
-        "tts_standard": true
-      },
-      "default_voice": "Gabrielle",
+      "iso_code": "fr",
+      "whisper_code": "fr",
+      "translate_code": "fr",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "fr-CA-SylvieNeural",
       "voices": [
-        {
-          "id": "Gabrielle",
-          "gender": "Female",
-          "supported_engines": [
-            "neural"
-          ]
-        },
-        {
-          "id": "Chantal",
-          "gender": "Female",
-          "supported_engines": [
-            "standard"
-          ]
-        }
+        { "id": "fr-CA-SylvieNeural", "name": "Sylvie", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "fr-CA-AntoineNeural", "name": "Antoine", "gender": "male", "neural": true, "provider": "edge" }
       ]
     },
     "de-DE": {
       "display_name": "German (Germany)",
-      "transcribe_locales": [
-        "de-DE"
-      ],
+      "iso_code": "de",
+      "whisper_code": "de",
       "translate_code": "de",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": true,
-        "stt_language_id": true,
-        "translate": true,
-        "tts_neural": true,
-        "tts_standard": true
-      },
-      "default_voice": "Vicki",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "de-DE-KatjaNeural",
       "voices": [
-        {
-          "id": "Vicki",
-          "gender": "Female",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        },
-        {
-          "id": "Daniel",
-          "gender": "Male",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        }
+        { "id": "de-DE-KatjaNeural", "name": "Katja", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "de-DE-ConradNeural", "name": "Conrad", "gender": "male", "neural": true, "provider": "edge" }
       ]
     },
     "it-IT": {
       "display_name": "Italian (Italy)",
-      "transcribe_locales": [
-        "it-IT"
-      ],
+      "iso_code": "it",
+      "whisper_code": "it",
       "translate_code": "it",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": true,
-        "stt_language_id": true,
-        "translate": true,
-        "tts_neural": true,
-        "tts_standard": true
-      },
-      "default_voice": "Bianca",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "it-IT-ElsaNeural",
       "voices": [
-        {
-          "id": "Bianca",
-          "gender": "Female",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        },
-        {
-          "id": "Adriano",
-          "gender": "Male",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        }
-      ]
-    },
-    "ja-JP": {
-      "display_name": "Japanese",
-      "transcribe_locales": [
-        "ja-JP"
-      ],
-      "translate_code": "ja",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": true,
-        "stt_language_id": true,
-        "translate": true,
-        "tts_neural": true,
-        "tts_standard": true
-      },
-      "default_voice": "Tomoko",
-      "voices": [
-        {
-          "id": "Tomoko",
-          "gender": "Female",
-          "supported_engines": [
-            "neural"
-          ]
-        },
-        {
-          "id": "Takumi",
-          "gender": "Male",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        },
-        {
-          "id": "Mizuki",
-          "gender": "Female",
-          "supported_engines": [
-            "standard"
-          ]
-        }
-      ]
-    },
-    "ko-KR": {
-      "display_name": "Korean",
-      "transcribe_locales": [
-        "ko-KR"
-      ],
-      "translate_code": "ko",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": true,
-        "stt_language_id": true,
-        "translate": true,
-        "tts_neural": true,
-        "tts_standard": true
-      },
-      "default_voice": "Seoyeon",
-      "voices": [
-        {
-          "id": "Seoyeon",
-          "gender": "Female",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        }
+        { "id": "it-IT-ElsaNeural", "name": "Elsa", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "it-IT-DiegoNeural", "name": "Diego", "gender": "male", "neural": true, "provider": "edge" }
       ]
     },
     "pt-BR": {
       "display_name": "Portuguese (Brazil)",
-      "transcribe_locales": [
-        "pt-BR"
-      ],
+      "iso_code": "pt",
+      "whisper_code": "pt",
       "translate_code": "pt",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": true,
-        "stt_language_id": true,
-        "translate": true,
-        "tts_neural": true,
-        "tts_standard": true
-      },
-      "default_voice": "Camila",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "pt-BR-FranciscaNeural",
       "voices": [
-        {
-          "id": "Camila",
-          "gender": "Female",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        },
-        {
-          "id": "Thiago",
-          "gender": "Male",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        }
+        { "id": "pt-BR-FranciscaNeural", "name": "Francisca", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "pt-BR-AntonioNeural", "name": "Antonio", "gender": "male", "neural": true, "provider": "edge" }
       ]
     },
     "pt-PT": {
       "display_name": "Portuguese (Portugal)",
-      "transcribe_locales": [
-        "pt-PT"
-      ],
-      "translate_code": "pt-PT",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": true,
-        "stt_language_id": false,
-        "translate": true,
-        "tts_neural": true,
-        "tts_standard": true
-      },
-      "default_voice": "Ines",
+      "iso_code": "pt",
+      "whisper_code": "pt",
+      "translate_code": "pt",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "pt-PT-RaquelNeural",
       "voices": [
-        {
-          "id": "Ines",
-          "gender": "Female",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        },
-        {
-          "id": "Cristiano",
-          "gender": "Male",
-          "supported_engines": [
-            "standard"
-          ]
-        }
+        { "id": "pt-PT-RaquelNeural", "name": "Raquel", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "pt-PT-DuarteNeural", "name": "Duarte", "gender": "male", "neural": true, "provider": "edge" }
+      ]
+    },
+    "ja-JP": {
+      "display_name": "Japanese (Japan)",
+      "iso_code": "ja",
+      "whisper_code": "ja",
+      "translate_code": "ja",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "ja-JP-NanamiNeural",
+      "voices": [
+        { "id": "ja-JP-NanamiNeural", "name": "Nanami", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "ja-JP-KeitaNeural", "name": "Keita", "gender": "male", "neural": true, "provider": "edge" }
+      ]
+    },
+    "ko-KR": {
+      "display_name": "Korean (South Korea)",
+      "iso_code": "ko",
+      "whisper_code": "ko",
+      "translate_code": "ko",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "ko-KR-SunHiNeural",
+      "voices": [
+        { "id": "ko-KR-SunHiNeural", "name": "Sun-Hi", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "ko-KR-InJoonNeural", "name": "InJoon", "gender": "male", "neural": true, "provider": "edge" }
       ]
     },
     "zh-CN": {
-      "display_name": "Chinese (Mandarin, Simplified)",
-      "transcribe_locales": [
-        "zh-CN"
-      ],
+      "display_name": "Chinese (Simplified)",
+      "iso_code": "zh",
+      "whisper_code": "zh",
       "translate_code": "zh",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": true,
-        "stt_language_id": true,
-        "translate": true,
-        "tts_neural": true,
-        "tts_standard": true
-      },
-      "default_voice": "Zhiyu",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "zh-CN-XiaoxiaoNeural",
       "voices": [
-        {
-          "id": "Zhiyu",
-          "gender": "Female",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        }
-      ]
-    },
-    "zh-TW": {
-      "display_name": "Chinese (Taiwan, Traditional)",
-      "transcribe_locales": [
-        "zh-TW"
-      ],
-      "translate_code": "zh-TW",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": true,
-        "stt_language_id": false,
-        "translate": true,
-        "tts_neural": true,
-        "tts_standard": false
-      },
-      "default_voice": "Hiujin",
-      "voices": [
-        {
-          "id": "Hiujin",
-          "gender": "Female",
-          "supported_engines": [
-            "neural"
-          ]
-        }
+        { "id": "zh-CN-XiaoxiaoNeural", "name": "Xiaoxiao", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "zh-CN-YunjianNeural", "name": "Yunjian", "gender": "male", "neural": true, "provider": "edge" }
       ]
     },
     "hi-IN": {
       "display_name": "Hindi (India)",
-      "transcribe_locales": [
-        "hi-IN"
-      ],
+      "iso_code": "hi",
+      "whisper_code": "hi",
       "translate_code": "hi",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": true,
-        "stt_language_id": true,
-        "translate": true,
-        "tts_neural": true,
-        "tts_standard": true
-      },
-      "default_voice": "Kajal",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "hi-IN-SwaraNeural",
       "voices": [
-        {
-          "id": "Kajal",
-          "gender": "Female",
-          "supported_engines": [
-            "neural"
-          ]
-        },
-        {
-          "id": "Aditi",
-          "gender": "Female",
-          "supported_engines": [
-            "standard"
-          ]
-        }
+        { "id": "hi-IN-SwaraNeural", "name": "Swara", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "hi-IN-MadhurNeural", "name": "Madhur", "gender": "male", "neural": true, "provider": "edge" }
       ]
     },
     "ar-AE": {
       "display_name": "Arabic (UAE)",
-      "transcribe_locales": [
-        "ar-AE"
-      ],
+      "iso_code": "ar",
+      "whisper_code": "ar",
       "translate_code": "ar",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": false,
-        "stt_language_id": false,
-        "translate": true,
-        "tts_neural": true,
-        "tts_standard": false
-      },
-      "default_voice": "Hala",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "ar-AE-FatimaNeural",
       "voices": [
-        {
-          "id": "Hala",
-          "gender": "Female",
-          "supported_engines": [
-            "neural"
-          ]
-        },
-        {
-          "id": "Zayd",
-          "gender": "Male",
-          "supported_engines": [
-            "neural"
-          ]
-        }
-      ]
-    },
-    "ar-SA": {
-      "display_name": "Arabic (Saudi Arabia)",
-      "transcribe_locales": [
-        "ar-SA"
-      ],
-      "translate_code": "ar",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": false,
-        "stt_language_id": false,
-        "translate": true,
-        "tts_neural": false,
-        "tts_standard": true
-      },
-      "default_voice": "Zeina",
-      "voices": [
-        {
-          "id": "Zeina",
-          "gender": "Female",
-          "supported_engines": [
-            "standard"
-          ]
-        }
+        { "id": "ar-AE-FatimaNeural", "name": "Fatima", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "ar-AE-HamdanNeural", "name": "Hamdan", "gender": "male", "neural": true, "provider": "edge" }
       ]
     },
     "ru-RU": {
-      "display_name": "Russian",
-      "transcribe_locales": [
-        "ru-RU"
-      ],
+      "display_name": "Russian (Russia)",
+      "iso_code": "ru",
+      "whisper_code": "ru",
       "translate_code": "ru",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": false,
-        "stt_language_id": false,
-        "translate": true,
-        "tts_neural": false,
-        "tts_standard": true
-      },
-      "default_voice": "Tatyana",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "ru-RU-SvetlanaNeural",
       "voices": [
-        {
-          "id": "Tatyana",
-          "gender": "Female",
-          "supported_engines": [
-            "standard"
-          ]
-        },
-        {
-          "id": "Maxim",
-          "gender": "Male",
-          "supported_engines": [
-            "standard"
-          ]
-        }
+        { "id": "ru-RU-SvetlanaNeural", "name": "Svetlana", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "ru-RU-DmitryNeural", "name": "Dmitry", "gender": "male", "neural": true, "provider": "edge" }
       ]
     },
     "nl-NL": {
-      "display_name": "Dutch",
-      "transcribe_locales": [
-        "nl-NL"
-      ],
+      "display_name": "Dutch (Netherlands)",
+      "iso_code": "nl",
+      "whisper_code": "nl",
       "translate_code": "nl",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": false,
-        "stt_language_id": false,
-        "translate": true,
-        "tts_neural": true,
-        "tts_standard": true
-      },
-      "default_voice": "Laura",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "nl-NL-ColetteNeural",
       "voices": [
-        {
-          "id": "Laura",
-          "gender": "Female",
-          "supported_engines": [
-            "neural"
-          ]
-        },
-        {
-          "id": "Lotte",
-          "gender": "Female",
-          "supported_engines": [
-            "standard"
-          ]
-        }
+        { "id": "nl-NL-ColetteNeural", "name": "Colette", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "nl-NL-FennaNeural", "name": "Fenna", "gender": "female", "neural": true, "provider": "edge" }
       ]
     },
     "tr-TR": {
-      "display_name": "Turkish",
-      "transcribe_locales": [
-        "tr-TR"
-      ],
+      "display_name": "Turkish (Turkey)",
+      "iso_code": "tr",
+      "whisper_code": "tr",
       "translate_code": "tr",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": false,
-        "stt_language_id": false,
-        "translate": true,
-        "tts_neural": false,
-        "tts_standard": true
-      },
-      "default_voice": "Filiz",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "tr-TR-EmelNeural",
       "voices": [
-        {
-          "id": "Filiz",
-          "gender": "Female",
-          "supported_engines": [
-            "standard"
-          ]
-        }
+        { "id": "tr-TR-EmelNeural", "name": "Emel", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "tr-TR-AhmetNeural", "name": "Ahmet", "gender": "male", "neural": true, "provider": "edge" }
       ]
     },
     "sv-SE": {
-      "display_name": "Swedish",
-      "transcribe_locales": [
-        "sv-SE"
-      ],
+      "display_name": "Swedish (Sweden)",
+      "iso_code": "sv",
+      "whisper_code": "sv",
       "translate_code": "sv",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": false,
-        "stt_language_id": false,
-        "translate": true,
-        "tts_neural": true,
-        "tts_standard": true
-      },
-      "default_voice": "Sofie",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "sv-SE-SofieNeural",
       "voices": [
-        {
-          "id": "Sofie",
-          "gender": "Female",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        },
-        {
-          "id": "Astrid",
-          "gender": "Female",
-          "supported_engines": [
-            "standard"
-          ]
-        }
+        { "id": "sv-SE-SofieNeural", "name": "Sofie", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "sv-SE-MattiasNeural", "name": "Mattias", "gender": "male", "neural": true, "provider": "edge" }
       ]
     },
     "pl-PL": {
-      "display_name": "Polish",
-      "transcribe_locales": [
-        "pl-PL"
-      ],
+      "display_name": "Polish (Poland)",
+      "iso_code": "pl",
+      "whisper_code": "pl",
       "translate_code": "pl",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": false,
-        "stt_language_id": false,
-        "translate": true,
-        "tts_neural": true,
-        "tts_standard": true
-      },
-      "default_voice": "Ola",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "pl-PL-ZofiaNeural",
       "voices": [
-        {
-          "id": "Ola",
-          "gender": "Female",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        },
-        {
-          "id": "Maja",
-          "gender": "Female",
-          "supported_engines": [
-            "standard"
-          ]
-        }
+        { "id": "pl-PL-ZofiaNeural", "name": "Zofia", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "pl-PL-MarekNeural", "name": "Marek", "gender": "male", "neural": true, "provider": "edge" }
       ]
     },
     "da-DK": {
-      "display_name": "Danish",
-      "transcribe_locales": [
-        "da-DK"
-      ],
+      "display_name": "Danish (Denmark)",
+      "iso_code": "da",
+      "whisper_code": "da",
       "translate_code": "da",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": false,
-        "stt_language_id": false,
-        "translate": true,
-        "tts_neural": false,
-        "tts_standard": true
-      },
-      "default_voice": "Naja",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "da-DK-ChristelNeural",
       "voices": [
-        {
-          "id": "Naja",
-          "gender": "Female",
-          "supported_engines": [
-            "standard"
-          ]
-        },
-        {
-          "id": "Mads",
-          "gender": "Male",
-          "supported_engines": [
-            "standard"
-          ]
-        }
+        { "id": "da-DK-ChristelNeural", "name": "Christel", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "da-DK-JeppeNeural", "name": "Jeppe", "gender": "male", "neural": true, "provider": "edge" }
       ]
     },
     "nb-NO": {
-      "display_name": "Norwegian",
-      "transcribe_locales": [
-        "nb-NO"
-      ],
+      "display_name": "Norwegian (Norway)",
+      "iso_code": "nb",
+      "whisper_code": "no",
       "translate_code": "no",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": false,
-        "stt_language_id": false,
-        "translate": true,
-        "tts_neural": true,
-        "tts_standard": true
-      },
-      "default_voice": "Ida",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "nb-NO-PernilleNeural",
       "voices": [
-        {
-          "id": "Ida",
-          "gender": "Female",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        },
-        {
-          "id": "Liv",
-          "gender": "Female",
-          "supported_engines": [
-            "standard"
-          ]
-        }
+        { "id": "nb-NO-PernilleNeural", "name": "Pernille", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "nb-NO-FinnNeural", "name": "Finn", "gender": "male", "neural": true, "provider": "edge" }
       ]
     },
     "fi-FI": {
-      "display_name": "Finnish",
-      "transcribe_locales": [
-        "fi-FI"
-      ],
+      "display_name": "Finnish (Finland)",
+      "iso_code": "fi",
+      "whisper_code": "fi",
       "translate_code": "fi",
-      "flags": {
-        "stt_batch": true,
-        "stt_streaming": false,
-        "stt_language_id": false,
-        "translate": true,
-        "tts_neural": true,
-        "tts_standard": true
-      },
-      "default_voice": "Suvi",
+      "stt_supported": true,
+      "translate_supported": true,
+      "default_voice": "fi-FI-NooraNeural",
       "voices": [
-        {
-          "id": "Suvi",
-          "gender": "Female",
-          "supported_engines": [
-            "neural",
-            "standard"
-          ]
-        }
+        { "id": "fi-FI-NooraNeural", "name": "Noora", "gender": "female", "neural": true, "provider": "edge" },
+        { "id": "fi-FI-HarriNeural", "name": "Harri", "gender": "male", "neural": true, "provider": "edge" }
       ]
     }
   }

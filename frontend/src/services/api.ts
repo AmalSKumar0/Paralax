@@ -62,10 +62,10 @@ export const api = {
       return res as { device: Device; device_key: string };
     }
     const dev: Device = {
-      device_id: res.device_id,
+      device_id: res.device_id || res.id,
       name: res.name || data.name,
       online: res.online ?? false,
-      last_seen: res.last_seen || res.last_heartbeat?.timestamp || new Date().toISOString(),
+      last_seen: res.last_seen || new Date().toISOString(),
       firmware_version: res.firmware_version || '1.0.0',
       rssi: res.rssi ?? -60,
       config_version: res.config_version || 1,
@@ -76,7 +76,7 @@ export const api = {
     return { device: dev, device_key: res.device_key };
   },
   updateDeviceConfig: (id: string, config: Partial<DeviceConfig>) =>
-    apiClient.request<Device>(`/admin/devices/${id}/config`, {
+    apiClient.request<DeviceConfig>(`/admin/devices/${id}/config`, {
       method: 'PUT',
       body: JSON.stringify(config),
     }),
@@ -99,7 +99,7 @@ export const api = {
   sendDeviceCommand: (id: string, type: CommandType) =>
     apiClient.request<DeviceCommand>(`/admin/devices/${id}/commands`, {
       method: 'POST',
-      body: JSON.stringify({ type }),
+      body: JSON.stringify({ command_type: type }),
     }),
   getDeviceTelemetry: (id: string, range: '1h' | '6h' | '24h' | '7d') =>
     apiClient.request<{ samples: TelemetrySample[] }>(`/admin/devices/${id}/telemetry?range=${range}`),
@@ -120,11 +120,9 @@ export const api = {
     if (params?.cursor) sp.set('cursor', params.cursor);
     return apiClient.request<{ items: ApiJob[]; next_cursor?: string }>(`/admin/jobs?${sp.toString()}`);
   },
-  getJob: (id: string) => apiClient.request<ApiJob>(`/jobs/${id}`),
+  getJob: (id: string) => apiClient.request<ApiJob>(`/admin/jobs/${id}`),
   retryJob: (id: string) =>
     apiClient.request<ApiJob>(`/admin/jobs/${id}/retry`, { method: 'POST' }),
-  cancelJob: (id: string) =>
-    apiClient.request<ApiJob>(`/admin/jobs/${id}/cancel`, { method: 'POST' }),
   deleteJob: (id: string) =>
     apiClient.request<{ success: boolean }>(`/admin/jobs/${id}`, { method: 'DELETE' }),
 
@@ -138,13 +136,15 @@ export const api = {
     if (params.deviceId) sp.set('device_id', params.deviceId);
     return apiClient.request<{
       job_id: string;
-      conversation_id: string;
+      id: string;
+      conversation_id?: string;
       source_language: string;
-      detected_language: string;
+      detected_language?: string;
       target_language: string;
       transcript: string;
       translation: string;
-      audio: { url: string; format: string; sample_rate: number; duration_ms: number; expires_in: number };
+      can_retry?: boolean;
+      audio: { url?: string; base64?: string; format: string; sample_rate: number; duration_ms: number; expires_in?: number };
       timings: { transcribe_ms: number; translate_ms: number; synthesize_ms: number; total_ms: number };
     }>(`/utterances?${sp.toString()}`, {
       method: 'POST',
@@ -155,27 +155,79 @@ export const api = {
     });
   },
 
-  // File Uploads
-  createUploadUrl: (filename: string, contentType: string = 'audio/wav') =>
-    apiClient.request<{ job_id: string; upload_url: string; expires_in: number }>('/uploads', {
-      method: 'POST',
-      body: JSON.stringify({ filename, content_type: contentType }),
-    }),
-  startFileJob: (data: { job_id: string; source_language: string; target_language: string; voice_id?: string }) =>
-    apiClient.request<ApiJob>('/jobs', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
+  // Direct File Upload with XHR Progress
+  uploadFileUtterance: (params: {
+    file: File | Blob;
+    source?: string;
+    target?: string;
+    onProgress?: (pct: number) => void;
+  }): Promise<{
+    job_id: string;
+    id: string;
+    source_language: string;
+    detected_language?: string;
+    target_language: string;
+    transcript: string;
+    translation: string;
+    can_retry?: boolean;
+    audio: { url?: string; base64?: string; format: string; sample_rate: number; duration_ms: number };
+    timings: { transcribe_ms: number; translate_ms: number; synthesize_ms: number; total_ms: number };
+  }> => {
+    return new Promise((resolve, reject) => {
+      const sp = new URLSearchParams({
+        kind: 'file',
+        source: params.source || 'auto',
+        target: params.target || 'es-US',
+        format: 'wav',
+      });
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `/api/v1/utterances?${sp.toString()}`);
+      xhr.withCredentials = true;
+      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+      if (params.onProgress) {
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            params.onProgress!(Math.round((e.loaded / e.total) * 100));
+          }
+        };
+      }
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            resolve(JSON.parse(xhr.responseText));
+          } catch {
+            reject(new Error('Invalid JSON response'));
+          }
+        } else {
+          try {
+            const err = JSON.parse(xhr.responseText);
+            reject(new Error(err.error?.message || `HTTP ${xhr.status}`));
+          } catch {
+            reject(new Error(`Upload failed with HTTP ${xhr.status}`));
+          }
+        }
+      };
+
+      xhr.onerror = () => reject(new Error('Network error during file upload'));
+
+      const formData = new FormData();
+      formData.append('file', params.file);
+      xhr.send(formData);
+    });
+  },
 
   // Conversations
-  getConversations: (params?: { device_id?: string; search?: string; cursor?: string }) => {
+  getConversations: async (params?: { device_id?: string; search?: string; cursor?: string }) => {
     const sp = new URLSearchParams();
     if (params?.device_id) sp.set('device_id', params.device_id);
     if (params?.search) sp.set('search', params.search);
     if (params?.cursor) sp.set('cursor', params.cursor);
-    return apiClient.request<{ items: Conversation[]; next_cursor?: string }>(
-      `/admin/conversations?${sp.toString()}`
-    );
+    const res = await apiClient.request<any>(`/admin/conversations?${sp.toString()}`);
+    const items = res?.conversations || res?.items || (Array.isArray(res) ? res : []);
+    return { items, next_cursor: res?.next_cursor };
   },
   getConversation: (id: string) =>
     apiClient.request<Conversation>(`/admin/conversations/${id}`),

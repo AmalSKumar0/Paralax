@@ -39,7 +39,7 @@ export const JobDetail: React.FC = () => {
   // Confirm Modal
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
-    type: 'retry' | 'cancel' | 'delete';
+    type: 'retry' | 'delete';
     title: string;
     message: string;
   }>({ isOpen: false, type: 'retry', title: '', message: '' });
@@ -94,10 +94,6 @@ export const JobDetail: React.FC = () => {
         const retried = await api.retryJob(id);
         setJob(retried);
         success('Job retried successfully');
-      } else if (type === 'cancel') {
-        const cancelled = await api.cancelJob(id);
-        setJob(cancelled);
-        warning('Job cancelled');
       } else if (type === 'delete') {
         await api.deleteJob(id);
         success('Job deleted permanently');
@@ -220,7 +216,7 @@ export const JobDetail: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {job.status === 'failed' && (
+            {(job.can_retry || job.canRetry) && (
               <Button
                 variant="primary"
                 size="sm"
@@ -228,31 +224,13 @@ export const JobDetail: React.FC = () => {
                   setConfirmModal({
                     isOpen: true,
                     type: 'retry',
-                    title: `Retry Job ${job.job_id}?`,
+                    title: `Retry Job ${job.job_id || job.jobId}?`,
                     message: 'Re-trigger this audio job through the translation and synthesis pipeline.',
                   })
                 }
                 icon={<RotateCcw className="w-3.5 h-3.5" />}
               >
                 Retry Job
-              </Button>
-            )}
-
-            {isInProgress && job.kind === 'file' && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() =>
-                  setConfirmModal({
-                    isOpen: true,
-                    type: 'cancel',
-                    title: `Cancel Job ${job.job_id}?`,
-                    message: 'Abort processing for this job.',
-                  })
-                }
-                icon={<Ban className="w-3.5 h-3.5" />}
-              >
-                Cancel Job
               </Button>
             )}
 

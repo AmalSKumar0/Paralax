@@ -109,7 +109,7 @@ export const Overview: React.FC = () => {
                 </h2>
               </div>
               <p className="text-xs font-semibold text-gray-600">
-                End-to-end speech ingestion, AWS Transcribe STT, AWS Translate, and Amazon Polly TTS breakdown
+                End-to-end speech ingestion, Groq Whisper STT, Groq/xAI Translation, and Edge TTS breakdown
               </p>
             </div>
             <div className="flex items-center gap-2">

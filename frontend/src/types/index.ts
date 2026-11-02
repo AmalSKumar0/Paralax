@@ -53,17 +53,21 @@ export interface Voice {
 }
 
 export interface LanguageCapabilities {
-  stt_streaming: boolean;
-  stt_batch: boolean;
-  stt_language_id: boolean;
+  stt: boolean;
   translate: boolean;
-  tts_neural: boolean;
-  tts_standard: boolean;
+  tts: boolean;
+  stt_streaming?: boolean;
+  stt_batch?: boolean;
+  stt_language_id?: boolean;
+  tts_neural?: boolean;
+  tts_standard?: boolean;
 }
 
 export interface Language {
   code: string;
   name: string;
+  iso_code?: string;
+  whisper_code?: string;
   capabilities: LanguageCapabilities;
   valid_targets: string[];
   voices: Voice[];
@@ -80,36 +84,53 @@ export interface JobTimings {
 }
 
 export interface JobAudio {
-  url: string;
+  url?: string;
+  base64?: string;
   format: string;
   sample_rate: number;
   duration_ms: number;
-  expires_in: number;
+  expires_in?: number;
 }
 
 export interface ApiJob {
   job_id: string;
+  jobId?: string;
   kind: JobKind;
   device_id?: string;
+  deviceId?: string;
   conversation_id?: string;
+  conversationId?: string;
   filename?: string;
   status: JobStatus;
   source_language: string;
+  sourceLanguage?: string;
   detected_language?: string;
+  detectedLanguage?: string;
   target_language: string;
+  targetLanguage?: string;
   transcript?: string;
   translation?: string;
+  can_retry?: boolean;
+  canRetry?: boolean;
+  audio?: JobAudio;
   original_audio_url?: string;
   translated_audio_url?: string;
   duration_sec?: number;
+  durationSec?: number;
   timings?: JobTimings;
+  transcribeMs?: number;
+  translateMs?: number;
+  synthesizeMs?: number;
+  totalMs?: number;
   error?: {
     code: string;
     message: string;
     retry_after_sec?: number;
   };
   created_at: string;
+  createdAt?: string | Date;
   updated_at: string;
+  updatedAt?: string | Date;
 }
 
 export interface ConversationTurn extends ApiJob {
@@ -118,10 +139,29 @@ export interface ConversationTurn extends ApiJob {
 
 export interface Conversation {
   conversation_id: string;
+  conversationId?: string;
   device_id: string;
+  deviceId?: string;
   started_at: string;
+  createdAt?: string | Date;
   updated_at: string;
+  lastUtteranceAt?: string | Date;
+  utteranceCount?: number;
   turns: ConversationTurn[];
+  jobs?: ApiJob[];
+}
+
+export interface SettingsProvidersBlock {
+  stt_chains: string[];
+  translate_chains: string[];
+  tts_chains: string[];
+  allow_paid_fallback: boolean;
+  models: {
+    groq_stt_model: string;
+    groq_chat_model: string;
+    xai_chat_model: string;
+  };
+  call_counts?: Record<string, any>;
 }
 
 export interface Settings {
@@ -138,6 +178,7 @@ export interface Settings {
   default_heartbeat_interval_sec: number;
   allowed_languages: string[];
   voice_map: Record<string, string>;
+  providers?: SettingsProvidersBlock;
 }
 
 export interface LatencyMetric {

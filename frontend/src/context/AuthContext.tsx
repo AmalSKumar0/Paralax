@@ -16,23 +16,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const current = authService.getSession();
-    if (current) {
-      setSession(current);
-    }
-    setIsLoading(false);
-
-    // Periodic token refresh check every 10 minutes
-    const interval = setInterval(async () => {
-      if (session) {
-        const refreshed = await authService.refreshToken();
-        if (refreshed) {
-          setSession(refreshed);
-        }
-      }
-    }, 10 * 60 * 1000);
-
-    return () => clearInterval(interval);
+    const initAuth = async () => {
+      const active = await authService.checkSession();
+      setSession(active);
+      setIsLoading(false);
+    };
+    initAuth();
   }, []);
 
   const login = async (email: string, pass: string) => {

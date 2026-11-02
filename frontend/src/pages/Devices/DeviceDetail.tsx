@@ -124,7 +124,7 @@ export const DeviceDetail: React.FC = () => {
     setIsConfigSaving(true);
     try {
       const updated = await api.updateDeviceConfig(id, formConfig);
-      setDevice(updated);
+      setDevice((prev) => (prev ? { ...prev, config: updated, config_version: prev.config_version + 1 } : prev));
       success('Device configuration saved. Pending sync to hardware.');
       // Refresh command history
       const cmds = await api.getDeviceCommands(id);

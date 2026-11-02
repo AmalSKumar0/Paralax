@@ -356,6 +356,81 @@ export const Settings: React.FC = () => {
           </div>
         </Card>
 
+        {/* Read-Only AI Providers & Fallback Status */}
+        <Card variant="light" className="space-y-4">
+          <div className="pb-3 border-b-[3px] border-black flex items-center justify-between">
+            <div>
+              <h2 className="font-display text-2xl font-black text-[#1a1a1a]">
+                Active AI Providers & Fallback Chains (Read-Only)
+              </h2>
+              <p className="text-xs font-semibold text-gray-600">
+                Ordered fallback chains and environment-governed models
+              </p>
+            </div>
+            <span className="text-xs font-black uppercase px-2.5 py-1 rounded border border-black bg-[#f0ece1]">
+              ENV Governed
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="p-3.5 rounded-xl border-[2px] border-black bg-[#f9f6f0]">
+              <span className="text-[11px] font-black uppercase text-gray-600 block mb-1">
+                STT Provider Chain
+              </span>
+              <span className="font-mono text-sm font-black text-black">
+                {formSettings.providers?.stt_chains?.join(' ➔ ') || 'groq ➔ xai'}
+              </span>
+              <span className="text-[10px] text-gray-500 block mt-1">
+                Model: {formSettings.providers?.models?.groq_stt_model || 'whisper-large-v3-turbo'}
+              </span>
+            </div>
+
+            <div className="p-3.5 rounded-xl border-[2px] border-black bg-[#f9f6f0]">
+              <span className="text-[11px] font-black uppercase text-gray-600 block mb-1">
+                Translator Chain
+              </span>
+              <span className="font-mono text-sm font-black text-black">
+                {formSettings.providers?.translate_chains?.join(' ➔ ') || 'groq ➔ xai'}
+              </span>
+              <span className="text-[10px] text-gray-500 block mt-1">
+                Groq: {formSettings.providers?.models?.groq_chat_model || 'llama-3.3-70b-versatile'}
+              </span>
+            </div>
+
+            <div className="p-3.5 rounded-xl border-[2px] border-black bg-[#f9f6f0]">
+              <span className="text-[11px] font-black uppercase text-gray-600 block mb-1">
+                TTS Provider Chain
+              </span>
+              <span className="font-mono text-sm font-black text-black">
+                {formSettings.providers?.tts_chains?.join(' ➔ ') || 'edge ➔ xai'}
+              </span>
+              <span className="text-[10px] text-gray-500 block mt-1">
+                Primary: Microsoft Edge ReadAloud (Free)
+              </span>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-xl border-[2px] border-black bg-[#fffdf0] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <div>
+              <span className="text-xs font-black text-black block">
+                Paid Fallback Policy (ALLOW_PAID_FALLBACK)
+              </span>
+              <p className="text-[11px] font-semibold text-gray-600">
+                When false, paid providers are skipped entirely, guaranteeing $0.00 cloud expenses.
+              </p>
+            </div>
+            <span
+              className={`px-3 py-1 rounded-full border border-black text-xs font-black shrink-0 ${
+                formSettings.providers?.allow_paid_fallback
+                  ? 'bg-amber-300 text-amber-900'
+                  : 'bg-emerald-300 text-emerald-900'
+              }`}
+            >
+              {formSettings.providers?.allow_paid_fallback ? 'Enabled (Paid Allowed)' : 'Disabled ($0.00 Free Only)'}
+            </span>
+          </div>
+        </Card>
+
         {/* Bottom Save / Reset Action Bar */}
         <div className="flex items-center justify-end gap-3 pt-4">
           <Button

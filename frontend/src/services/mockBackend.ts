@@ -19,12 +19,9 @@ export const INITIAL_LANGUAGES: Language[] = [
     code: 'en-US',
     name: 'English (US)',
     capabilities: {
-      stt_streaming: true,
-      stt_batch: true,
-      stt_language_id: true,
+      stt: true,
       translate: true,
-      tts_neural: true,
-      tts_standard: true,
+      tts: true,
     },
     valid_targets: ['es-ES', 'fr-FR', 'de-DE', 'ja-JP', 'zh-CN', 'it-IT', 'pt-BR', 'ko-KR', 'ar-SA', 'hi-IN'],
     voices: [
@@ -37,12 +34,9 @@ export const INITIAL_LANGUAGES: Language[] = [
     code: 'es-ES',
     name: 'Spanish (Spain)',
     capabilities: {
-      stt_streaming: true,
-      stt_batch: true,
-      stt_language_id: true,
+      stt: true,
       translate: true,
-      tts_neural: true,
-      tts_standard: true,
+      tts: true,
     },
     valid_targets: ['en-US', 'fr-FR', 'de-DE', 'it-IT', 'pt-BR'],
     voices: [
@@ -54,12 +48,9 @@ export const INITIAL_LANGUAGES: Language[] = [
     code: 'fr-FR',
     name: 'French (France)',
     capabilities: {
-      stt_streaming: true,
-      stt_batch: true,
-      stt_language_id: true,
+      stt: true,
       translate: true,
-      tts_neural: true,
-      tts_standard: true,
+      tts: true,
     },
     valid_targets: ['en-US', 'es-ES', 'de-DE', 'it-IT', 'ja-JP'],
     voices: [
@@ -71,12 +62,9 @@ export const INITIAL_LANGUAGES: Language[] = [
     code: 'de-DE',
     name: 'German (Germany)',
     capabilities: {
-      stt_streaming: true,
-      stt_batch: true,
-      stt_language_id: true,
+      stt: true,
       translate: true,
-      tts_neural: true,
-      tts_standard: true,
+      tts: true,
     },
     valid_targets: ['en-US', 'es-ES', 'fr-FR', 'it-IT'],
     voices: [
@@ -88,12 +76,9 @@ export const INITIAL_LANGUAGES: Language[] = [
     code: 'ja-JP',
     name: 'Japanese (Japan)',
     capabilities: {
-      stt_streaming: true,
-      stt_batch: true,
-      stt_language_id: true,
+      stt: true,
       translate: true,
-      tts_neural: true,
-      tts_standard: true,
+      tts: true,
     },
     valid_targets: ['en-US', 'zh-CN', 'ko-KR', 'fr-FR'],
     voices: [
@@ -105,12 +90,9 @@ export const INITIAL_LANGUAGES: Language[] = [
     code: 'zh-CN',
     name: 'Chinese (Mandarin Simplified)',
     capabilities: {
-      stt_streaming: true,
-      stt_batch: true,
-      stt_language_id: true,
+      stt: true,
       translate: true,
-      tts_neural: true,
-      tts_standard: true,
+      tts: true,
     },
     valid_targets: ['en-US', 'ja-JP', 'ko-KR'],
     voices: [
@@ -121,12 +103,9 @@ export const INITIAL_LANGUAGES: Language[] = [
     code: 'it-IT',
     name: 'Italian (Italy)',
     capabilities: {
-      stt_streaming: true,
-      stt_batch: true,
-      stt_language_id: true,
+      stt: true,
       translate: true,
-      tts_neural: true,
-      tts_standard: true,
+      tts: true,
     },
     valid_targets: ['en-US', 'es-ES', 'fr-FR', 'de-DE'],
     voices: [
@@ -138,12 +117,9 @@ export const INITIAL_LANGUAGES: Language[] = [
     code: 'pt-BR',
     name: 'Portuguese (Brazil)',
     capabilities: {
-      stt_streaming: true,
-      stt_batch: true,
-      stt_language_id: true,
+      stt: true,
       translate: true,
-      tts_neural: true,
-      tts_standard: true,
+      tts: true,
     },
     valid_targets: ['en-US', 'es-ES'],
     voices: [
@@ -155,12 +131,9 @@ export const INITIAL_LANGUAGES: Language[] = [
     code: 'ko-KR',
     name: 'Korean (South Korea)',
     capabilities: {
-      stt_streaming: true,
-      stt_batch: true,
-      stt_language_id: true,
+      stt: true,
       translate: true,
-      tts_neural: true,
-      tts_standard: true,
+      tts: true,
     },
     valid_targets: ['en-US', 'ja-JP', 'zh-CN'],
     voices: [
@@ -171,12 +144,9 @@ export const INITIAL_LANGUAGES: Language[] = [
     code: 'ar-SA',
     name: 'Arabic (Saudi Arabia)',
     capabilities: {
-      stt_streaming: false,
-      stt_batch: true,
-      stt_language_id: false,
+      stt: true,
       translate: true,
-      tts_neural: true,
-      tts_standard: true,
+      tts: true,
     },
     valid_targets: ['en-US', 'fr-FR'],
     voices: [
@@ -299,7 +269,7 @@ export const INITIAL_DEVICES: Device[] = [
 export const INITIAL_SETTINGS: Settings = {
   service_enabled: true,
   max_utterance_sec: 15,
-  max_file_size_mb: 25,
+  max_file_size_mb: 4,
   max_duration_sec: 300,
   retention_days: 30,
   store_audio: true,
@@ -320,6 +290,17 @@ export const INITIAL_SETTINGS: Settings = {
     'pt-BR': 'pt-BR-Camila',
     'ko-KR': 'ko-KR-Seoyeon',
     'ar-SA': 'ar-SA-Hala',
+  },
+  providers: {
+    stt_chains: ['groq', 'xai'],
+    translate_chains: ['groq', 'xai'],
+    tts_chains: ['edge', 'xai'],
+    allow_paid_fallback: false,
+    models: {
+      groq_stt_model: 'whisper-large-v3-turbo',
+      groq_chat_model: 'llama-3.3-70b-versatile',
+      xai_chat_model: 'grok-2-latest',
+    },
   },
 };
 
@@ -744,14 +725,17 @@ class MockBackendState {
     targetLanguage?: string;
     audioBlob?: Blob;
     deviceId?: string;
+    kind?: 'utterance' | 'file';
   }): {
     job_id: string;
+    id: string;
     conversation_id: string;
     source_language: string;
     detected_language: string;
     target_language: string;
     transcript: string;
     translation: string;
+    can_retry: boolean;
     audio: { url: string; format: string; sample_rate: number; duration_ms: number; expires_in: number };
     timings: { transcribe_ms: number; translate_ms: number; synthesize_ms: number; total_ms: number };
   } {
@@ -765,6 +749,7 @@ class MockBackendState {
     const src = params.sourceLanguage || 'en-US';
     const tgt = params.targetLanguage || 'es-ES';
     const devId = params.deviceId || 'dev-aurora-01';
+    const kind = params.kind || 'utterance';
 
     // Demo realistic phrases based on target language
     const phraseMap: Record<string, { srcText: string; tgtText: string }> = {
@@ -812,7 +797,7 @@ class MockBackendState {
 
     const job: ApiJob = {
       job_id: jobId,
-      kind: 'utterance',
+      kind,
       device_id: devId,
       conversation_id: convId,
       status: 'completed',
@@ -821,6 +806,7 @@ class MockBackendState {
       target_language: tgt,
       transcript: chosen.srcText,
       translation: chosen.tgtText,
+      can_retry: true,
       original_audio_url: origAudioUrl,
       translated_audio_url: audioUrl,
       duration_sec: 3.2,
@@ -853,12 +839,14 @@ class MockBackendState {
 
     return {
       job_id: jobId,
+      id: jobId,
       conversation_id: convId,
       source_language: src,
       detected_language: src,
       target_language: tgt,
       transcript: chosen.srcText,
       translation: chosen.tgtText,
+      can_retry: true,
       audio: {
         url: audioUrl,
         format: 'audio/wav',
@@ -1078,11 +1066,11 @@ class MockBackendState {
     const nowIso = new Date().toISOString();
     return {
       services: [
-        { name: 'Amazon Transcribe', status: 'healthy', checked_at: nowIso, latency_ms: 42 },
-        { name: 'Amazon Translate', status: 'healthy', checked_at: nowIso, latency_ms: 28 },
-        { name: 'Amazon Polly (Neural TTS)', status: 'healthy', checked_at: nowIso, latency_ms: 36 },
-        { name: 'Amazon S3 Audio Storage', status: 'healthy', checked_at: nowIso, latency_ms: 19 },
-        { name: 'Amazon DynamoDB State Store', status: 'healthy', checked_at: nowIso, latency_ms: 12 },
+        { name: 'Groq (Whisper STT)', status: 'healthy', checked_at: nowIso, latency_ms: 38 },
+        { name: 'Groq (Llama Translation)', status: 'healthy', checked_at: nowIso, latency_ms: 28 },
+        { name: 'Microsoft Edge (ReadAloud TTS)', status: 'healthy', checked_at: nowIso, latency_ms: 32 },
+        { name: 'Upstash Redis', status: 'healthy', checked_at: nowIso, latency_ms: 15 },
+        { name: 'Neon Postgres', status: 'healthy', checked_at: nowIso, latency_ms: 22 },
       ],
       offline_devices: this.devices.filter((d) => !d.online),
       recent_failures: this.jobs.filter((j) => j.status === 'failed').slice(0, 20),

@@ -1,21 +1,26 @@
 /**
  * TypeScript API definitions generated from openapi.yaml
- * IoT Two-Way Voice Translator Backend API (v1.0.0)
+ * IoT Two-Way Voice Translator Backend API (v2.0.0 - Vercel Edition)
  */
 
 export type ErrorCode =
-  | "unsupported_language_pair"
-  | "no_speech_detected"
-  | "low_confidence_language"
-  | "audio_too_long"
-  | "invalid_audio_format"
-  | "rate_limited"
-  | "quota_exceeded"
-  | "service_disabled"
-  | "in_progress"
-  | "already_completed"
-  | "unauthorized"
-  | "not_found";
+  | 'unsupported_language_pair'
+  | 'no_speech_detected'
+  | 'low_confidence_language'
+  | 'audio_too_long'
+  | 'invalid_audio_format'
+  | 'rate_limited'
+  | 'device_rate_limited'
+  | 'provider_rate_limited'
+  | 'daily_quota_exceeded'
+  | 'missing_idempotency_key'
+  | 'idempotent_in_progress'
+  | 'missing_csrf_header'
+  | 'cannot_retry'
+  | 'service_disabled'
+  | 'unauthorized'
+  | 'not_found'
+  | 'invalid_credentials';
 
 export interface ApiError {
   code: ErrorCode | string;
@@ -27,22 +32,22 @@ export interface ErrorResponse {
   error: ApiError;
 }
 
-export type JobKind = "utterance" | "file";
+export type JobKind = 'utterance' | 'file';
 
 export type JobStatus =
-  | "QUEUED"
-  | "TRANSCRIBING"
-  | "TRANSLATING"
-  | "SYNTHESIZING"
-  | "COMPLETED"
-  | "FAILED"
-  | "CANCELLED";
+  | 'queued'
+  | 'transcribing'
+  | 'translating'
+  | 'synthesizing'
+  | 'completed'
+  | 'failed'
+  | 'cancelled';
 
-export type DeviceMode = "auto" | "buttons";
+export type DeviceMode = 'auto' | 'buttons';
 
-export type CommandType = "reboot" | "sync_config" | "identify";
+export type CommandType = 'reboot' | 'sync_config' | 'identify' | 'update_firmware' | 'ping';
 
-export type CommandStatus = "pending" | "delivered" | "done" | "failed" | "expired";
+export type CommandStatus = 'pending' | 'delivered' | 'done' | 'failed' | 'expired';
 
 export interface DeviceConfig {
   config_version: number;
@@ -52,132 +57,185 @@ export interface DeviceConfig {
   voice_map?: Record<string, string>;
   speech_rate_pct?: number;
   volume_pct?: number;
+  volume?: number;
+  tts_speed?: number;
+  mic_gain?: number;
   max_recording_sec?: number;
+  max_utterance_sec?: number;
+  conversation_idle_sec?: number;
   heartbeat_interval_sec?: number;
 }
 
 export interface DeviceCommand {
   id: string;
+  device_id: string;
   type: CommandType;
-  params: Record<string, unknown>;
-}
-
-export interface HeartbeatRequest {
-  firmware_version: string;
-  rssi: number;
-  free_heap: number;
-  uptime_sec: number;
-  battery_pct?: number;
-  config_version: number;
-}
-
-export interface HeartbeatResponse {
-  server_time: string;
-  config_version: number;
-  config_changed: boolean;
-  heartbeat_interval_sec: number;
-  commands: DeviceCommand[];
-}
-
-export interface CommandAckRequest {
-  status: "done" | "failed";
+  status: CommandStatus;
+  created_at: string;
+  acked_at?: string;
   detail?: string;
 }
 
-export interface TimingsBreakdown {
-  transcribe_ms?: number;
-  translate_ms?: number;
-  synthesize_ms?: number;
+export interface TelemetrySample {
+  ts: string;
+  rssi?: number;
+  free_heap?: number;
+  battery_pct?: number;
+  uptime_sec?: number;
+  temperature?: number;
+  error_count?: number;
+}
+
+export interface Device {
+  id: string;
+  device_id: string;
+  name: string;
+  status: 'active' | 'revoked';
+  online?: boolean;
+  last_seen?: string;
+  firmware_version?: string;
+  rssi?: number;
+  config_version: number;
+  applied_config_version: number;
+  config: DeviceConfig;
+  created_at: string;
+}
+
+export interface JobTimings {
+  transcribe_ms: number;
+  translate_ms: number;
+  synthesize_ms: number;
   total_ms: number;
 }
 
-export interface AudioMetadata {
+export interface JobAudio {
   url?: string;
-  format: "pcm" | "mp3";
+  base64?: string;
+  format: string;
   sample_rate: number;
   duration_ms: number;
-  expires_in?: number;
 }
 
-export interface UtteranceResponse {
-  job_id: string;
-  conversation_id: string;
-  source_language: string;
-  detected_language: string;
-  target_language: string;
-  transcript: string;
-  translation: string;
-  audio: AudioMetadata;
-  timings: TimingsBreakdown;
-}
-
-export interface JobRecord {
-  job_id: string;
+export interface Job {
+  jobId: string;
   kind: JobKind;
-  device_id?: string;
-  conversation_id: string;
+  deviceId?: string;
+  conversationId?: string;
   status: JobStatus;
-  source_language: string;
-  detected_language?: string;
-  target_language: string;
+  sourceLanguage: string;
+  detectedLanguage?: string;
+  targetLanguage: string;
   transcript?: string;
   translation?: string;
-  audio_input_url?: string;
-  audio_output_url?: string;
-  timings?: TimingsBreakdown;
-  durations?: {
-    audio_input_sec?: number;
-    audio_output_sec?: number;
-  };
-  error?: ApiError;
+  canRetry: boolean;
+  durationSec?: number;
+  transcribeMs?: number;
+  translateMs?: number;
+  synthesizeMs?: number;
+  totalMs?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Conversation {
+  conversationId: string;
+  deviceId: string;
+  createdAt: string;
+  lastUtteranceAt: string;
+  utteranceCount: number;
+  jobs?: Job[];
+}
+
+export interface Voice {
+  id: string;
+  name: string;
+  gender: 'female' | 'male' | 'neutral';
+  neural: boolean;
+  provider: 'edge' | 'xai' | 'groq';
+}
+
+export interface LanguageCapabilities {
+  stt: boolean;
+  translate: boolean;
+  tts: boolean;
+  stt_streaming?: boolean;
+  stt_batch?: boolean;
+  stt_language_id?: boolean;
+  tts_neural?: boolean;
+  tts_standard?: boolean;
+}
+
+export interface Language {
+  code: string;
+  name: string;
+  iso_code?: string;
+  whisper_code?: string;
+  capabilities: LanguageCapabilities;
+  valid_targets: string[];
+  voices: Voice[];
+}
+
+export interface ApiKey {
+  id: string;
+  name: string;
+  key_prefix: string;
   created_at: string;
-  updated_at?: string;
+  last_used_at?: string;
+  status: 'active' | 'revoked';
 }
 
-export interface UploadRequest {
-  filename: string;
-  content_type: string;
+export interface LatencyMetric {
+  p50: number;
+  p95: number;
 }
 
-export interface UploadResponse {
-  job_id: string;
-  upload_url: string;
-  expires_in: number;
-  max_size_mb: number;
-}
-
-export interface CreateJobRequest {
-  job_id: string;
-  source_language?: string;
-  target_language: string;
-  voice_id?: string;
-}
-
-export interface CreateJobResponse {
-  job_id: string;
-  status: JobStatus;
-}
-
-export interface DeviceSummary {
-  device_id: string;
-  status: "active" | "revoked";
-  config_version: number;
-  config: DeviceConfig;
-  online: boolean;
-  last_heartbeat?: {
-    timestamp: string;
-    firmware_version: string;
-    rssi: number;
-    free_heap: number;
-    uptime_sec: number;
-    battery_pct?: number;
+export interface AdminStats {
+  counts_by_status: Record<string, number>;
+  counts_by_kind: Record<string, number>;
+  jobs_per_day: Array<{ date: string; count: number; failed: number }>;
+  failure_rate: number;
+  devices_online: number;
+  devices_total: number;
+  top_language_pairs: Array<{ pair: string; count: number; percentage: number }>;
+  total_audio_minutes: number;
+  utterances_today: number;
+  jobs_in_progress: number;
+  latency: {
+    total: LatencyMetric;
+    transcribe: LatencyMetric;
+    translate: LatencyMetric;
+    synthesize: LatencyMetric;
   };
-  created_at: string;
-  updated_at?: string;
-  device_key?: string; // Only returned on initial creation
 }
 
-export interface SystemSettings {
+export interface ServiceHealthItem {
+  name: string;
+  status: 'healthy' | 'degraded' | 'down';
+  checked_at: string;
+  latency_ms: number;
+}
+
+export interface SystemHealth {
+  services: ServiceHealthItem[];
+  offline_devices: Device[];
+  recent_failures: Job[];
+  cached?: boolean;
+}
+
+export interface SettingsProvidersBlock {
+  stt_chains: string[];
+  translate_chains: string[];
+  tts_chains: string[];
+  allow_paid_fallback: boolean;
+  models: {
+    groq_stt_model: string;
+    groq_chat_model: string;
+    xai_chat_model: string;
+  };
+  call_counts?: Record<string, any>;
+}
+
+export interface Settings {
   service_enabled: boolean;
   max_utterance_sec: number;
   max_file_size_mb: number;
@@ -190,59 +248,6 @@ export interface SystemSettings {
   device_daily_quota: number;
   default_heartbeat_interval_sec: number;
   allowed_languages: string[];
-  voice_map?: Record<string, string>;
-}
-
-export interface SystemStats {
-  metadata: {
-    query_cap: number;
-    jobs_evaluated: number;
-    window_hours_latency: number;
-    window_days_jobs: number;
-  };
-  devices: {
-    online: number;
-    total: number;
-  };
-  jobs: {
-    total: number;
-    counts_by_status: Record<string, number>;
-    counts_by_kind: Record<string, number>;
-    failure_rate: number;
-    jobs_per_day_30d: Array<{ date: string; count: number }>;
-  };
-  audio: {
-    total_audio_minutes: number;
-    top_language_pairs: Array<{ pair: string; count: number }>;
-  };
-  latencies_24h_ms: {
-    total: { p50: number; p95: number; samples: number };
-    transcribe: { p50: number; p95: number; samples: number };
-    translate: { p50: number; p95: number; samples: number };
-    synthesize: { p50: number; p95: number; samples: number };
-  };
-}
-
-export interface SystemHealth {
-  status: "healthy" | "degraded" | "unhealthy";
-  timestamp: string;
-  services: {
-    dynamodb: { status: string; table_status?: string };
-    s3: { status: string; bucket?: string };
-    translate: { status: string };
-    polly: { status: string };
-    transcribe: { status: string };
-  };
-  devices: {
-    total: number;
-    offline_count: number;
-    offline_device_ids: string[];
-  };
-  last_failed_jobs: Array<{
-    job_id: string;
-    kind?: string;
-    device_id?: string;
-    created_at?: string;
-    error?: ApiError;
-  }>;
+  voice_map: Record<string, string>;
+  providers: SettingsProvidersBlock;
 }

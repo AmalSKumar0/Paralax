@@ -7,7 +7,10 @@ __pycache__/
 .aws-sam/
 .env
 *.env
+.env.local
+.env.*.local
 !*.env.example
+.vercel/
 node_modules/
 dist/
 

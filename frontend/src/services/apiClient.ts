@@ -4,7 +4,7 @@ import { mockBackend } from './mockBackend';
 // Helper to normalize backend base URL from VITE_API_BASE_URL
 function normalizeBaseUrl(rawUrl?: string): string {
   if (!rawUrl || !rawUrl.trim()) {
-    return 'http://localhost:8000/v1';
+    return '/api/v1';
   }
   let clean = rawUrl.trim().replace(/\/+$/, '');
   if (!clean.endsWith('/v1')) {
@@ -44,6 +44,9 @@ class ApiClient {
     const session = authService.getSession();
     const headers = new Headers(options.headers || {});
 
+    // Send CSRF header required for state-changing admin calls
+    headers.set('X-Requested-With', 'XMLHttpRequest');
+
     if (session?.token) {
       headers.set('Authorization', `Bearer ${session.token}`);
     }
@@ -64,24 +67,18 @@ class ApiClient {
       response = await fetch(url, {
         ...options,
         headers,
+        credentials: 'include', // Same-origin cookie credentials
       });
     } catch {
-      // Fallback to mock if real backend is unreachable
+      // Fallback to mock if real backend is unreachable in dev
       console.warn(`[paralax API] Real backend unreachable at ${url}, falling back to mock mode.`);
       return this.handleMockRequest<T>(endpoint, options);
     }
 
     if (response.status === 401) {
-      // Attempt token refresh
-      const refreshed = await authService.refreshToken();
-      if (refreshed) {
-        headers.set('Authorization', `Bearer ${refreshed.token}`);
-        response = await fetch(url, { ...options, headers });
-      } else {
-        authService.logout();
-        window.location.href = '/login';
-        throw new ApiError('unauthorized', 'Session expired. Please log in again.', 401);
-      }
+      authService.logout();
+      window.location.href = '/login';
+      throw new ApiError('unauthorized', 'Session expired or required. Please log in.', 401);
     }
 
     if (response.status === 503) {
@@ -110,7 +107,6 @@ class ApiClient {
 
   // --- Mock Router ---
   private async handleMockRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    // Artificial small latency for realistic feel
     await new Promise((r) => setTimeout(r, 60));
 
     const method = (options.method || 'GET').toUpperCase();
@@ -118,8 +114,7 @@ class ApiClient {
     const path = url.pathname;
     const searchParams = url.searchParams;
 
-    // Check if service is disabled for user-facing execution
-    if (!mockBackend.settings.service_enabled && (path.startsWith('/utterances') || path.startsWith('/jobs'))) {
+    if (!mockBackend.settings.service_enabled && path.startsWith('/utterances')) {
       window.dispatchEvent(new CustomEvent(SERVICE_DISABLED_EVENT));
       throw new ApiError('service_disabled', 'The voice translator service is currently disabled by administrator.', 503);
     }
@@ -128,39 +123,30 @@ class ApiClient {
     if (path === '/utterances' && method === 'POST') {
       const source = searchParams.get('source') || 'en-US';
       const target = searchParams.get('target') || 'es-ES';
+      const kind = searchParams.get('kind') || 'utterance';
+      let audioBlob: Blob;
+
+      if (options.body instanceof FormData) {
+        audioBlob = (options.body.get('file') || options.body.get('audio')) as Blob;
+      } else {
+        audioBlob = options.body as Blob;
+      }
+
       const result = mockBackend.processUtterance({
         sourceLanguage: source,
         targetLanguage: target,
-        audioBlob: options.body as Blob,
+        audioBlob,
+        kind: kind as 'utterance' | 'file',
       });
       return result as unknown as T;
     }
 
-    // 2. /uploads
-    if (path === '/uploads' && method === 'POST') {
-      const body = JSON.parse((options.body as string) || '{}');
-      return mockBackend.createUploadUrl(body.filename || 'audio.wav', body.content_type || 'audio/wav') as unknown as T;
-    }
-
-    // 3. /jobs
-    if (path === '/jobs' && method === 'POST') {
-      const body = JSON.parse((options.body as string) || '{}');
-      return mockBackend.startFileJob(body) as unknown as T;
-    }
-
-    const jobMatch = path.match(/^\/jobs\/([^/]+)$/);
-    if (jobMatch && method === 'GET') {
-      const job = mockBackend.getJob(jobMatch[1]);
-      if (!job) throw new ApiError('job_not_found', 'Job not found', 404);
-      return job as unknown as T;
-    }
-
-    // 4. /languages
+    // 2. /languages
     if (path === '/languages' && method === 'GET') {
       return { languages: mockBackend.languages } as unknown as T;
     }
 
-    // 5. /admin/jobs
+    // 3. /admin/jobs
     if (path === '/admin/jobs' && method === 'GET') {
       const status = searchParams.get('status');
       const kind = searchParams.get('kind');
@@ -181,18 +167,13 @@ class ApiClient {
       return mockBackend.retryJob(jobRetryMatch[1]) as unknown as T;
     }
 
-    const jobCancelMatch = path.match(/^\/admin\/jobs\/([^/]+)\/cancel$/);
-    if (jobCancelMatch && method === 'POST') {
-      return mockBackend.cancelJob(jobCancelMatch[1]) as unknown as T;
-    }
-
     const jobDeleteMatch = path.match(/^\/admin\/jobs\/([^/]+)$/);
     if (jobDeleteMatch && method === 'DELETE') {
       mockBackend.deleteJob(jobDeleteMatch[1]);
       return { success: true } as unknown as T;
     }
 
-    // 6. /admin/conversations
+    // 4. /admin/conversations
     if (path === '/admin/conversations' && method === 'GET') {
       return mockBackend.getConversations({
         deviceId: searchParams.get('device_id') || undefined,
@@ -207,7 +188,7 @@ class ApiClient {
       return conv as unknown as T;
     }
 
-    // 7. /admin/devices
+    // 5. /admin/devices
     if (path === '/admin/devices') {
       if (method === 'GET') {
         return mockBackend.getDevices() as unknown as T;
@@ -269,7 +250,7 @@ class ApiClient {
       return { samples } as unknown as T;
     }
 
-    // 8. /admin/settings
+    // 6. /admin/settings
     if (path === '/admin/settings') {
       if (method === 'GET') {
         return mockBackend.settings as unknown as T;
@@ -281,17 +262,17 @@ class ApiClient {
       }
     }
 
-    // 9. /admin/stats
+    // 7. /admin/stats
     if (path === '/admin/stats' && method === 'GET') {
       return mockBackend.getStats() as unknown as T;
     }
 
-    // 10. /admin/health
+    // 8. /admin/health
     if (path === '/admin/health' && method === 'GET') {
       return mockBackend.getHealth() as unknown as T;
     }
 
-    // 11. /admin/api-keys
+    // 9. /admin/api-keys
     if (path === '/admin/api-keys') {
       if (method === 'GET') {
         return mockBackend.apiKeys as unknown as T;

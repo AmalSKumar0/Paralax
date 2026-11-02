@@ -56,15 +56,18 @@ export const LanguageSupport: React.FC = () => {
     }
 
     const missing: string[] = [];
-    if (!sourceLangObj.capabilities.stt_streaming && !sourceLangObj.capabilities.stt_batch) {
+    if (!sourceLangObj.capabilities.stt && !sourceLangObj.capabilities.stt_batch) {
       missing.push(`Speech recognition (STT) is unavailable for source language ${sourceLangObj.name}.`);
+    }
+    if (!sourceLangObj.capabilities.translate) {
+      missing.push(`Machine translation is unavailable for source language ${sourceLangObj.name}.`);
     }
     if (!sourceLangObj.valid_targets.includes(checkTarget)) {
       missing.push(
         `Machine translation route between ${sourceLangObj.name} and ${targetLangObj.name} is not currently enabled in the translation matrix.`
       );
     }
-    if (!targetLangObj.capabilities.tts_neural && !targetLangObj.capabilities.tts_standard) {
+    if (!targetLangObj.capabilities.tts && !targetLangObj.capabilities.tts_neural) {
       missing.push(`Speech synthesis (TTS) voices are unavailable for target language ${targetLangObj.name}.`);
     }
 
@@ -243,7 +246,7 @@ export const LanguageSupport: React.FC = () => {
 
                       {/* STT */}
                       <td className="py-4 px-4 text-center">
-                        {lang.capabilities.stt_streaming || lang.capabilities.stt_batch ? (
+                        {lang.capabilities.stt || lang.capabilities.stt_streaming || lang.capabilities.stt_batch ? (
                           <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-black bg-[#4ade80] text-black">
                             <Check className="w-3.5 h-3.5" />
                           </span>
@@ -256,7 +259,7 @@ export const LanguageSupport: React.FC = () => {
 
                       {/* Lang ID */}
                       <td className="py-4 px-4 text-center">
-                        {lang.capabilities.stt_language_id ? (
+                        {lang.capabilities.stt || lang.capabilities.stt_language_id ? (
                           <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-black bg-[#4ade80] text-black">
                             <Check className="w-3.5 h-3.5" />
                           </span>
@@ -280,9 +283,9 @@ export const LanguageSupport: React.FC = () => {
                         )}
                       </td>
 
-                      {/* Neural TTS */}
+                      {/* TTS */}
                       <td className="py-4 px-4 text-center">
-                        {lang.capabilities.tts_neural ? (
+                        {lang.capabilities.tts || lang.capabilities.tts_neural ? (
                           <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-black bg-[#4ade80] text-black">
                             <Check className="w-3.5 h-3.5" />
                           </span>
