@@ -62,7 +62,7 @@ const char* CONFIG_URL    = "https://paralax.amalskumar.dev/api/v1/device/config
 
 // Paste your device secret key from https://paralax.amalskumar.dev/devices
 const char* DEVICE_KEY    = "key_YOUR_DEVICE_KEY_HERE";
-const char* FIRMWARE_VER  = "1.1.0";
+const char* FIRMWARE_VER  = "1.1.1";
 
 // Default Language Pair (Updated dynamically via Heartbeat / Config Sync)
 String currentLanguageA   = "en-US";
@@ -124,6 +124,7 @@ void soundError();
 void recordAudio(int buttonPin, const char* directionTag);
 void sendTranslationRequest(const char* directionTag);
 void sendHeartbeat();
+void ackCommand(const String& cmdId, const char* status, const char* detail = NULL);
 String generateUUID();
 String decodeBase64Url(String input);
 
@@ -133,6 +134,9 @@ String decodeBase64Url(String input);
 void setup() {
   Serial.begin(115200);
   delay(1000);
+
+  // Initialize Wi-Fi in Station mode first so MAC address and radio are ready
+  WiFi.mode(WIFI_STA);
 
   printHeaderBox("PARALAX IoT Dual-Button AI Voice Translator - Boot Diagnostics");
   Serial.printf("[System] ESP32 Chip Revision: %d | CPU Freq: %d MHz\n", ESP.getChipRevision(), ESP.getCpuFreqMHz());
@@ -301,6 +305,7 @@ void initI2sMic() {
   };
 
   i2s_pin_config_t pin_config = {
+    .mck_io_num   = I2S_PIN_NO_CHANGE, // Explicitly no MCLK to prevent GPIO 0 conflict
     .bck_io_num   = I2S_MIC_SCK,
     .ws_io_num    = I2S_MIC_WS,
     .data_out_num = I2S_PIN_NO_CHANGE,
@@ -314,9 +319,10 @@ void initI2sMic() {
   err = i2s_set_pin(I2S_NUM_0, &pin_config);
   if (err != ESP_OK) {
     Serial.printf("[I2S_0] [ERROR] Pin configuration failed: %d\n", err);
+  } else {
+    Serial.printf("[I2S_0] [SUCCESS] INMP441 Mic ready on SCK=%d, WS=%d, SD=%d (16kHz 16-bit Mono)\n",
+                  I2S_MIC_SCK, I2S_MIC_WS, I2S_MIC_SD);
   }
-  Serial.printf("[I2S_0] [SUCCESS] INMP441 Mic ready on SCK=%d, WS=%d, SD=%d (16kHz 16-bit Mono)\n",
-                I2S_MIC_SCK, I2S_MIC_WS, I2S_MIC_SD);
 }
 
 void initI2sSpeaker() {
@@ -335,6 +341,7 @@ void initI2sSpeaker() {
   };
 
   i2s_pin_config_t pin_config = {
+    .mck_io_num   = I2S_PIN_NO_CHANGE, // Explicitly no MCLK to prevent GPIO 0 conflict
     .bck_io_num   = I2S_SPK_BCLK,
     .ws_io_num    = I2S_SPK_LRC,
     .data_out_num = I2S_SPK_DIN,
@@ -348,9 +355,10 @@ void initI2sSpeaker() {
   err = i2s_set_pin(I2S_NUM_1, &pin_config);
   if (err != ESP_OK) {
     Serial.printf("[I2S_1] [ERROR] Pin configuration failed: %d\n", err);
+  } else {
+    Serial.printf("[I2S_1] [SUCCESS] MAX98357A Amp ready on BCLK=%d, LRC=%d, DIN=%d (16kHz 16-bit Mono)\n",
+                  I2S_SPK_BCLK, I2S_SPK_LRC, I2S_SPK_DIN);
   }
-  Serial.printf("[I2S_1] [SUCCESS] MAX98357A Amp ready on BCLK=%d, LRC=%d, DIN=%d (16kHz 16-bit Mono)\n",
-                I2S_SPK_BCLK, I2S_SPK_LRC, I2S_SPK_DIN);
 }
 
 // ============================================================================
@@ -666,16 +674,31 @@ void sendHeartbeat() {
       Serial.printf("[Heartbeat] [ACK 200] Telemetry synced. Cloud Config v%d | Pair: %s <-> %s\n",
                     deviceConfigVersion, currentLanguageA.c_str(), currentLanguageB.c_str());
 
-      // Check for remote commands (e.g. reboot command from web dashboard)
-      if (resDoc.containsKey("pending_commands")) {
-        JsonArray commands = resDoc["pending_commands"].as<JsonArray>();
+      // Check for remote commands from web dashboard
+      if (resDoc.containsKey("pending_commands") || resDoc.containsKey("commands")) {
+        JsonArray commands = resDoc.containsKey("pending_commands") 
+                                ? resDoc["pending_commands"].as<JsonArray>() 
+                                : resDoc["commands"].as<JsonArray>();
+
         for (JsonObject cmd : commands) {
-          String type = cmd["type"].as<String>();
+          String cmdId = cmd["id"].as<String>();
+          String type  = cmd["type"].as<String>();
+          Serial.printf("[Command] Received pending command from cloud: ID='%s', Type='%s'\n",
+                        cmdId.c_str(), type.c_str());
+
+          // Step 1: ALWAYS acknowledge the command to the cloud FIRST so it gets removed from the queue!
+          ackCommand(cmdId, "done");
+
+          // Step 2: Handle reboot command with bootloop guard
           if (type == "reboot") {
-            Serial.println("[Heartbeat] [COMMAND] Remote REBOOT commanded by Paralax dashboard! Restarting...");
-            soundError();
-            delay(1000);
-            ESP.restart();
+            if (millis() < 45000) {
+              // Device booted less than 45 seconds ago: prevent reboot loop!
+              Serial.println("[Command] [BOOTLOOP GUARD] Discarding reboot: Device just booted (< 45s ago). Queue cleared in cloud!");
+            } else {
+              Serial.println("[Command] Remote REBOOT confirmed by cloud. Restarting ESP32 in 1s...");
+              delay(1000);
+              ESP.restart();
+            }
           }
         }
       }
@@ -686,6 +709,36 @@ void sendHeartbeat() {
     Serial.printf("[Heartbeat] [WARN] Server returned HTTP %d\n", httpCode);
   }
 
+  http.end();
+}
+
+// ============================================================================
+// ACKNOWLEDGE REMOTE COMMAND TO CLOUD (Removes it from server queue)
+// ============================================================================
+void ackCommand(const String& cmdId, const char* status, const char* detail) {
+  if (WiFi.status() != WL_CONNECTED || cmdId.length() == 0) return;
+
+  WiFiClientSecure client;
+  client.setInsecure();
+  client.setTimeout(5000);
+
+  HTTPClient http;
+  String ackUrl = "https://" + String(API_HOST) + "/api/v1/device/commands/" + cmdId + "/ack";
+  if (!http.begin(client, ackUrl)) return;
+
+  http.addHeader("Content-Type", "application/json");
+  http.addHeader("X-Device-Key", DEVICE_KEY);
+
+  StaticJsonDocument<256> doc;
+  doc["status"] = status;
+  if (detail) doc["detail"] = detail;
+
+  String payload;
+  serializeJson(doc, payload);
+
+  int httpCode = http.POST(payload);
+  Serial.printf("[Command] Acknowledged '%s' (status: %s) -> Server HTTP %d\n",
+                cmdId.c_str(), status, httpCode);
   http.end();
 }
 

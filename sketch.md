@@ -67,21 +67,30 @@ Only **1 library** is required:
 
 ---
 
-## 4. Why the Previous Code Crashed & How It Is Solved
+## 4. Why Was It "Connecting and Disconnecting" & Pin Error 258?
 
-### The Problem:
+### 1. The "Wi-Fi Disconnecting" (Actually an Infinite Reboot Loop)
+In your Serial Monitor output:
 ```text
-[System] Free Heap at Boot:   272832 bytes
-[Memory] Allocating audio recording buffer (160000 bytes in SRAM)...
-[Memory] [FATAL ERROR] Audio buffer allocation failed! Halting.
+[Heartbeat] [COMMAND] Remote REBOOT commanded by Paralax dashboard! Restarting...
+ets Jul 29 2019 12:21:46
+rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
 ```
-- In ESP32 microcontrollers without external PSRAM, the SRAM heap is divided across non-contiguous DRAM blocks.
-- The maximum single contiguous block is typically ~110,000 to 120,000 bytes.
-- Requesting `160,000 bytes` (160 KB for 5 seconds of audio) fails because no single contiguous memory block of that size exists in internal SRAM.
+* Someone in the Paralax Dashboard previously sent a "Reboot" command to this device.
+* The command was queued in the cloud database.
+* When the ESP32 booted, it connected to Wi-Fi and sent its heartbeat. The cloud returned `{ "pending_commands": [{ "type": "reboot" }] }`.
+* The previous code executed `ESP.restart()` **without acknowledging the command** back to the server (`POST /api/v1/device/commands/:id/ack`).
+* Therefore, the command remained in the cloud queue forever. Every time the ESP32 restarted and sent a heartbeat, it received the same reboot command and restarted again!
+* **The Fix**: The new firmware calls `ackCommand(cmdId, "done")` to remove the command from the cloud queue immediately, and includes a **45-second bootloop protection guard** so fresh boots ignore redundant reboot commands.
 
-### The Solution:
-- In the updated firmware, the audio buffer is safely sized to `80,000 bytes` (2.5 seconds of 16 kHz 16-bit mono speech) with an automatic fallback to `64,000 bytes` (2.0 seconds).
-- It leaves at least 40 KB of contiguous memory free for the `WiFiClientSecure` / `mbedTLS` SSL handshake, eliminating memory crashes.
+### 2. The I2S_1 Pin Configuration Error 258
+```text
+E (1119) esp_clock_output: esp_clock_output_start(206): Selected io is already mapped by another signal
+[I2S_1] [ERROR] Pin configuration failed: 258
+```
+* In dual-I2S on ESP32, if `mck_io_num` is not explicitly set, both I2S peripherals default to claiming GPIO 0 for master clock output (MCLK).
+* When `I2S_1` tried to claim GPIO 0 after `I2S_0` already claimed it, ESP-IDF threw an invalid state error.
+* **The Fix**: Both `I2S_0` and `I2S_1` now explicitly set `.mck_io_num = I2S_PIN_NO_CHANGE` (neither INMP441 nor MAX98357A require an external MCLK).
 
 ---
 
@@ -89,41 +98,44 @@ Only **1 library** is required:
 
 Set your Arduino IDE Serial Monitor dropdown to **`115200 baud`**. You will see:
 
-### Boot Diagnostics
+### Clean Boot & Wi-Fi Connection
 ```text
 +----------------------------------------------------------------------+
 | PARALAX IoT Dual-Button AI Voice Translator - Boot Diagnostics       |
 +----------------------------------------------------------------------+
 [System] ESP32 Chip Revision: 301 | CPU Freq: 240 MHz
 [System] Flash Chip Size:     4 MB
-[System] Free Heap at Boot:   272832 bytes
-[System] Max Contiguous Block: 113420 bytes
-[System] Firmware Version:     1.1.0
+[System] Free Heap at Boot:   275228 bytes
+[System] Max Contiguous Block: 110580 bytes
+[System] Firmware Version:     1.1.1
 [System] Target Cloud Server:  https://paralax.amalskumar.dev
 [System] MAC Address:          34:85:18:XX:XX:XX
 ------------------------------------------------------------------------
 [Hardware] Button A configured on GPIO 32 (INPUT_PULLUP, Active LOW) -> Lang A to B
 [Hardware] Button B configured on GPIO 21 (INPUT_PULLUP, Active LOW) -> Lang B to A
 ------------------------------------------------------------------------
-[Memory] Allocating audio recording buffer (80000 bytes in SRAM)...
-[Memory] [SUCCESS] Audio buffer allocated: 80000 bytes (2.5 seconds max speech)
-[Memory] Free heap remaining: 192832 bytes | Largest free block: 33420 bytes
+[Memory] Allocating audio recording buffer (64000 bytes in SRAM)...
+[Memory] [SUCCESS] Audio buffer allocated: 64000 bytes (2.0 seconds max speech)
+[Memory] Free heap remaining: 209424 bytes | Largest free block: 110580 bytes
 ------------------------------------------------------------------------
 [I2S_0] [SUCCESS] INMP441 Mic ready on SCK=26, WS=25, SD=33 (16kHz 16-bit Mono)
 [I2S_1] [SUCCESS] MAX98357A Amp ready on BCLK=14, LRC=27, DIN=22 (16kHz 16-bit Mono)
 ------------------------------------------------------------------------
 [WiFi] Initiating connection to SSID: "Aurora"...
-[WiFi] Connecting...... CONNECTED!
-[WiFi] IP Address:   192.168.1.142
-[WiFi] Gateway IP:   192.168.1.1
+[WiFi] Connecting....... CONNECTED!
+[WiFi] IP Address:   10.65.220.105
+[WiFi] Gateway IP:   10.65.220.164
 [WiFi] Subnet Mask:  255.255.255.0
-[WiFi] DNS Server:   192.168.1.1
-[WiFi] Signal RSSI:  -54 dBm (Good      [|||.])
+[WiFi] DNS Server:   10.65.220.164
+[WiFi] Signal RSSI:  -41 dBm (Excellent [||||])
 ------------------------------------------------------------------------
 [Speaker] Playing startup chime (880Hz -> 1320Hz)...
 ------------------------------------------------------------------------
 [Heartbeat] Sending telemetry payload to cloud...
 [Heartbeat] [ACK 200] Telemetry synced. Cloud Config v1 | Pair: en-US <-> es-US
+[Command] Received pending command from cloud: ID='cmd_xxx', Type='reboot'
+[Command] Acknowledged 'cmd_xxx' (status: done) -> Server HTTP 200
+[Command] [BOOTLOOP GUARD] Discarding reboot: Device just booted (< 45s ago). Queue cleared in cloud!
 ------------------------------------------------------------------------
 +----------------------------------------------------------------------+
 | SYSTEM READY - DUAL-BUTTON PUSH-TO-TALK ACTIVE                       |
@@ -138,10 +150,8 @@ Set your Arduino IDE Serial Monitor dropdown to **`115200 baud`**. You will see:
 ```text
 >>> [Button A - GPIO 32] PRESSED: Translating en-US -> es-US
 [Voice] >>> Recording in progress... (keep button pressed, speak clearly)
-[Voice]  0.2s / 2.5s  |  RMS:  42%  [######----------]  |  Peak:  60%
-[Voice]  0.4s / 2.5s  |  RMS:  78%  [############----]  |  Peak:  92%
-[Voice]  0.6s / 2.5s  |  RMS:  65%  [##########------]  |  Peak:  84%
-[Voice]  0.8s / 2.5s  |  RMS:  72%  [###########-----]  |  Peak:  88%
+[Voice]  0.4s / 2.0s  |  RMS:  78%  [############----]  |  Peak:  92%
+[Voice]  0.8s / 2.0s  |  RMS:  72%  [###########-----]  |  Peak:  88%
 [Voice] <<< Recording finished: 1.12 seconds captured (35840 bytes raw PCM)
 
 +----------------------------------------------------------------------+
@@ -152,28 +162,10 @@ Set your Arduino IDE Serial Monitor dropdown to **`115200 baud`**. You will see:
 [API] Direction:     a_to_b (en-US -> es-US)
 [API] Payload Size:  35840 bytes (16 kHz 16-bit Mono PCM)
 [API] Establishing SSL/TLS handshake with server... Connected! (285 ms)
-[API] >>> Sending HTTP Request Headers:
-[API]     POST /api/v1/device/translate HTTP/1.1
-[API]     Host: paralax.amalskumar.dev
-[API]     X-Device-Key: key_YOUR_DEVICE_KEY_HERE
-[API]     Idempotency-Key: e8a97c41-9430-4e12-b530-5899a19c6d32
-[API]     X-Direction: a_to_b
-[API]     Content-Type: audio/L16;rate=16000
-[API]     Accept: application/octet-stream
-[API]     Content-Length: 35840
-[API]     Connection: close
 [API] >>> Streaming audio payload (35840 bytes in 1024-byte chunks)...
-[API]     Upload progress:  45% (16384 / 35840 bytes)
-[API]     Upload progress:  91% (32768 / 35840 bytes)
 [API]     Upload progress: 100% (35840 / 35840 bytes)
 [API] Upload complete in 94 ms (381.3 KB/s). Awaiting AI pipeline...
 [API] <<< Response Status: HTTP/1.1 200 OK (Wait time: 1050 ms)
-[API] <<< Server Pipeline Response Headers:
-[API]     [STT Timing]       340 ms
-[API]     [Translate Timing] 210 ms
-[API]     [TTS Timing]       460 ms
-[API]     [Pipeline Latency] 1010 ms
-[API]     [Audio Length]     48000 bytes
 
 ================================================================================
 >>> [TRANSCRIPT]  "Where is the nearest subway station?"
@@ -191,7 +183,7 @@ Set your Arduino IDE Serial Monitor dropdown to **`115200 baud`**. You will see:
 
 ## 6. Complete ESP32 Arduino Sketch Code
 
-Copy and paste the code below directly into your Arduino IDE (`esp32_translator.ino`):
+Copy and paste the code below into your Arduino IDE (`esp32_translator.ino`):
 
 ```cpp
 /**
@@ -258,7 +250,7 @@ const char* CONFIG_URL    = "https://paralax.amalskumar.dev/api/v1/device/config
 
 // Paste your device secret key from https://paralax.amalskumar.dev/devices
 const char* DEVICE_KEY    = "key_YOUR_DEVICE_KEY_HERE";
-const char* FIRMWARE_VER  = "1.1.0";
+const char* FIRMWARE_VER  = "1.1.1";
 
 // Default Language Pair (Updated dynamically via Heartbeat / Config Sync)
 String currentLanguageA   = "en-US";
@@ -320,6 +312,7 @@ void soundError();
 void recordAudio(int buttonPin, const char* directionTag);
 void sendTranslationRequest(const char* directionTag);
 void sendHeartbeat();
+void ackCommand(const String& cmdId, const char* status, const char* detail = NULL);
 String generateUUID();
 String decodeBase64Url(String input);
 
@@ -329,6 +322,9 @@ String decodeBase64Url(String input);
 void setup() {
   Serial.begin(115200);
   delay(1000);
+
+  // Initialize Wi-Fi in Station mode first so MAC address and radio are ready
+  WiFi.mode(WIFI_STA);
 
   printHeaderBox("PARALAX IoT Dual-Button AI Voice Translator - Boot Diagnostics");
   Serial.printf("[System] ESP32 Chip Revision: %d | CPU Freq: %d MHz\n", ESP.getChipRevision(), ESP.getCpuFreqMHz());
@@ -497,6 +493,7 @@ void initI2sMic() {
   };
 
   i2s_pin_config_t pin_config = {
+    .mck_io_num   = I2S_PIN_NO_CHANGE, // Explicitly no MCLK to prevent GPIO 0 conflict
     .bck_io_num   = I2S_MIC_SCK,
     .ws_io_num    = I2S_MIC_WS,
     .data_out_num = I2S_PIN_NO_CHANGE,
@@ -510,9 +507,10 @@ void initI2sMic() {
   err = i2s_set_pin(I2S_NUM_0, &pin_config);
   if (err != ESP_OK) {
     Serial.printf("[I2S_0] [ERROR] Pin configuration failed: %d\n", err);
+  } else {
+    Serial.printf("[I2S_0] [SUCCESS] INMP441 Mic ready on SCK=%d, WS=%d, SD=%d (16kHz 16-bit Mono)\n",
+                  I2S_MIC_SCK, I2S_MIC_WS, I2S_MIC_SD);
   }
-  Serial.printf("[I2S_0] [SUCCESS] INMP441 Mic ready on SCK=%d, WS=%d, SD=%d (16kHz 16-bit Mono)\n",
-                I2S_MIC_SCK, I2S_MIC_WS, I2S_MIC_SD);
 }
 
 void initI2sSpeaker() {
@@ -531,6 +529,7 @@ void initI2sSpeaker() {
   };
 
   i2s_pin_config_t pin_config = {
+    .mck_io_num   = I2S_PIN_NO_CHANGE, // Explicitly no MCLK to prevent GPIO 0 conflict
     .bck_io_num   = I2S_SPK_BCLK,
     .ws_io_num    = I2S_SPK_LRC,
     .data_out_num = I2S_SPK_DIN,
@@ -544,9 +543,10 @@ void initI2sSpeaker() {
   err = i2s_set_pin(I2S_NUM_1, &pin_config);
   if (err != ESP_OK) {
     Serial.printf("[I2S_1] [ERROR] Pin configuration failed: %d\n", err);
+  } else {
+    Serial.printf("[I2S_1] [SUCCESS] MAX98357A Amp ready on BCLK=%d, LRC=%d, DIN=%d (16kHz 16-bit Mono)\n",
+                  I2S_SPK_BCLK, I2S_SPK_LRC, I2S_SPK_DIN);
   }
-  Serial.printf("[I2S_1] [SUCCESS] MAX98357A Amp ready on BCLK=%d, LRC=%d, DIN=%d (16kHz 16-bit Mono)\n",
-                I2S_SPK_BCLK, I2S_SPK_LRC, I2S_SPK_DIN);
 }
 
 // ============================================================================
@@ -862,16 +862,31 @@ void sendHeartbeat() {
       Serial.printf("[Heartbeat] [ACK 200] Telemetry synced. Cloud Config v%d | Pair: %s <-> %s\n",
                     deviceConfigVersion, currentLanguageA.c_str(), currentLanguageB.c_str());
 
-      // Check for remote commands (e.g. reboot command from web dashboard)
-      if (resDoc.containsKey("pending_commands")) {
-        JsonArray commands = resDoc["pending_commands"].as<JsonArray>();
+      // Check for remote commands from web dashboard
+      if (resDoc.containsKey("pending_commands") || resDoc.containsKey("commands")) {
+        JsonArray commands = resDoc.containsKey("pending_commands") 
+                                ? resDoc["pending_commands"].as<JsonArray>() 
+                                : resDoc["commands"].as<JsonArray>();
+
         for (JsonObject cmd : commands) {
-          String type = cmd["type"].as<String>();
+          String cmdId = cmd["id"].as<String>();
+          String type  = cmd["type"].as<String>();
+          Serial.printf("[Command] Received pending command from cloud: ID='%s', Type='%s'\n",
+                        cmdId.c_str(), type.c_str());
+
+          // Step 1: ALWAYS acknowledge the command to the cloud FIRST so it gets removed from the queue!
+          ackCommand(cmdId, "done");
+
+          // Step 2: Handle reboot command with bootloop guard
           if (type == "reboot") {
-            Serial.println("[Heartbeat] [COMMAND] Remote REBOOT commanded by Paralax dashboard! Restarting...");
-            soundError();
-            delay(1000);
-            ESP.restart();
+            if (millis() < 45000) {
+              // Device booted less than 45 seconds ago: prevent reboot loop!
+              Serial.println("[Command] [BOOTLOOP GUARD] Discarding reboot: Device just booted (< 45s ago). Queue cleared in cloud!");
+            } else {
+              Serial.println("[Command] Remote REBOOT confirmed by cloud. Restarting ESP32 in 1s...");
+              delay(1000);
+              ESP.restart();
+            }
           }
         }
       }
@@ -882,6 +897,36 @@ void sendHeartbeat() {
     Serial.printf("[Heartbeat] [WARN] Server returned HTTP %d\n", httpCode);
   }
 
+  http.end();
+}
+
+// ============================================================================
+// ACKNOWLEDGE REMOTE COMMAND TO CLOUD (Removes it from server queue)
+// ============================================================================
+void ackCommand(const String& cmdId, const char* status, const char* detail) {
+  if (WiFi.status() != WL_CONNECTED || cmdId.length() == 0) return;
+
+  WiFiClientSecure client;
+  client.setInsecure();
+  client.setTimeout(5000);
+
+  HTTPClient http;
+  String ackUrl = "https://" + String(API_HOST) + "/api/v1/device/commands/" + cmdId + "/ack";
+  if (!http.begin(client, ackUrl)) return;
+
+  http.addHeader("Content-Type", "application/json");
+  http.addHeader("X-Device-Key", DEVICE_KEY);
+
+  StaticJsonDocument<256> doc;
+  doc["status"] = status;
+  if (detail) doc["detail"] = detail;
+
+  String payload;
+  serializeJson(doc, payload);
+
+  int httpCode = http.POST(payload);
+  Serial.printf("[Command] Acknowledged '%s' (status: %s) -> Server HTTP %d\n",
+                cmdId.c_str(), status, httpCode);
   http.end();
 }
 
