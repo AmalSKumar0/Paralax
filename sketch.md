@@ -250,7 +250,7 @@ const char* CONFIG_URL    = "https://paralax.amalskumar.dev/api/v1/device/config
 
 // Paste your device secret key from https://paralax.amalskumar.dev/devices
 const char* DEVICE_KEY    = "key_YOUR_DEVICE_KEY_HERE";
-const char* FIRMWARE_VER  = "1.1.1";
+const char* FIRMWARE_VER  = "1.2.0";
 
 // Default Language Pair (Updated dynamically via Heartbeat / Config Sync)
 String currentLanguageA   = "en-US";
@@ -877,16 +877,10 @@ void sendHeartbeat() {
           // Step 1: ALWAYS acknowledge the command to the cloud FIRST so it gets removed from the queue!
           ackCommand(cmdId, "done");
 
-          // Step 2: Handle reboot command with bootloop guard
+          // Step 2: Handle reboot command (acknowledge to clear queue, no hardware reset)
           if (type == "reboot") {
-            if (millis() < 45000) {
-              // Device booted less than 45 seconds ago: prevent reboot loop!
-              Serial.println("[Command] [BOOTLOOP GUARD] Discarding reboot: Device just booted (< 45s ago). Queue cleared in cloud!");
-            } else {
-              Serial.println("[Command] Remote REBOOT confirmed by cloud. Restarting ESP32 in 1s...");
-              delay(1000);
-              ESP.restart();
-            }
+            Serial.println("[Command] Remote 'reboot' command acknowledged & cleared from server queue.");
+            Serial.println("[Command] (Note: Automatic reset disabled to keep voice translator online).");
           }
         }
       }
