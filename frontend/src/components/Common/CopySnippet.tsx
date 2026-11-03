@@ -57,7 +57,7 @@ export const CopySnippet: React.FC<CopySnippetProps> = ({
         )}
       </div>
 
-      <div className="flex items-center gap-2 p-2.5 rounded-xl border border-[#ded7cc] bg-[#f7f5f0] font-mono text-xs break-all text-[#2b1d16]">
+      <div className="flex items-center gap-2 p-2.5 rounded-xl border-2 border-[#121212] bg-[#fbf9f4] font-mono text-xs break-all text-[#121212] shadow-[2px_2px_0px_#121212]">
         <div className="flex-1 overflow-x-auto select-all font-medium">
           {value}
         </div>

@@ -18,28 +18,28 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const sizeClasses = {
-    sm: 'px-3 py-1.5 text-xs font-semibold rounded-lg gap-1.5',
-    md: 'px-4 py-2 text-xs font-semibold rounded-xl gap-2',
-    lg: 'px-6 py-2.5 text-sm font-semibold rounded-xl gap-2.5',
+    sm: 'px-3 py-1.5 text-xs font-bold rounded-lg gap-1.5',
+    md: 'px-4 py-2 text-xs font-bold rounded-xl gap-2',
+    lg: 'px-6 py-2.5 text-sm font-bold rounded-xl gap-2.5',
   };
 
   const variantClasses = {
     primary:
-      'bg-[#e9b140] text-[#2b1d16] hover:bg-[#dfa32b] border border-[#d89e2c] shadow-[0_1px_2px_rgba(43,29,22,0.06)] active:scale-[0.98]',
+      'bg-[#ffc86b] text-[#121212] hover:bg-[#f5b738] border-2 border-[#121212] shadow-[2.5px_2.5px_0px_#121212] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3.5px_3.5px_0px_#121212] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none',
     dark:
-      'bg-[#2b1d16] text-[#edeae4] hover:bg-[#3d2a20] border border-[#2b1d16] shadow-[0_1px_2px_rgba(43,29,22,0.12)] active:scale-[0.98]',
+      'bg-[#121212] text-white hover:bg-[#262626] border-2 border-[#121212] shadow-[2.5px_2.5px_0px_#ffc86b] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3.5px_3.5px_0px_#ffc86b] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none',
     secondary:
-      'bg-[#f7f5f0] hover:bg-[#eae5dd] text-[#2b1d16] border border-[#ded7cc] shadow-[0_1px_2px_rgba(43,29,22,0.04)] active:scale-[0.98]',
+      'bg-white hover:bg-[#fbf9f4] text-[#121212] border-2 border-[#121212] shadow-[2.5px_2.5px_0px_#121212] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3.5px_3.5px_0px_#121212] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none',
     danger:
-      'bg-[#fde8e8] hover:bg-[#fbd3d3] text-[#9c2828] border border-[#f5b8b8] shadow-[0_1px_2px_rgba(156,40,40,0.06)] active:scale-[0.98]',
+      'bg-[#fecdd3] hover:bg-[#fca5a5] text-[#991b1b] border-2 border-[#121212] shadow-[2.5px_2.5px_0px_#121212] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3.5px_3.5px_0px_#121212] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none',
     ghost:
-      'bg-transparent hover:bg-black/5 text-[#2b1d16] border border-transparent active:scale-[0.98]',
+      'bg-transparent hover:bg-black/5 text-[#121212] border-2 border-transparent hover:border-[#121212] active:translate-x-[1px] active:translate-y-[1px]',
   };
 
   return (
     <button
       disabled={disabled || isLoading}
-      className={`inline-flex items-center justify-center transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed select-none ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
+      className={`inline-flex items-center justify-center transition-all duration-120 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed select-none ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
       {...props}
     >
       {isLoading ? (

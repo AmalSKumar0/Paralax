@@ -238,14 +238,14 @@ export const DeviceDetail: React.FC = () => {
           <div className="flex items-center gap-3">
             <Link
               to="/devices"
-              className="p-2 rounded-xl border border-[#ded7cc] bg-white hover:bg-[#f7f5f0] text-[#736154] hover:text-[#2b1d16] transition-all cursor-pointer shadow-sm"
+              className="p-2 rounded-xl border-2 border-[#121212] bg-white hover:bg-[#ffc86b] text-[#121212] transition-all cursor-pointer shadow-[2px_2px_0px_#121212] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
               aria-label="Back to device list"
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
             <div>
               <div className="flex items-center gap-2.5">
-                <h1 className="text-2xl font-bold tracking-tight text-[#2b1d16]">
+                <h1 className="text-2xl font-extrabold tracking-tight text-[#121212]">
                   {device.name}
                 </h1>
                 {device.online ? (
@@ -267,7 +267,7 @@ export const DeviceDetail: React.FC = () => {
                   </Badge>
                 )}
               </div>
-              <p className="text-xs font-semibold text-gray-600 mt-0.5">
+              <p className="text-xs font-semibold text-[#555555] mt-0.5">
                 Last seen {formatRelativeTime(device.last_seen)} · Provisioned on {new Date(device.created_at).toLocaleDateString()}
               </p>
             </div>
@@ -311,57 +311,57 @@ export const DeviceDetail: React.FC = () => {
         </div>
 
         {/* IoT Hardware Connection & Audio Signals Monitor */}
-        <Card variant="light" className="space-y-5 border border-[#ded7cc]">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-[#ded7cc] gap-3">
+        <Card variant="light" className="space-y-5">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b-2 border-[#121212] gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <Waves className="w-5 h-5 text-[#e9b140]" />
-                <h2 className="text-lg font-bold text-[#2b1d16]">
+                <Waves className="w-5 h-5 text-[#121212]" />
+                <h2 className="text-lg font-extrabold text-[#121212]">
                   IoT Hardware & Real-Time Audio Signal Monitor
                 </h2>
               </div>
-              <p className="text-xs text-[#736154]">
+              <p className="text-xs text-[#555555] font-medium">
                 INMP441 Microphone (I2S0) · MAX98357A Amp (I2S1) · SSD1306 OLED (I2C) · Push Button (GPIO 32)
               </p>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
+              <span className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold border-2 border-[#121212] shadow-[1.5px_1.5px_0px_#121212] ${
                 device.online
-                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                  : 'bg-gray-100 text-[#736154] border-[#ded7cc]'
+                  ? 'bg-[#bbf7d0] text-[#14532d]'
+                  : 'bg-[#fbf9f4] text-[#555555]'
               }`}>
-                <span className={`w-2 h-2 rounded-full ${device.online ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
+                <span className={`w-2 h-2 rounded-full ${device.online ? 'bg-emerald-600 animate-pulse' : 'bg-gray-400'}`} />
                 {device.online ? 'Hardware Connected' : 'Device Standby'}
               </span>
-              <span className="px-3 py-1 rounded-full text-xs font-mono font-medium border border-[#ded7cc] bg-white text-[#5c4a3e]">
+              <span className="px-3 py-1 rounded-lg text-xs font-mono font-bold border-2 border-[#121212] bg-white text-[#121212] shadow-[1.5px_1.5px_0px_#121212]">
                 16 kHz / 16-bit Mono L16
               </span>
             </div>
           </div>
 
           {/* Audio Signal Level VU Meter */}
-          <div className="p-4 rounded-xl border border-[#ded7cc] bg-[#f7f5f0] space-y-3">
+          <div className="p-4 rounded-xl border-2 border-[#121212] bg-[#fbf9f4] space-y-3 shadow-[2.5px_2.5px_0px_#121212]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Mic className="w-4 h-4 text-[#2b1d16]" />
-                <span className="text-xs font-bold uppercase tracking-wider text-[#2b1d16]">
+                <Mic className="w-4 h-4 text-[#121212]" />
+                <span className="text-xs font-extrabold uppercase tracking-wider text-[#121212]">
                   INMP441 Microphone Live Signal Level (VU Meter)
                 </span>
               </div>
               <div className="flex items-center gap-3 text-xs font-mono">
-                <span className="text-[#5c4a3e]">
-                  Peak: <strong className="text-[#2b1d16]">{currentMicPeak}%</strong>
+                <span className="text-[#333333]">
+                  Peak: <strong className="text-[#121212]">{currentMicPeak}%</strong>
                 </span>
-                <span className="text-[#5c4a3e]">
-                  RMS Level: <strong className="text-[#2b1d16]">{currentAudioLevel}%</strong>
+                <span className="text-[#333333]">
+                  RMS Level: <strong className="text-[#121212]">{currentAudioLevel}%</strong>
                 </span>
-                <span className={`px-2 py-0.5 rounded text-[11px] font-semibold uppercase ${
+                <span className={`px-2 py-0.5 rounded-md text-[11px] font-bold uppercase border-2 border-[#121212] shadow-[1px_1px_0px_#121212] ${
                   currentAudioLevel > 75
-                    ? 'bg-rose-100 text-rose-800'
+                    ? 'bg-[#fecdd3] text-[#881337]'
                     : currentAudioLevel > 20
-                    ? 'bg-emerald-100 text-emerald-800'
-                    : 'bg-amber-100 text-amber-800'
+                    ? 'bg-[#bbf7d0] text-[#14532d]'
+                    : 'bg-[#fde68a] text-[#78350f]'
                 }`}>
                   {currentAudioLevel > 75 ? 'Peak / Loud' : currentAudioLevel > 20 ? 'Voice Detected' : 'Ambient / Quiet'}
                 </span>
@@ -369,7 +369,7 @@ export const DeviceDetail: React.FC = () => {
             </div>
 
             {/* Visual 24-Segment VU Meter Bar */}
-            <div className="grid grid-cols-24 gap-1 h-4 bg-white/80 p-1 rounded-lg border border-[#ded7cc]">
+            <div className="grid grid-cols-24 gap-1 h-5 bg-white p-1 rounded-lg border-2 border-[#121212] shadow-[1.5px_1.5px_0px_#121212]">
               {Array.from({ length: 24 }).map((_, i) => {
                 const threshold = ((i + 1) / 24) * 100;
                 const isLit = (currentAudioLevel || 12) >= threshold;
@@ -381,103 +381,103 @@ export const DeviceDetail: React.FC = () => {
                 return (
                   <div
                     key={i}
-                    className={`h-full rounded-xs transition-all duration-150 ${
+                    className={`h-full rounded-xs transition-all duration-150 border border-black/10 ${
                       isLit
                         ? color
                         : isPeak
                         ? `${color} opacity-40`
-                        : 'bg-stone-200/60'
+                        : 'bg-stone-100'
                     }`}
                   />
                 );
               })}
             </div>
 
-            <div className="flex justify-between text-[10px] font-mono text-[#8a776a] px-0.5">
+            <div className="flex justify-between text-[10px] font-mono text-[#555555] px-0.5 font-semibold">
               <span>-60 dB (Silence)</span>
               <span>-30 dB (Speech Range)</span>
               <span>-12 dB (Optimal)</span>
-              <span className="text-rose-600 font-semibold">0 dB (Clip)</span>
+              <span className="text-rose-700 font-bold">0 dB (Clip)</span>
             </div>
           </div>
 
           {/* 4 Connected Hardware Component Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* INMP441 Microphone */}
-            <div className="p-3.5 rounded-xl border border-[#ded7cc] bg-white space-y-2 shadow-xs">
+            <div className="p-3.5 rounded-xl border-2 border-[#121212] bg-white space-y-2 shadow-[2.5px_2.5px_0px_#121212]">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <Mic className="w-4 h-4 text-[#e9b140]" />
-                  <span className="text-xs font-bold text-[#2b1d16]">INMP441 MEMS Mic</span>
+                  <Mic className="w-4 h-4 text-[#121212]" />
+                  <span className="text-xs font-bold text-[#121212]">INMP441 MEMS Mic</span>
                 </div>
-                <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-md bg-[#bbf7d0] text-[#14532d] border-2 border-[#121212] shadow-[1px_1px_0px_#121212]">
                   I2S_0 (Rx)
                 </span>
               </div>
-              <p className="text-[11px] text-[#736154]">
+              <p className="text-[11px] text-[#555555] font-medium">
                 24-bit MEMS microphone with MSB downsampling (+12dB gain) to 16 kHz 16-bit signed PCM.
               </p>
-              <div className="text-[10px] font-mono text-[#5c4a3e] bg-[#f7f5f0] p-1.5 rounded-lg border border-[#edeae4] space-y-0.5">
+              <div className="text-[10px] font-mono text-[#121212] bg-[#fbf9f4] p-1.5 rounded-lg border-2 border-[#121212] space-y-0.5">
                 <div>SCK: <strong>GPIO 26</strong> · WS: <strong>GPIO 25</strong></div>
                 <div>SD: <strong>GPIO 33</strong> · L/R: <strong>GND (Left)</strong></div>
               </div>
             </div>
 
             {/* MAX98357A Audio Amplifier */}
-            <div className="p-3.5 rounded-xl border border-[#ded7cc] bg-white space-y-2 shadow-xs">
+            <div className="p-3.5 rounded-xl border-2 border-[#121212] bg-white space-y-2 shadow-[2.5px_2.5px_0px_#121212]">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <Volume2 className="w-4 h-4 text-[#e9b140]" />
-                  <span className="text-xs font-bold text-[#2b1d16]">MAX98357A Amp</span>
+                  <Volume2 className="w-4 h-4 text-[#121212]" />
+                  <span className="text-xs font-bold text-[#121212]">MAX98357A Amp</span>
                 </div>
-                <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-md bg-[#bbf7d0] text-[#14532d] border-2 border-[#121212] shadow-[1px_1px_0px_#121212]">
                   I2S_1 (Tx)
                 </span>
               </div>
-              <p className="text-[11px] text-[#736154]">
+              <p className="text-[11px] text-[#555555] font-medium">
                 Class-D 3.2W DAC streaming directly to 8 Ω 0.5 W speaker with zero audio buffering heap overhead.
               </p>
-              <div className="text-[10px] font-mono text-[#5c4a3e] bg-[#f7f5f0] p-1.5 rounded-lg border border-[#edeae4] space-y-0.5">
+              <div className="text-[10px] font-mono text-[#121212] bg-[#fbf9f4] p-1.5 rounded-lg border-2 border-[#121212] space-y-0.5">
                 <div>BCLK: <strong>GPIO 14</strong> · LRC: <strong>GPIO 27</strong></div>
                 <div>DIN: <strong>GPIO 22</strong> · Gain: <strong>12 dB</strong></div>
               </div>
             </div>
 
             {/* 0.96" OLED Display */}
-            <div className="p-3.5 rounded-xl border border-[#ded7cc] bg-white space-y-2 shadow-xs">
+            <div className="p-3.5 rounded-xl border-2 border-[#121212] bg-white space-y-2 shadow-[2.5px_2.5px_0px_#121212]">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <Activity className="w-4 h-4 text-[#e9b140]" />
-                  <span className="text-xs font-bold text-[#2b1d16]">SSD1306 OLED</span>
+                  <Activity className="w-4 h-4 text-[#121212]" />
+                  <span className="text-xs font-bold text-[#121212]">SSD1306 OLED</span>
                 </div>
-                <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-md bg-[#bfdbfe] text-[#1e3a8a] border-2 border-[#121212] shadow-[1px_1px_0px_#121212]">
                   I2C (0x3C)
                 </span>
               </div>
-              <p className="text-[11px] text-[#736154]">
+              <p className="text-[11px] text-[#555555] font-medium">
                 128x64 graphical status display for live audio metering, decoded transcript, and translation text.
               </p>
-              <div className="text-[10px] font-mono text-[#5c4a3e] bg-[#f7f5f0] p-1.5 rounded-lg border border-[#edeae4] space-y-0.5">
+              <div className="text-[10px] font-mono text-[#121212] bg-[#fbf9f4] p-1.5 rounded-lg border-2 border-[#121212] space-y-0.5">
                 <div>SDA: <strong>GPIO 21</strong> · SCL: <strong>GPIO 19</strong></div>
                 <div>VCC: <strong>3.3V / 5V</strong> · Rate: <strong>400 kHz</strong></div>
               </div>
             </div>
 
             {/* Tactile Button & Controller */}
-            <div className="p-3.5 rounded-xl border border-[#ded7cc] bg-white space-y-2 shadow-xs">
+            <div className="p-3.5 rounded-xl border-2 border-[#121212] bg-white space-y-2 shadow-[2.5px_2.5px_0px_#121212]">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <Cpu className="w-4 h-4 text-[#e9b140]" />
-                  <span className="text-xs font-bold text-[#2b1d16]">ESP32 & Button</span>
+                  <Cpu className="w-4 h-4 text-[#121212]" />
+                  <span className="text-xs font-bold text-[#121212]">ESP32 & Button</span>
                 </div>
-                <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">
+                <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-md bg-[#ffc86b] text-[#121212] border-2 border-[#121212] shadow-[1px_1px_0px_#121212]">
                   WROOM-32
                 </span>
               </div>
-              <p className="text-[11px] text-[#736154]">
+              <p className="text-[11px] text-[#555555] font-medium">
                 Tactile switch on GPIO 32 with internal pull-up. Press & hold to speak, release to translate.
               </p>
-              <div className="text-[10px] font-mono text-[#5c4a3e] bg-[#f7f5f0] p-1.5 rounded-lg border border-[#edeae4] space-y-0.5">
+              <div className="text-[10px] font-mono text-[#121212] bg-[#fbf9f4] p-1.5 rounded-lg border-2 border-[#121212] space-y-0.5">
                 <div>Button: <strong>GPIO 32</strong> (Active LOW)</div>
                 <div>Power: <strong>5V 2A</strong> · Xtensa Dual-Core</div>
               </div>

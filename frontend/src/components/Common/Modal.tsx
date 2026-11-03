@@ -49,15 +49,15 @@ export const Modal: React.FC<ModalProps> = ({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`relative z-10 w-full bg-white border border-[#ded7cc] rounded-2xl shadow-[0_12px_36px_rgba(43,29,22,0.12)] p-6 sm:p-7 animate-in fade-in zoom-in-95 duration-150 ${maxWidthClasses[maxWidth]}`}
+        className={`relative z-10 w-full bg-white border-2 border-[#121212] rounded-2xl shadow-[6px_6px_0px_#121212] p-6 sm:p-7 animate-in fade-in zoom-in-95 duration-150 ${maxWidthClasses[maxWidth]}`}
       >
-        <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-[#ded7cc]">
-          <h2 className="text-lg font-bold text-[#2b1d16] tracking-tight">
+        <div className="flex items-center justify-between pb-3.5 mb-4 border-b-2 border-[#121212]">
+          <h2 className="text-lg font-extrabold text-[#121212] tracking-tight">
             {title}
           </h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-[#8a776a] hover:text-[#2b1d16] hover:bg-[#edeae4] transition-all cursor-pointer"
+            className="p-1.5 rounded-lg border-2 border-[#121212] bg-[#fbf9f4] text-[#121212] hover:bg-[#ffc86b] shadow-[1.5px_1.5px_0px_#121212] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
             aria-label="Close dialog"
           >
             <X className="w-4 h-4" />

@@ -19,16 +19,16 @@ export const ServiceBanner: React.FC = () => {
 
   return (
     <>
-      <div className="bg-rose-50 border-b border-rose-200 px-5 py-3 flex items-center justify-between shadow-sm sticky top-0 z-40">
+      <div className="bg-[#fde68a] border-b-2 border-[#121212] px-5 py-3 flex items-center justify-between shadow-[0_2px_0px_#121212] sticky top-0 z-40">
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-lg bg-rose-100 text-rose-800 flex items-center justify-center shrink-0">
+          <div className="w-7 h-7 rounded-lg bg-[#ffc86b] text-[#121212] border-2 border-[#121212] shadow-[1px_1px_0px_#121212] flex items-center justify-center shrink-0">
             <AlertTriangle className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-rose-900">
+            <p className="text-xs font-extrabold text-[#121212] uppercase tracking-wider">
               SERVICE PAUSED · 503 service_disabled
             </p>
-            <p className="text-[11px] text-rose-700">
+            <p className="text-[11px] text-[#333333] font-medium">
               Voice transcription, translation, and device utterance ingestion are currently paused by administrator policy.
             </p>
           </div>
@@ -37,14 +37,14 @@ export const ServiceBanner: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowConfirm(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-xs font-semibold text-emerald-800 cursor-pointer transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-[#121212] bg-[#bbf7d0] hover:bg-[#86efac] text-xs font-bold text-[#14532d] shadow-[2px_2px_0px_#121212] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none cursor-pointer transition-all"
           >
             <Power className="w-3.5 h-3.5" />
             <span>Enable Service</span>
           </button>
           <button
             onClick={dismissBanner}
-            className="p-1 rounded-lg text-rose-700 hover:bg-rose-100 cursor-pointer transition-all"
+            className="p-1.5 rounded-lg border-2 border-[#121212] bg-white text-[#121212] hover:bg-[#fbf9f4] shadow-[1px_1px_0px_#121212] cursor-pointer transition-all"
             aria-label="Dismiss banner"
           >
             <X className="w-4 h-4" />

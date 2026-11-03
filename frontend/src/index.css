@@ -4,27 +4,22 @@
   :root {
     --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --color-linen: #edeae4;
-    --color-linen-light: #f5f3ee;
-    --color-amber: #e9b140;
-    --color-amber-hover: #dfa32b;
-    --color-amber-soft: rgba(233, 177, 64, 0.15);
-    --color-brown-dark: #2b1d16;
-    --color-brown-medium: #5c4a3e;
-    --color-brown-muted: #8a776a;
-    --color-border: #ded7cc;
-    --color-border-subtle: #e8e4dc;
+    --color-bg: #f8f6f0;
+    --color-black: #121212;
+    --color-yellow: #ffc86b;
+    --color-yellow-hover: #f5b738;
+    --color-border: #121212;
   }
 
   body {
     font-family: var(--font-sans);
-    background-color: #edeae4;
-    color: #2b1d16;
+    background-color: #f8f6f0;
+    color: #121212;
     letter-spacing: -0.01em;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    color: #2b1d16;
+    color: #121212;
     letter-spacing: -0.02em;
     font-weight: 700;
   }
@@ -40,135 +35,135 @@
   font-family: var(--font-sans);
 }
 
-/* Minimal Refined Styling System (Replaces Brutalist Styles) */
+/* Minimal Neo-Brutalist Core System */
 .brutal-border {
-  border: 1px solid #ded7cc;
+  border: 2px solid #121212;
 }
 
 .brutal-border-sm {
-  border: 1px solid #ded7cc;
+  border: 1.5px solid #121212;
 }
 
 .brutal-border-lg {
-  border: 1px solid #d5cebf;
+  border: 3px solid #121212;
 }
 
 .brutal-shadow-sm {
-  box-shadow: 0 1px 2px rgba(43, 29, 22, 0.04);
+  box-shadow: 2px 2px 0px 0px #121212;
 }
 
 .brutal-shadow {
-  box-shadow: 0 1px 3px rgba(43, 29, 22, 0.04), 0 4px 12px rgba(43, 29, 22, 0.03);
+  box-shadow: 3.5px 3.5px 0px 0px #121212;
 }
 
 .brutal-shadow-md {
-  box-shadow: 0 4px 14px rgba(43, 29, 22, 0.06);
+  box-shadow: 4px 4px 0px 0px #121212;
 }
 
 .brutal-shadow-lg {
-  box-shadow: 0 8px 24px rgba(43, 29, 22, 0.08);
+  box-shadow: 6px 6px 0px 0px #121212;
 }
 
 .brutal-shadow-yellow {
-  box-shadow: 0 4px 12px rgba(233, 177, 64, 0.25);
+  box-shadow: 3.5px 3.5px 0px 0px #ffc86b;
 }
 
 .brutal-shadow-yellow-lg {
-  box-shadow: 0 8px 20px rgba(233, 177, 64, 0.3);
-}
-
-.brutal-shadow-yellow-xl {
-  box-shadow: 0 12px 28px rgba(233, 177, 64, 0.35);
+  box-shadow: 6px 6px 0px 0px #ffc86b;
 }
 
 .brutal-btn {
-  border: 1px solid #ded7cc;
-  box-shadow: 0 1px 2px rgba(43, 29, 22, 0.05);
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid #121212;
+  box-shadow: 2.5px 2.5px 0px 0px #121212;
+  transition: all 0.12s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   user-select: none;
 }
 
 .brutal-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(43, 29, 22, 0.08);
+  transform: translate(-1px, -1px);
+  box-shadow: 3.5px 3.5px 0px 0px #121212;
 }
 
 .brutal-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(43, 29, 22, 0.05);
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px 0px #121212;
 }
 
 .brutal-btn-primary {
-  background-color: #e9b140;
-  color: #2b1d16;
-  border-color: #dfa32b;
+  background-color: #ffc86b;
+  color: #121212;
+  border-color: #121212;
 }
 
 .brutal-btn-primary:hover {
-  background-color: #dfa32b;
+  background-color: #f5b738;
 }
 
 .brutal-btn-dark {
-  background-color: #2b1d16;
-  color: #edeae4;
-  border-color: #2b1d16;
+  background-color: #121212;
+  color: #ffffff;
+  border-color: #121212;
+  box-shadow: 2.5px 2.5px 0px 0px #ffc86b;
 }
 
 .brutal-btn-dark:hover {
-  background-color: #3d2a20;
+  background-color: #262626;
+  box-shadow: 3.5px 3.5px 0px 0px #ffc86b;
 }
 
 .brutal-btn-dark:active {
-  transform: translateY(0);
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px 0px #ffc86b;
 }
 
 .brutal-card {
   background-color: #ffffff;
-  border: 1px solid #ded7cc;
+  border: 2px solid #121212;
   border-radius: 1rem;
-  box-shadow: 0 1px 3px rgba(43, 29, 22, 0.04), 0 4px 12px rgba(43, 29, 22, 0.02);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 3.5px 3.5px 0px 0px #121212;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .brutal-card-hover:hover {
-  transform: translateY(-2px);
-  border-color: #d0c7b8;
-  box-shadow: 0 4px 16px rgba(43, 29, 22, 0.07);
+  transform: translate(-1.5px, -1.5px);
+  box-shadow: 5px 5px 0px 0px #121212;
 }
 
 .brutal-input {
-  border: 1px solid #ded7cc;
-  border-radius: 0.625rem;
+  border: 2px solid #121212;
+  border-radius: 0.75rem;
   padding: 0.625rem 0.875rem;
   background-color: #ffffff;
-  color: #2b1d16;
+  color: #121212;
+  box-shadow: 2px 2px 0px 0px #121212;
   font-weight: 500;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
 }
 
 .brutal-input:focus {
   background-color: #ffffff;
   outline: none;
-  border-color: #e9b140;
-  box-shadow: 0 0 0 3px rgba(233, 177, 64, 0.2);
+  box-shadow: 3.5px 3.5px 0px 0px #121212;
 }
 
-/* Custom Minimal Scrollbar */
+/* Custom Minimal Neo-Brutalist Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #edeae4;
+  background: #f8f6f0;
+  border-left: 2px solid #121212;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c8bfb0;
-  border-radius: 9999px;
+  background: #ffc86b;
+  border: 2px solid #121212;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a89e8e;
+  background: #f5b738;
 }

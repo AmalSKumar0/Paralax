@@ -106,9 +106,9 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
     return (
       <Modal isOpen={isOpen} onClose={handleClose} title="Device Provisioned" maxWidth="lg">
         <div className="space-y-6">
-          <div className="flex items-center gap-3 p-3 rounded-xl border border-emerald-200 bg-emerald-50">
-            <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0" />
-            <p className="text-xs font-medium text-emerald-900">
+          <div className="flex items-center gap-3 p-3.5 rounded-xl border-2 border-[#121212] bg-[#bbf7d0] shadow-[2px_2px_0px_#121212]">
+            <CheckCircle2 className="w-5 h-5 text-[#121212] shrink-0" />
+            <p className="text-xs font-bold text-[#121212]">
               The device credentials have been generated. Copy or download this snippet now. The device key will never be shown again!
             </p>
           </div>
@@ -138,7 +138,7 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
     <Modal isOpen={isOpen} onClose={handleClose} title="Register New Translator" maxWidth="lg">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-[#5c4a3e] mb-1.5">
+          <label className="block text-xs font-bold uppercase tracking-wider text-[#121212] mb-1.5">
             Device Friendly Name *
           </label>
           <input
@@ -147,13 +147,13 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. VIP Lounge Translator 03"
-            className="w-full px-3.5 py-2.5 rounded-xl border border-[#ded7cc] bg-[#f7f5f0] text-sm text-[#2b1d16] focus:bg-white focus:outline-none focus:border-[#e9b140] focus:ring-1 focus:ring-[#e9b140] transition-all placeholder:text-[#8a776a]"
+            className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#121212] bg-[#fffdfa] text-sm font-semibold text-[#121212] focus:bg-white focus:outline-none shadow-[2px_2px_0px_#121212] transition-all placeholder:text-[#888888]"
           />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-[#5c4a3e] mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-[#121212] mb-1.5">
               Primary Language (A)
             </label>
             <select
@@ -162,7 +162,7 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
                 setLangA(e.target.value);
                 setVoiceA('');
               }}
-              className="w-full px-3.5 py-2 rounded-xl border border-[#ded7cc] bg-[#f7f5f0] text-sm text-[#2b1d16] focus:bg-white focus:outline-none focus:border-[#e9b140] transition-all cursor-pointer"
+              className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#121212] bg-[#fffdfa] text-sm font-semibold text-[#121212] focus:bg-white focus:outline-none shadow-[2px_2px_0px_#121212] transition-all cursor-pointer"
             >
               {languages.map((l) => (
                 <option key={l.code} value={l.code}>
@@ -173,7 +173,7 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-[#5c4a3e] mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-[#121212] mb-1.5">
               Secondary Language (B)
             </label>
             <select
@@ -182,7 +182,7 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
                 setLangB(e.target.value);
                 setVoiceB('');
               }}
-              className="w-full px-3.5 py-2 rounded-xl border border-[#ded7cc] bg-[#f7f5f0] text-sm text-[#2b1d16] focus:bg-white focus:outline-none focus:border-[#e9b140] transition-all cursor-pointer"
+              className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#121212] bg-[#fffdfa] text-sm font-semibold text-[#121212] focus:bg-white focus:outline-none shadow-[2px_2px_0px_#121212] transition-all cursor-pointer"
             >
               {languages.map((l) => (
                 <option key={l.code} value={l.code}>
@@ -195,8 +195,8 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
 
         {/* Pair Validation Feedback */}
         {!isValidPair && (
-          <div className="flex items-center gap-2 p-3 rounded-xl border border-rose-200 bg-rose-50 text-xs font-medium text-rose-800">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+          <div className="flex items-center gap-2 p-3 rounded-xl border-2 border-[#121212] bg-[#fecdd3] shadow-[2px_2px_0px_#121212] text-xs font-bold text-[#121212]">
+            <AlertCircle className="w-4 h-4 shrink-0 text-[#121212]" />
             <span>
               The language pair {langA} ↔ {langB} is currently unsupported by translation pipelines. Please pick a supported target.
             </span>
@@ -205,13 +205,13 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-[#5c4a3e] mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-[#121212] mb-1.5">
               Voice for Language A
             </label>
             <select
               value={voiceA || selectedLangAObj?.voices[0]?.id || ''}
               onChange={(e) => setVoiceA(e.target.value)}
-              className="w-full px-3.5 py-2 rounded-xl border border-[#ded7cc] bg-[#f7f5f0] text-xs text-[#2b1d16] focus:bg-white focus:outline-none focus:border-[#e9b140] transition-all cursor-pointer"
+              className="w-full px-3.5 py-2 rounded-xl border-2 border-[#121212] bg-[#fffdfa] text-xs font-semibold text-[#121212] focus:bg-white focus:outline-none shadow-[2px_2px_0px_#121212] transition-all cursor-pointer"
             >
               {selectedLangAObj?.voices.map((v) => (
                 <option key={v.id} value={v.id}>
@@ -222,13 +222,13 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-[#5c4a3e] mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-[#121212] mb-1.5">
               Voice for Language B
             </label>
             <select
               value={voiceB || selectedLangBObj?.voices[0]?.id || ''}
               onChange={(e) => setVoiceB(e.target.value)}
-              className="w-full px-3.5 py-2 rounded-xl border border-[#ded7cc] bg-[#f7f5f0] text-xs text-[#2b1d16] focus:bg-white focus:outline-none focus:border-[#e9b140] transition-all cursor-pointer"
+              className="w-full px-3.5 py-2 rounded-xl border-2 border-[#121212] bg-[#fffdfa] text-xs font-semibold text-[#121212] focus:bg-white focus:outline-none shadow-[2px_2px_0px_#121212] transition-all cursor-pointer"
             >
               {selectedLangBObj?.voices.map((v) => (
                 <option key={v.id} value={v.id}>
@@ -240,39 +240,39 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
         </div>
 
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-[#5c4a3e] mb-1.5">
+          <label className="block text-xs font-bold uppercase tracking-wider text-[#121212] mb-1.5">
             Operating Mode
           </label>
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => setMode('auto_detect')}
-              className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
+              className={`p-3.5 rounded-xl border-2 border-[#121212] text-left cursor-pointer transition-all ${
                 mode === 'auto_detect'
-                  ? 'bg-[#e9b140]/15 border-[#e9b140] font-semibold text-[#2b1d16] shadow-sm'
-                  : 'bg-[#f7f5f0] border-[#ded7cc] font-medium text-[#736154] hover:bg-white'
+                  ? 'bg-[#ffc86b] font-bold text-[#121212] shadow-[2.5px_2.5px_0px_#121212]'
+                  : 'bg-white font-semibold text-[#121212] shadow-[2px_2px_0px_#121212] hover:bg-[#f8f6f0]'
               }`}
             >
               <div className="text-xs">Auto-Detect</div>
-              <div className="text-[10px] text-[#8a776a] mt-0.5">Continuous speech identification</div>
+              <div className="text-[10px] text-[#444444] mt-0.5 font-medium">Continuous speech identification</div>
             </button>
 
             <button
               type="button"
               onClick={() => setMode('buttons')}
-              className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
+              className={`p-3.5 rounded-xl border-2 border-[#121212] text-left cursor-pointer transition-all ${
                 mode === 'buttons'
-                  ? 'bg-[#e9b140]/15 border-[#e9b140] font-semibold text-[#2b1d16] shadow-sm'
-                  : 'bg-[#f7f5f0] border-[#ded7cc] font-medium text-[#736154] hover:bg-white'
+                  ? 'bg-[#ffc86b] font-bold text-[#121212] shadow-[2.5px_2.5px_0px_#121212]'
+                  : 'bg-white font-semibold text-[#121212] shadow-[2px_2px_0px_#121212] hover:bg-[#f8f6f0]'
               }`}
             >
               <div className="text-xs">Physical Buttons</div>
-              <div className="text-[10px] text-[#8a776a] mt-0.5">Button A & Button B manual push</div>
+              <div className="text-[10px] text-[#444444] mt-0.5 font-medium">Button A & Button B manual push</div>
             </button>
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#ded7cc]">
+        <div className="flex items-center justify-end gap-3 pt-4 border-t-2 border-[#121212]">
           <Button variant="secondary" onClick={handleClose} type="button">
             Cancel
           </Button>

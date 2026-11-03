@@ -29,11 +29,11 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} maxWidth="md">
       <div className="space-y-5">
-        <div className="flex items-start gap-3.5 p-3.5 rounded-xl border border-amber-200 bg-[#fcf8ee]">
-          <div className="p-1.5 rounded-lg bg-[#e9b140]/20 text-[#855b14] shrink-0 mt-0.5">
+        <div className="flex items-start gap-3.5 p-3.5 rounded-xl border-2 border-[#121212] bg-[#fef3c7] shadow-[2.5px_2.5px_0px_#121212]">
+          <div className="p-1.5 rounded-lg bg-[#ffc86b] text-[#121212] border-2 border-[#121212] shrink-0 mt-0.5">
             <AlertTriangle className="w-4 h-4" />
           </div>
-          <p className="text-xs text-[#5c4a3e] leading-relaxed">
+          <p className="text-xs text-[#121212] font-medium leading-relaxed">
             {message}
           </p>
         </div>

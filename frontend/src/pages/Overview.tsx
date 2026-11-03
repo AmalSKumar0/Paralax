@@ -100,23 +100,23 @@ export const Overview: React.FC = () => {
 
         {/* Latency Card & Chart */}
         <Card variant="light" className="space-y-5">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-[#ded7cc] gap-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b-2 border-[#121212] gap-2">
             <div>
               <div className="flex items-center gap-2">
-                <Gauge className="w-4 h-4 text-[#855b14]" />
-                <h2 className="text-base font-bold text-[#2b1d16] tracking-tight">
+                <Gauge className="w-4 h-4 text-[#121212]" />
+                <h2 className="text-base font-bold text-[#121212] tracking-tight">
                   Cloud Latency Profile (p50 & p95)
                 </h2>
               </div>
-              <p className="text-xs text-[#8a776a] mt-0.5">
+              <p className="text-xs text-[#555555] mt-0.5">
                 End-to-end speech ingestion, Groq Whisper STT, Groq/xAI Translation, and Edge TTS breakdown
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-full border border-[#e9b140]/40 bg-[#fcf8ee] text-[#855b14]">
+              <span className="text-xs font-bold px-2.5 py-1 rounded-md border-2 border-[#121212] bg-[#fef08a] text-[#121212] shadow-[1.5px_1.5px_0px_#121212]">
                 Total p50: {formatLatency(stats.latency.total.p50)}
               </span>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-full border border-[#ded7cc] bg-[#2b1d16] text-[#edeae4]">
+              <span className="text-xs font-bold px-2.5 py-1 rounded-md border-2 border-[#121212] bg-[#121212] text-white shadow-[1.5px_1.5px_0px_#121212]">
                 Total p95: {formatLatency(stats.latency.total.p95)}
               </span>
             </div>
@@ -129,11 +129,11 @@ export const Overview: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <Card variant="light" className="space-y-4">
-              <div className="pb-4 border-b border-[#ded7cc]">
-                <h2 className="text-base font-bold text-[#2b1d16] tracking-tight">
+              <div className="pb-4 border-b-2 border-[#121212]">
+                <h2 className="text-base font-bold text-[#121212] tracking-tight">
                   Jobs Volume (Last 30 Days)
                 </h2>
-                <p className="text-xs text-[#8a776a] mt-0.5">
+                <p className="text-xs text-[#555555] mt-0.5">
                   Daily processed voice utterances and batch audio file translation requests
                 </p>
               </div>
@@ -144,11 +144,11 @@ export const Overview: React.FC = () => {
           <div>
             <Card variant="sand" className="space-y-4 h-full flex flex-col justify-between">
               <div>
-                <div className="pb-4 border-b border-[#ded7cc]">
-                  <h2 className="text-base font-bold text-[#2b1d16] tracking-tight">
+                <div className="pb-4 border-b-2 border-[#121212]">
+                  <h2 className="text-base font-bold text-[#121212] tracking-tight">
                     Top Language Pairs
                   </h2>
-                  <p className="text-xs text-[#8a776a] mt-0.5">
+                  <p className="text-xs text-[#555555] mt-0.5">
                     Highest volume translation routes across the network
                   </p>
                 </div>
@@ -157,11 +157,11 @@ export const Overview: React.FC = () => {
                 </div>
               </div>
 
-              <div className="mt-6 p-3.5 rounded-xl border border-[#ded7cc] bg-white">
-                <span className="text-[11px] font-semibold uppercase text-[#736154] block mb-1">
+              <div className="mt-6 p-3.5 rounded-xl border-2 border-[#121212] bg-white shadow-[2px_2px_0px_#121212]">
+                <span className="text-[11px] font-bold uppercase text-[#121212] block mb-1">
                   Language ID Threshold
                 </span>
-                <p className="text-xs text-[#5c4a3e]">
+                <p className="text-xs font-medium text-[#444444]">
                   Auto-detect confidence gate set at 85%. Review configurations in Settings.
                 </p>
               </div>

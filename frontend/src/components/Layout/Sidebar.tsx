@@ -44,43 +44,43 @@ export const Sidebar: React.FC = () => {
   }
 
   return (
-    <aside className="w-64 shrink-0 bg-[#f7f5f0] border-r border-[#ded7cc] flex flex-col justify-between sticky top-0 h-screen select-none">
+    <aside className="w-64 shrink-0 bg-[#fbf9f4] border-r-2 border-[#121212] flex flex-col justify-between sticky top-0 h-screen select-none">
       <div className="flex flex-col min-h-0 flex-1">
         {/* Brand Header: Exactly h-[72px] matching Topbar */}
-        <div className="h-[72px] px-6 border-b border-[#ded7cc] bg-white flex flex-col justify-center shrink-0">
+        <div className="h-[72px] px-6 border-b-2 border-[#121212] bg-white flex flex-col justify-center shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-[#2b1d16] tracking-tight leading-none">
+              <span className="text-xl font-extrabold text-[#121212] tracking-tight leading-none">
                 paralax
               </span>
-              <span className="w-2.5 h-2.5 rounded-full bg-[#e9b140] inline-block shrink-0" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#ffc86b] border border-[#121212] inline-block shrink-0" />
             </div>
             {IS_MOCK_MODE && (
               <span
                 title="Mock mode active with simulated IoT devices and cloud endpoints"
-                className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-[#e9b140]/50 bg-[#fcf8ee] text-[#855b14]"
+                className="text-[10px] font-bold px-2 py-0.5 rounded-md border-2 border-[#121212] bg-[#ffc86b] text-[#121212] shadow-[1.5px_1.5px_0px_#121212]"
               >
                 Mock
               </span>
             )}
           </div>
-          <p className="mt-1 text-xs text-[#8a776a] leading-none">
+          <p className="mt-1 text-xs text-[#555555] leading-none font-medium">
             IoT Voice Translator Cloud
           </p>
         </div>
 
         {/* Navigation list */}
-        <nav className="flex-1 overflow-y-auto p-3 space-y-1" aria-label="Main Navigation">
+        <nav className="flex-1 overflow-y-auto p-3 space-y-1.5" aria-label="Main Navigation">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.to === '/'}
               className={({ isActive }) =>
-                `flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
+                `flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs transition-all duration-120 ${
                   isActive
-                    ? 'bg-[#e9b140] text-[#2b1d16] font-semibold shadow-xs'
-                    : 'text-[#5c4a3e] hover:bg-[#edeae4]/70 hover:text-[#2b1d16]'
+                    ? 'bg-[#ffc86b] text-[#121212] font-bold border-2 border-[#121212] shadow-[2.5px_2.5px_0px_#121212]'
+                    : 'text-[#333333] font-semibold border-2 border-transparent hover:border-[#121212] hover:bg-white hover:shadow-[2px_2px_0px_#121212]'
                 }`
               }
             >
@@ -89,7 +89,7 @@ export const Sidebar: React.FC = () => {
                 <span>{item.label}</span>
               </div>
               {item.badge && (
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-white/80 text-[#2b1d16] border border-[#ded7cc]">
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-white text-[#121212] border-2 border-[#121212] shadow-[1px_1px_0px_#121212]">
                   {item.badge}
                 </span>
               )}
@@ -99,16 +99,16 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* User / Session footer */}
-      <div className="p-4 border-t border-[#ded7cc] bg-white space-y-2.5 shrink-0">
-        <div className="flex items-center gap-2.5 p-2 rounded-xl bg-[#f7f5f0] border border-[#ded7cc]">
-          <div className="w-7 h-7 rounded-full bg-[#e9b140] text-[#2b1d16] flex items-center justify-center font-bold text-xs shrink-0">
+      <div className="p-4 border-t-2 border-[#121212] bg-white space-y-2.5 shrink-0">
+        <div className="flex items-center gap-2.5 p-2 rounded-xl bg-[#fbf9f4] border-2 border-[#121212] shadow-[2px_2px_0px_#121212]">
+          <div className="w-7 h-7 rounded-lg bg-[#ffc86b] text-[#121212] border-2 border-[#121212] flex items-center justify-center font-bold text-xs shrink-0">
             {session?.email ? session.email[0].toUpperCase() : 'A'}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold truncate text-[#2b1d16]">
+            <p className="text-xs font-bold truncate text-[#121212]">
               {session?.email || 'Admin'}
             </p>
-            <p className="text-[10px] text-[#8a776a]">
+            <p className="text-[10px] text-[#666666]">
               {session?.isMock ? 'Mock Session' : 'Admin User'}
             </p>
           </div>
@@ -116,7 +116,7 @@ export const Sidebar: React.FC = () => {
 
         <button
           onClick={logout}
-          className="w-full flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl border border-[#ded7cc] text-xs font-medium text-[#736154] hover:bg-[#edeae4] hover:text-[#2b1d16] transition-all cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl border-2 border-[#121212] text-xs font-bold text-[#121212] bg-white hover:bg-[#fecdd3] shadow-[2px_2px_0px_#121212] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
         >
           <LogOut className="w-3.5 h-3.5" />
           <span>Sign Out</span>

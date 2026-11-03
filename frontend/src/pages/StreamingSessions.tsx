@@ -17,9 +17,9 @@ export const StreamingSessions: React.FC = () => {
       />
 
       <div className="p-6 md:p-8 space-y-6 w-full max-w-3xl mx-auto">
-        <Card variant="light" className="text-center p-12 space-y-4">
-          <div className="w-14 h-14 rounded-2xl border border-[#ded7cc] bg-[#f7f5f0] flex items-center justify-center mx-auto shadow-sm">
-            <Radio className="w-6 h-6 text-[#e9b140]" />
+        <Card variant="light" className="text-center p-12 space-y-5">
+          <div className="w-16 h-16 rounded-xl border-2 border-[#121212] bg-[#ffc86b] shadow-[3px_3px_0px_#121212] flex items-center justify-center mx-auto">
+            <Radio className="w-7 h-7 text-[#121212]" />
           </div>
 
           <div className="inline-block">
@@ -28,17 +28,19 @@ export const StreamingSessions: React.FC = () => {
             </Badge>
           </div>
 
-          <h2 className="text-2xl font-bold tracking-tight text-[#2b1d16]">
+          <h2 className="text-2xl font-black tracking-tight text-[#121212]">
             Streaming is not available yet
           </h2>
 
-          <p className="text-sm font-normal text-[#5c4a3e] max-w-md mx-auto leading-relaxed">
+          <p className="text-sm font-medium text-[#333333] max-w-md mx-auto leading-relaxed">
             Real-time sub-second WebSocket audio streaming sessions with continuous chunked bidirectional translation are currently in closed beta testing for next-generation hardware.
           </p>
 
-          <div className="pt-2 flex items-center justify-center gap-2 text-xs font-mono text-[#8a776a]">
-            <Clock className="w-4 h-4 text-[#736154]" />
-            <span>Target release: v2.6.0 Firmware & Cloud Gateway</span>
+          <div className="pt-2 flex items-center justify-center">
+            <div className="inline-flex items-center gap-2 text-xs font-mono font-bold text-[#121212] px-3.5 py-1.5 rounded-lg border-2 border-[#121212] bg-white shadow-[2px_2px_0px_#121212]">
+              <Clock className="w-4 h-4 text-[#121212]" />
+              <span>Target release: v2.6.0 Firmware & Cloud Gateway</span>
+            </div>
           </div>
         </Card>
       </div>

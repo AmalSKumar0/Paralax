@@ -20,13 +20,13 @@ export const LatencyChart: React.FC<{ data: LatencyData }> = ({ data }) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-end gap-4 text-xs font-medium text-[#5c4a3e]">
+      <div className="flex items-center justify-end gap-4 text-xs font-bold text-[#121212]">
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 bg-[#e9b140] rounded-sm inline-block" />
+          <span className="w-3 h-3 bg-[#ffc86b] border border-[#121212] rounded-xs inline-block shadow-[1px_1px_0px_#121212]" />
           p50 (Median)
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 bg-[#2b1d16] rounded-sm inline-block" />
+          <span className="w-3 h-3 bg-[#121212] border border-[#121212] rounded-xs inline-block shadow-[1px_1px_0px_#121212]" />
           p95 (Tail)
         </span>
       </div>
@@ -39,41 +39,41 @@ export const LatencyChart: React.FC<{ data: LatencyData }> = ({ data }) => {
           return (
             <div
               key={st.key}
-              className="p-4 rounded-xl border border-[#ded7cc] bg-[#f7f5f0] flex flex-col justify-between shadow-xs"
+              className="p-4 rounded-xl border-2 border-[#121212] bg-[#fffdfa] shadow-[3px_3px_0px_#121212] flex flex-col justify-between"
             >
               <div>
-                <span className="text-xs font-semibold text-[#2b1d16]">
+                <span className="text-xs font-bold text-[#121212]">
                   {st.label}
                 </span>
-                <div className="flex flex-col gap-0.5 mt-2 pt-2 border-t border-[#ded7cc] text-xs font-mono">
+                <div className="flex flex-col gap-1 mt-2 pt-2 border-t-2 border-[#121212] text-xs font-mono font-bold">
                   <div className="flex justify-between">
-                    <span className="text-[#8a776a]">p50:</span>
-                    <strong className="text-[#2b1d16] font-semibold">{st.p50} ms</strong>
+                    <span className="text-[#555555]">p50:</span>
+                    <strong className="text-[#121212] font-black">{st.p50} ms</strong>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#8a776a]">p95:</span>
-                    <strong className="text-[#2b1d16] font-semibold">{st.p95} ms</strong>
+                    <span className="text-[#555555]">p95:</span>
+                    <strong className="text-[#121212] font-black">{st.p95} ms</strong>
                   </div>
                 </div>
               </div>
 
               {/* Bar visualization */}
-              <div className="mt-4 pt-2 flex items-end justify-center gap-4 h-28 border-b border-[#ded7cc] pb-1">
+              <div className="mt-4 pt-2 flex items-end justify-center gap-4 h-28 border-b-2 border-[#121212] pb-1">
                 <div className="flex flex-col items-center gap-1">
-                  <span className="text-[10px] font-mono text-[#5c4a3e]">{st.p50}ms</span>
+                  <span className="text-[10px] font-mono font-bold text-[#121212]">{st.p50}ms</span>
                   <div
-                    className="w-7 bg-[#e9b140] rounded-t-sm transition-all duration-300"
+                    className="w-7 bg-[#ffc86b] border-2 border-b-0 border-[#121212] rounded-t-sm transition-all duration-300"
                     style={{ height: `${p50H}px` }}
                   />
-                  <span className="text-[10px] text-[#8a776a]">p50</span>
+                  <span className="text-[10px] font-bold text-[#555555]">p50</span>
                 </div>
                 <div className="flex flex-col items-center gap-1">
-                  <span className="text-[10px] font-mono text-[#5c4a3e]">{st.p95}ms</span>
+                  <span className="text-[10px] font-mono font-bold text-[#121212]">{st.p95}ms</span>
                   <div
-                    className="w-7 bg-[#2b1d16] rounded-t-sm transition-all duration-300"
+                    className="w-7 bg-[#121212] border-2 border-b-0 border-[#121212] rounded-t-sm transition-all duration-300"
                     style={{ height: `${p95H}px` }}
                   />
-                  <span className="text-[10px] text-[#8a776a]">p95</span>
+                  <span className="text-[10px] font-bold text-[#555555]">p95</span>
                 </div>
               </div>
             </div>

@@ -26,33 +26,33 @@ export const JobsPerDayChart: React.FC<{ data: DailyJobPoint[] }> = ({ data }) =
       <div className="h-7 flex items-center justify-between text-xs">
         {hoveredIdx !== null ? (
           <div className="flex items-center gap-3">
-            <span className="font-semibold px-2 py-0.5 rounded-full border border-[#ded7cc] bg-white text-[#2b1d16]">
+            <span className="font-bold px-2 py-0.5 rounded-md border-2 border-[#121212] bg-[#fef08a] text-[#121212] shadow-[1px_1px_0px_#121212]">
               {data[hoveredIdx].date}
             </span>
-            <span className="text-[#5c4a3e]">
-              Total: <strong className="text-[#2b1d16] font-semibold">{data[hoveredIdx].count}</strong>
+            <span className="text-[#121212] font-semibold">
+              Total: <strong className="text-[#121212] font-black">{data[hoveredIdx].count}</strong>
             </span>
-            <span className="text-rose-700">
-              Failed: <strong className="font-semibold">{data[hoveredIdx].failed}</strong>
+            <span className="text-rose-700 font-semibold">
+              Failed: <strong className="font-black">{data[hoveredIdx].failed}</strong>
             </span>
           </div>
         ) : (
-          <span className="text-[#8a776a] text-xs">Hover over bars for daily breakdown</span>
+          <span className="text-[#666666] font-medium text-xs">Hover over bars for daily breakdown</span>
         )}
-        <div className="flex items-center gap-3 text-xs text-[#5c4a3e]">
+        <div className="flex items-center gap-3 text-xs font-semibold text-[#121212]">
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 bg-[#e9b140] rounded-sm inline-block" />
+            <span className="w-3 h-3 bg-[#ffc86b] border border-[#121212] rounded-xs inline-block shadow-[1px_1px_0px_#121212]" />
             Completed
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 bg-rose-500 rounded-sm inline-block" />
+            <span className="w-3 h-3 bg-[#f87171] border border-[#121212] rounded-xs inline-block shadow-[1px_1px_0px_#121212]" />
             Failed
           </span>
         </div>
       </div>
 
       {/* SVG Bar Chart */}
-      <div className="relative border border-[#ded7cc] rounded-xl p-4 bg-[#f7f5f0]">
+      <div className="relative border-2 border-[#121212] rounded-xl p-4 bg-white shadow-[3px_3px_0px_#121212]">
         <svg
           viewBox={`0 0 ${data.length * 24} ${chartHeight}`}
           className="w-full h-44 overflow-visible"
@@ -66,7 +66,7 @@ export const JobsPerDayChart: React.FC<{ data: DailyJobPoint[] }> = ({ data }) =
               y1={chartHeight * (1 - ratio)}
               x2={data.length * 24}
               y2={chartHeight * (1 - ratio)}
-              stroke="#ded7cc"
+              stroke="#e5e5e5"
               strokeDasharray="3 3"
               strokeWidth="1"
             />
@@ -94,7 +94,9 @@ export const JobsPerDayChart: React.FC<{ data: DailyJobPoint[] }> = ({ data }) =
                   width="16"
                   height={Math.max(4, barH)}
                   rx="3"
-                  fill={isHovered ? '#dfa32b' : '#e9b140'}
+                  fill={isHovered ? '#ffb944' : '#ffc86b'}
+                  stroke="#121212"
+                  strokeWidth="1.5"
                   className="transition-colors duration-150"
                 />
                 {/* Failed overlay bar */}
@@ -105,7 +107,9 @@ export const JobsPerDayChart: React.FC<{ data: DailyJobPoint[] }> = ({ data }) =
                     width="16"
                     height={Math.max(2, failH)}
                     rx="2"
-                    fill="#f43f5e"
+                    fill="#f87171"
+                    stroke="#121212"
+                    strokeWidth="1.5"
                   />
                 )}
               </g>
@@ -114,7 +118,7 @@ export const JobsPerDayChart: React.FC<{ data: DailyJobPoint[] }> = ({ data }) =
         </svg>
 
         {/* X-axis labels */}
-        <div className="flex justify-between mt-2 pt-2 border-t border-[#ded7cc] text-[10px] text-[#8a776a] font-mono">
+        <div className="flex justify-between mt-2 pt-2 border-t-2 border-[#121212] text-[10px] text-[#555555] font-mono font-bold">
           <span>{data[0]?.date}</span>
           <span>{data[Math.floor(data.length / 2)]?.date}</span>
           <span>{data[data.length - 1]?.date}</span>

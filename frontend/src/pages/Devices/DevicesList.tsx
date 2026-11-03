@@ -77,26 +77,26 @@ export const DevicesList: React.FC = () => {
           <div className="flex flex-wrap items-center gap-3">
             {/* Search Input */}
             <div className="relative min-w-[240px] sm:min-w-[280px]">
-              <Search className="w-4 h-4 text-[#8a776a] absolute left-3 top-2.5" />
+              <Search className="w-4 h-4 text-[#121212] absolute left-3.5 top-3" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search name, ID or language..."
-                className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-[#ded7cc] bg-white text-xs text-[#2b1d16] focus:bg-white focus:outline-none focus:border-[#e9b140] focus:ring-1 focus:ring-[#e9b140] shadow-sm transition-all placeholder:text-[#8a776a]"
+                className="w-full pl-10 pr-3.5 py-2 rounded-xl border-2 border-[#121212] bg-white text-xs font-semibold text-[#121212] focus:bg-white focus:outline-none shadow-[2.5px_2.5px_0px_#121212] transition-all placeholder:text-[#666666]"
               />
             </div>
 
             {/* Status Filter Chips */}
-            <div className="flex items-center gap-1 p-1 bg-[#f7f5f0] rounded-xl border border-[#ded7cc]">
+            <div className="flex items-center gap-1.5 p-1 bg-white rounded-xl border-2 border-[#121212] shadow-[2.5px_2.5px_0px_#121212]">
               {(['all', 'online', 'offline'] as const).map((filter) => (
                 <button
                   key={filter}
                   onClick={() => setStatusFilter(filter)}
-                  className={`px-3 py-1 text-xs font-medium uppercase rounded-lg transition-all cursor-pointer ${
+                  className={`px-3 py-1 text-xs font-bold uppercase rounded-lg transition-all cursor-pointer ${
                     statusFilter === filter
-                      ? 'bg-[#2b1d16] text-white shadow-sm'
-                      : 'bg-transparent text-[#736154] hover:text-[#2b1d16]'
+                      ? 'bg-[#ffc86b] text-[#121212] border-2 border-[#121212] shadow-[1.5px_1.5px_0px_#121212]'
+                      : 'bg-transparent text-[#121212] hover:bg-[#f8f6f0] border-2 border-transparent'
                   }`}
                 >
                   {filter}
@@ -115,11 +115,11 @@ export const DevicesList: React.FC = () => {
         </div>
 
         {/* Devices Table Card */}
-        <div className="bg-white border border-[#ded7cc] rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white border-2 border-[#121212] rounded-xl shadow-[4px_4px_0px_#121212] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-[#ded7cc] bg-[#f7f5f0] text-[11px] font-semibold uppercase tracking-wider text-[#736154]">
+                <tr className="border-b-2 border-[#121212] bg-[#f8f6f0] text-[11px] font-bold uppercase tracking-wider text-[#121212]">
                   <th className="py-3.5 px-5">Device</th>
                   <th className="py-3.5 px-4">Status</th>
                   <th className="py-3.5 px-4">Last Seen</th>
@@ -131,19 +131,19 @@ export const DevicesList: React.FC = () => {
                   <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#ded7cc] text-xs">
+              <tbody className="divide-y-2 divide-[#121212] text-xs">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={9} className="py-12 text-center text-[#736154]">
-                      <div className="flex items-center justify-center gap-2">
-                        <RefreshCw className="w-4 h-4 animate-spin text-[#736154]" />
+                    <td colSpan={9} className="py-12 text-center text-[#121212]">
+                      <div className="flex items-center justify-center gap-2 font-bold">
+                        <RefreshCw className="w-4 h-4 animate-spin text-[#121212]" />
                         <span>Loading devices...</span>
                       </div>
                     </td>
                   </tr>
                 ) : filteredDevices.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-12 text-center text-[#736154]">
+                    <td colSpan={9} className="py-12 text-center font-bold text-[#121212]">
                       No matching devices found in registry.
                     </td>
                   </tr>
@@ -156,19 +156,19 @@ export const DevicesList: React.FC = () => {
                       <tr
                         key={device.device_id}
                         onClick={() => navigate(`/devices/${device.device_id}`)}
-                        className="hover:bg-[#f7f5f0] transition-colors cursor-pointer group"
+                        className="hover:bg-[#fff9eb] transition-colors cursor-pointer group"
                       >
                         {/* Name & Device ID */}
                         <td className="py-3.5 px-5">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg border border-[#ded7cc] bg-[#f7f5f0] group-hover:border-[#e9b140] flex items-center justify-center shrink-0 transition-colors">
-                              <Cpu className="w-4 h-4 text-[#736154]" />
+                            <div className="w-8 h-8 rounded-lg border-2 border-[#121212] bg-[#f8f6f0] group-hover:bg-[#ffc86b] shadow-[1.5px_1.5px_0px_#121212] flex items-center justify-center shrink-0 transition-colors">
+                              <Cpu className="w-4 h-4 text-[#121212]" />
                             </div>
                             <div>
-                              <span className="font-semibold text-[#2b1d16] block text-sm">
+                              <span className="font-bold text-[#121212] block text-sm">
                                 {device.name}
                               </span>
-                              <span className="font-mono text-[11px] text-[#8a776a]">
+                              <span className="font-mono text-[11px] text-[#4a4a4a]">
                                 {device.device_id}
                               </span>
                             </div>
@@ -189,49 +189,49 @@ export const DevicesList: React.FC = () => {
                         </td>
 
                         {/* Last seen */}
-                        <td className="py-3.5 px-4 text-[#736154]">
+                        <td className="py-3.5 px-4 font-medium text-[#121212]">
                           {formatRelativeTime(device.last_seen)}
                         </td>
 
                         {/* RSSI */}
                         <td className="py-3.5 px-4">
                           <span
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[11px] font-mono ${rssiMeta.color}`}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border-2 border-[#121212] shadow-[1.5px_1.5px_0px_#121212] text-[11px] font-mono font-bold ${rssiMeta.color}`}
                           >
-                            {device.online ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+                            {device.online ? <Wifi className="w-3 h-3 text-[#121212]" /> : <WifiOff className="w-3 h-3 text-[#121212]" />}
                             {device.rssi} dBm
                           </span>
                         </td>
 
                         {/* Firmware */}
-                        <td className="py-3.5 px-4 font-mono text-[#5c4a3e]">
+                        <td className="py-3.5 px-4 font-mono font-semibold text-[#121212]">
                           {device.firmware_version}
                         </td>
 
                         {/* Language Pair */}
                         <td className="py-3.5 px-4">
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border border-[#ded7cc] bg-[#f7f5f0] text-[#2b1d16] font-medium text-[11px]">
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border-2 border-[#121212] bg-white shadow-[1.5px_1.5px_0px_#121212] text-[#121212] font-bold text-[11px]">
                             <span>{device.config.language_a}</span>
-                            <span className="text-[#8a776a]">↔</span>
+                            <span className="text-[#666666]">↔</span>
                             <span>{device.config.language_b}</span>
                           </div>
                         </td>
 
                         {/* Mode */}
-                        <td className="py-3.5 px-4 capitalize text-[#5c4a3e]">
+                        <td className="py-3.5 px-4 capitalize font-semibold text-[#121212]">
                           {device.config.mode === 'auto_detect' ? 'Auto-Detect' : 'Buttons'}
                         </td>
 
                         {/* Config sync */}
                         <td className="py-3.5 px-4">
                           {isConfigSyncPending ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-amber-200 bg-amber-50 text-amber-800 font-medium text-[11px] animate-pulse">
-                              <Clock className="w-3 h-3" />
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md border-2 border-[#121212] bg-[#fef08a] text-[#121212] font-bold text-[11px] shadow-[1.5px_1.5px_0px_#121212]">
+                              <Clock className="w-3 h-3 text-[#121212]" />
                               Sync Pending (v{device.applied_config_version} → v{device.config_version})
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-800 font-medium text-[11px]">
-                              <CheckCircle2 className="w-3 h-3" />
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md border-2 border-[#121212] bg-[#bbf7d0] text-[#121212] font-bold text-[11px] shadow-[1.5px_1.5px_0px_#121212]">
+                              <CheckCircle2 className="w-3 h-3 text-[#121212]" />
                               Up to Date (v{device.config_version})
                             </span>
                           )}
@@ -239,7 +239,7 @@ export const DevicesList: React.FC = () => {
 
                         {/* Action link */}
                         <td className="py-3.5 px-4 text-right">
-                          <span className="inline-flex items-center gap-1 text-xs text-[#736154] group-hover:text-[#2b1d16] transition-colors">
+                          <span className="inline-flex items-center gap-1 text-xs font-bold text-[#121212] group-hover:translate-x-0.5 transition-transform">
                             Details <ChevronRight className="w-3.5 h-3.5" />
                           </span>
                         </td>

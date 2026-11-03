@@ -16,20 +16,20 @@ export const Card: React.FC<CardProps> = ({
   onClick,
 }) => {
   const variantStyles = {
-    light: 'bg-white border-[#ded7cc] text-[#2b1d16] shadow-[0_1px_3px_rgba(43,29,22,0.04),0_4px_12px_rgba(43,29,22,0.02)]',
-    sand: 'bg-[#f7f5f0] border-[#ded7cc] text-[#2b1d16] shadow-[0_1px_3px_rgba(43,29,22,0.04)]',
-    dark: 'bg-[#2b1d16] border-[#3d2a20] text-[#edeae4] shadow-[0_4px_16px_rgba(43,29,22,0.12)]',
-    yellow: 'bg-[#fcf8ee] border-[#e9b140]/50 text-[#2b1d16] shadow-[0_1px_3px_rgba(43,29,22,0.04)]',
+    light: 'bg-white border-2 border-[#121212] text-[#121212] shadow-[3.5px_3.5px_0px_#121212]',
+    sand: 'bg-[#fbf9f4] border-2 border-[#121212] text-[#121212] shadow-[3.5px_3.5px_0px_#121212]',
+    dark: 'bg-[#121212] border-2 border-[#121212] text-white shadow-[3.5px_3.5px_0px_#ffc86b]',
+    yellow: 'bg-[#ffc86b] border-2 border-[#121212] text-[#121212] shadow-[3.5px_3.5px_0px_#121212]',
   };
 
   const hoverStyles = hoverable
-    ? 'hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(43,29,22,0.08)] hover:border-[#cfc6b5] transition-all duration-200 cursor-pointer'
+    ? 'hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5.5px_5.5px_0px_#121212] transition-all duration-150 cursor-pointer'
     : '';
 
   return (
     <div
       onClick={onClick}
-      className={`border rounded-2xl p-6 transition-all duration-200 ${variantStyles[variant]} ${hoverStyles} ${className}`}
+      className={`rounded-2xl p-6 transition-all duration-150 ${variantStyles[variant]} ${hoverStyles} ${className}`}
     >
       {children}
     </div>

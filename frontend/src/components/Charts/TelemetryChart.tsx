@@ -61,7 +61,7 @@ export const TelemetryChart: React.FC<TelemetryChartProps> = ({
       {/* Controls header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         {/* Metric picker tabs */}
-        <div className="flex flex-wrap items-center gap-1 p-1 bg-[#edeae4] rounded-xl border border-[#ded7cc]">
+        <div className="flex flex-wrap items-center gap-1 p-1 bg-[#fbf9f4] rounded-xl border-2 border-[#121212] shadow-[2px_2px_0px_#121212]">
           {(
             [
               { key: 'rssi', label: 'Signal (RSSI)' },
@@ -74,10 +74,10 @@ export const TelemetryChart: React.FC<TelemetryChartProps> = ({
             <button
               key={m.key}
               onClick={() => onMetricChange(m.key)}
-              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+              className={`px-3 py-1 text-xs rounded-lg transition-all cursor-pointer ${
                 metric === m.key
-                  ? 'bg-[#2b1d16] text-[#edeae4] shadow-xs'
-                  : 'text-[#736154] hover:text-[#2b1d16]'
+                  ? 'bg-[#ffc86b] text-[#121212] font-bold border-2 border-[#121212] shadow-[1.5px_1.5px_0px_#121212]'
+                  : 'text-[#333333] font-semibold border-2 border-transparent hover:border-[#121212] hover:bg-white'
               }`}
             >
               {m.label}
@@ -91,10 +91,10 @@ export const TelemetryChart: React.FC<TelemetryChartProps> = ({
             <button
               key={r}
               onClick={() => onRangeChange(r)}
-              className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+              className={`px-2.5 py-1 text-xs rounded-lg border-2 border-[#121212] transition-all cursor-pointer font-bold ${
                 timeRange === r
-                  ? 'bg-[#e9b140] text-[#2b1d16] border-[#d89e2c]'
-                  : 'bg-white text-[#736154] border-[#ded7cc] hover:bg-[#edeae4]'
+                  ? 'bg-[#121212] text-white shadow-[2px_2px_0px_#ffc86b]'
+                  : 'bg-white text-[#121212] shadow-[2px_2px_0px_#121212] hover:bg-[#ffc86b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none'
               }`}
             >
               {r}
