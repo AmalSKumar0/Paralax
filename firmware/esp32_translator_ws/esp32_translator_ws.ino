@@ -57,7 +57,7 @@ const char *WIFI_PASSWORD = "amalskumar";
 // Backend WebSocket host & port
 // When running locally with 'npm run server:ws', use your computer's local Wi-Fi IP:
 const char *WS_HOST       = "192.168.55.158"; // Local IP on Wi-Fi 'Aurora'
-const int   WS_PORT       = 3000;
+const int   WS_PORT       = 8000;
 const bool  WS_USE_SSL    = false; 
 
 // Paste your device secret key from https://paralax.amalskumar.dev/devices

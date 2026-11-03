@@ -13,12 +13,12 @@ const server = createAdaptorServer({
 
 setupWebSocketServer(server);
 
-server.listen(port, () => {
+server.listen(port, '0.0.0.0', () => {
   console.log(`+----------------------------------------------------------------------+`);
   console.log(`| PARALAX IoT AI Voice Translator - Persistent Server Active           |`);
   console.log(`+----------------------------------------------------------------------+`);
-  console.log(`[HTTP REST]  http://localhost:${port}`);
-  console.log(`[WebSocket]  ws://localhost:${port}/ws/device/stream`);
+  console.log(`[HTTP REST]  http://0.0.0.0:${port}`);
+  console.log(`[WebSocket]  ws://0.0.0.0:${port}/ws/device/stream`);
   console.log(`------------------------------------------------------------------------`);
 });
 

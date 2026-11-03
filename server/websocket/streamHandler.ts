@@ -58,13 +58,23 @@ export function setupWebSocketServer(server: HttpServer): WebSocketServer {
         session.authenticated = true;
         session.sourceLang = device.config.language_a;
         session.targetLang = device.config.language_b;
+        console.log(`[WebSocket] Client authenticated: "${device.name}" (${device.id}) [${session.sourceLang} <-> ${session.targetLang}]`);
         ws.send(JSON.stringify({
           type: 'ready',
           device_id: device.id,
           name: device.name,
           config: device.config,
         }));
+      } else {
+        console.warn(`[WebSocket] Authentication failed: key "${initialKey.slice(0, 12)}..." not recognized!`);
+        ws.send(JSON.stringify({
+          type: 'error',
+          code: 'unauthorized',
+          message: 'Invalid or unrecognized device key',
+        }));
       }
+    } else {
+      console.log('[WebSocket] Client connected without key in URL. Awaiting "auth" control message...');
     }
 
     ws.on('message', async (data: any, isBinary: boolean) => {

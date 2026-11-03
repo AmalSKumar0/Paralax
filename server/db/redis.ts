@@ -170,6 +170,32 @@ export class RedisStore {
     if (url && token && !url.includes('your-database-id')) {
       this.client = new Redis({ url, token });
     }
+
+    // Pre-seed default device into memory fallback so local/offline server always authenticates ESP32
+    const defaultKey = 'key_ed506f3405ff2002bc61351b37c1322132d36e0a84686a44';
+    const defaultDev: DeviceRecord = {
+      id: 'dev_esp32_translator_01',
+      device_id: 'dev_esp32_translator_01',
+      name: 'ESP32 Dual-Button AI Translator',
+      key_hash: hashSecret(defaultKey),
+      status: 'active',
+      created_at: new Date().toISOString(),
+      config: {
+        language_a: 'en-US',
+        language_b: 'es-US',
+        mode: 'buttons',
+        volume: 80,
+        tts_speed: 1.0,
+        mic_gain: 1.0,
+        max_utterance_sec: 15,
+        conversation_idle_sec: 120,
+        config_version: 1,
+      },
+      config_version: 1,
+      applied_config_version: 1,
+    };
+    this.memory.set(`paralax:device:${defaultDev.id}`, defaultDev);
+    this.memory.set('paralax:devices:index', [defaultDev.id]);
   }
 
   public hashKey(secret: string): string {
