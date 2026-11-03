@@ -10,6 +10,7 @@ import {
   validateAndParseAudio,
   pcmToWav,
   encodeBase64Url,
+  calculatePcmRms,
   AudioValidationError,
 } from '../shared/audio.js';
 import {
@@ -393,6 +394,22 @@ deviceRoutes.post('/translate', async (c) => {
         },
         86400
       );
+
+      // Record audio signal telemetry on utterance translation
+      try {
+        const rms = calculatePcmRms(parsedAudio.pcm);
+        const audioLevel = Math.min(100, Math.round((rms / 16384) * 100));
+        await redis.recordTelemetry(device.id, {
+          ts: new Date().toISOString(),
+          rssi: device.rssi,
+          battery_pct: device.battery_pct,
+          uptime_sec: device.uptime_sec,
+          audio_level: audioLevel,
+          mic_peak: Math.min(100, Math.round(audioLevel * 1.25)),
+        });
+      } catch (telemErr) {
+        console.warn('[Telemetry] Failed to record audio telemetry:', telemErr);
+      }
     })()
   );
 
@@ -454,7 +471,18 @@ deviceRoutes.post('/heartbeat', async (c) => {
     // Optional JSON body
   }
 
-  const { firmware_version, rssi, battery_pct, uptime_sec, config_version } = body;
+  const {
+    firmware_version,
+    rssi,
+    battery_pct,
+    uptime_sec,
+    config_version,
+    free_heap,
+    audio_level,
+    mic_peak,
+    temperature,
+    error_count,
+  } = body;
 
   // Check if device applied latest config
   let appliedVersion = device.applied_config_version;
@@ -469,6 +497,19 @@ deviceRoutes.post('/heartbeat', async (c) => {
     battery_pct: battery_pct !== undefined ? battery_pct : device.battery_pct,
     uptime_sec: uptime_sec !== undefined ? uptime_sec : device.uptime_sec,
     applied_config_version: appliedVersion,
+  });
+
+  // Record telemetry sample into Redis ring buffer
+  await redis.recordTelemetry(device.id, {
+    ts: new Date().toISOString(),
+    rssi: rssi !== undefined ? rssi : device.rssi,
+    free_heap: free_heap !== undefined ? free_heap : undefined,
+    battery_pct: battery_pct !== undefined ? battery_pct : device.battery_pct,
+    uptime_sec: uptime_sec !== undefined ? uptime_sec : device.uptime_sec,
+    audio_level: audio_level !== undefined ? audio_level : undefined,
+    mic_peak: mic_peak !== undefined ? mic_peak : undefined,
+    temperature: temperature !== undefined ? temperature : undefined,
+    error_count: error_count !== undefined ? error_count : undefined,
   });
 
   const pendingCommands = await redis.getPendingCommands(device.id);

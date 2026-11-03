@@ -27,7 +27,7 @@ export const TelemetryChart: React.FC<TelemetryChartProps> = ({
     );
   }
 
-  const values = samples.map((s) => s[metric]);
+  const values = samples.map((s) => (s[metric] !== undefined ? (s[metric] as number) : 0));
   const minVal = Math.min(...values);
   const maxVal = Math.max(...values);
   const range = maxVal - minVal === 0 ? 1 : maxVal - minVal;
@@ -37,8 +37,9 @@ export const TelemetryChart: React.FC<TelemetryChartProps> = ({
   const pad = 10;
 
   const points = samples.map((s, idx) => {
+    const val = s[metric] !== undefined ? (s[metric] as number) : 0;
     const x = pad + (idx / Math.max(1, samples.length - 1)) * (chartW - pad * 2);
-    const normalized = (s[metric] - minVal) / range;
+    const normalized = (val - minVal) / range;
     const y = chartH - pad - normalized * (chartH - pad * 2);
     return { x, y, sample: s };
   });
@@ -49,6 +50,7 @@ export const TelemetryChart: React.FC<TelemetryChartProps> = ({
   const formatDisplayVal = (sample: TelemetrySample) => {
     if (!sample) return '';
     if (metric === 'rssi') return `${sample.rssi} dBm`;
+    if (metric === 'audio_level') return `${sample.audio_level ?? 0}% Signal`;
     if (metric === 'battery_pct') return `${sample.battery_pct}%`;
     if (metric === 'free_heap') return formatBytes(sample.free_heap);
     return formatDuration(sample.uptime_sec);
@@ -63,6 +65,7 @@ export const TelemetryChart: React.FC<TelemetryChartProps> = ({
           {(
             [
               { key: 'rssi', label: 'Signal (RSSI)' },
+              { key: 'audio_level', label: 'Mic Signal' },
               { key: 'battery_pct', label: 'Battery' },
               { key: 'free_heap', label: 'Free Heap' },
               { key: 'uptime_sec', label: 'Uptime' },

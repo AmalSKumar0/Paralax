@@ -30,9 +30,11 @@ export interface TelemetrySample {
   free_heap: number;     // in bytes or KB
   battery_pct: number;   // 0 - 100
   uptime_sec: number;
+  audio_level?: number;  // 0 - 100% volume / signal
+  mic_peak?: number;
 }
 
-export type TelemetryMetricType = 'rssi' | 'free_heap' | 'battery_pct' | 'uptime_sec';
+export type TelemetryMetricType = 'rssi' | 'free_heap' | 'battery_pct' | 'uptime_sec' | 'audio_level';
 
 export type CommandType = 'reboot' | 'sync_config' | 'identify';
 export type CommandStatus = 'pending' | 'delivered' | 'done' | 'failed' | 'expired';

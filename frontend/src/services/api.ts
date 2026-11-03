@@ -103,6 +103,10 @@ export const api = {
     }),
   getDeviceTelemetry: (id: string, range: '1h' | '6h' | '24h' | '7d') =>
     apiClient.request<{ samples: TelemetrySample[] }>(`/admin/devices/${id}/telemetry?range=${range}`),
+  getDeviceUtterances: async (id: string) => {
+    const res = await apiClient.request<{ items: ApiJob[] }>(`/admin/devices/${id}/utterances`);
+    return res.items || [];
+  },
 
   // Jobs
   getJobs: (params?: {

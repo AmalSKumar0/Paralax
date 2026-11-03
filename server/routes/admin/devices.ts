@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import crypto from 'crypto';
 import { redis, DeviceRecord, hashSecret } from '../../db/redis.js';
+import { postgres } from '../../db/postgres.js';
 
 export const adminDeviceRoutes = new Hono();
 
@@ -236,8 +237,30 @@ adminDeviceRoutes.post('/:id/telemetry', async (c) => {
     free_heap: body.free_heap,
     temperature: body.temperature,
     error_count: body.error_count,
+    audio_level: body.audio_level,
+    mic_peak: body.mic_peak,
   };
 
   await redis.recordTelemetry(id, sample);
   return c.json({ success: true, sample }, 201);
+});
+
+// GET /admin/devices/:id/utterances
+adminDeviceRoutes.get('/:id/utterances', async (c) => {
+  const id = c.req.param('id');
+  const limit = Math.min(parseInt(c.req.query('limit') || '30', 10), 100);
+  const cursor = c.req.query('cursor');
+
+  const jobsResult = await postgres.listJobs({
+    deviceId: id,
+    kind: 'utterance',
+    limit,
+    cursor,
+  });
+
+  return c.json({
+    items: jobsResult.items,
+    next_cursor: jobsResult.next_cursor,
+    total: jobsResult.items.length,
+  });
 });

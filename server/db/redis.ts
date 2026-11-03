@@ -56,6 +56,8 @@ export interface TelemetrySampleRecord {
   uptime_sec?: number;
   temperature?: number;
   error_count?: number;
+  audio_level?: number;
+  mic_peak?: number;
 }
 
 export interface SystemSettings {

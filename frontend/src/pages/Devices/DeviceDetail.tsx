@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { api } from '../../services/api';
-import { Device, Language, TelemetrySample, DeviceCommand, DeviceConfig, CommandType } from '../../types';
+import { Device, Language, TelemetrySample, DeviceCommand, DeviceConfig, CommandType, ApiJob, TelemetryMetricType } from '../../types';
 import { Topbar } from '../../components/Layout/Topbar';
 import { Card } from '../../components/Common/Card';
 import { Button } from '../../components/Common/Button';
@@ -9,9 +9,10 @@ import { Badge } from '../../components/Common/Badge';
 import { Modal } from '../../components/Common/Modal';
 import { ConfirmModal } from '../../components/Common/ConfirmModal';
 import { CopySnippet } from '../../components/Common/CopySnippet';
+import { AudioPlayer } from '../../components/Common/AudioPlayer';
 import { TelemetryChart } from '../../components/Charts/TelemetryChart';
 import { useToast } from '../../context/ToastContext';
-import { formatRelativeTime, formatDuration, getRssiQuality } from '../../utils/formatters';
+import { formatRelativeTime, formatDuration, getRssiQuality, formatBytes } from '../../utils/formatters';
 import {
   ArrowLeft,
   Cpu,
@@ -29,6 +30,12 @@ import {
   Battery,
   HardDrive,
   MessagesSquare,
+  Mic,
+  Volume2,
+  Waves,
+  Activity,
+  Sparkles,
+  Wifi,
 } from 'lucide-react';
 
 export const DeviceDetail: React.FC = () => {
@@ -40,12 +47,13 @@ export const DeviceDetail: React.FC = () => {
   const [languages, setLanguages] = useState<Language[]>([]);
   const [telemetry, setTelemetry] = useState<TelemetrySample[]>([]);
   const [commands, setCommands] = useState<DeviceCommand[]>([]);
+  const [utterances, setUtterances] = useState<ApiJob[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Telemetry chart state
   const [timeRange, setTimeRange] = useState<'1h' | '6h' | '24h' | '7d'>('24h');
-  const [metric, setMetric] = useState<'rssi' | 'free_heap' | 'battery_pct' | 'uptime_sec'>('rssi');
+  const [metric, setMetric] = useState<TelemetryMetricType>('rssi');
 
   // Config editor state
   const [formConfig, setFormConfig] = useState<DeviceConfig | null>(null);
@@ -67,16 +75,18 @@ export const DeviceDetail: React.FC = () => {
       if (!id) return;
       if (isManual) setIsRefreshing(true);
       try {
-        const [dev, langData, telemData, cmdData] = await Promise.all([
+        const [dev, langData, telemData, cmdData, uttData] = await Promise.all([
           api.getDevice(id),
           api.getLanguages(),
           api.getDeviceTelemetry(id, timeRange),
           api.getDeviceCommands(id),
+          api.getDeviceUtterances(id).catch(() => []),
         ]);
         setDevice(dev);
         setLanguages(langData.languages);
         setTelemetry(telemData.samples);
         setCommands(cmdData);
+        setUtterances(uttData || []);
 
         // Initialize form config if not yet set or not dirty
         setFormConfig((prev) => prev || { ...dev.config });
@@ -209,6 +219,9 @@ export const DeviceDetail: React.FC = () => {
 
   const isConfigSyncPending = device.config_version > device.applied_config_version;
   const rssiQuality = getRssiQuality(device.rssi);
+  const latestSample = telemetry && telemetry.length > 0 ? telemetry[0] : null;
+  const currentAudioLevel = latestSample?.audio_level !== undefined ? latestSample.audio_level : 0;
+  const currentMicPeak = latestSample?.mic_peak !== undefined ? latestSample.mic_peak : Math.round(currentAudioLevel * 1.25);
 
   return (
     <div className="flex-1 flex flex-col pb-16">
@@ -296,6 +309,181 @@ export const DeviceDetail: React.FC = () => {
             </Button>
           </div>
         </div>
+
+        {/* IoT Hardware Connection & Audio Signals Monitor */}
+        <Card variant="light" className="space-y-5 border border-[#ded7cc]">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-[#ded7cc] gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <Waves className="w-5 h-5 text-[#e9b140]" />
+                <h2 className="text-lg font-bold text-[#2b1d16]">
+                  IoT Hardware & Real-Time Audio Signal Monitor
+                </h2>
+              </div>
+              <p className="text-xs text-[#736154]">
+                INMP441 Microphone (I2S0) · MAX98357A Amp (I2S1) · SSD1306 OLED (I2C) · Push Button (GPIO 32)
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
+                device.online
+                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                  : 'bg-gray-100 text-[#736154] border-[#ded7cc]'
+              }`}>
+                <span className={`w-2 h-2 rounded-full ${device.online ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
+                {device.online ? 'Hardware Connected' : 'Device Standby'}
+              </span>
+              <span className="px-3 py-1 rounded-full text-xs font-mono font-medium border border-[#ded7cc] bg-white text-[#5c4a3e]">
+                16 kHz / 16-bit Mono L16
+              </span>
+            </div>
+          </div>
+
+          {/* Audio Signal Level VU Meter */}
+          <div className="p-4 rounded-xl border border-[#ded7cc] bg-[#f7f5f0] space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Mic className="w-4 h-4 text-[#2b1d16]" />
+                <span className="text-xs font-bold uppercase tracking-wider text-[#2b1d16]">
+                  INMP441 Microphone Live Signal Level (VU Meter)
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-xs font-mono">
+                <span className="text-[#5c4a3e]">
+                  Peak: <strong className="text-[#2b1d16]">{currentMicPeak}%</strong>
+                </span>
+                <span className="text-[#5c4a3e]">
+                  RMS Level: <strong className="text-[#2b1d16]">{currentAudioLevel}%</strong>
+                </span>
+                <span className={`px-2 py-0.5 rounded text-[11px] font-semibold uppercase ${
+                  currentAudioLevel > 75
+                    ? 'bg-rose-100 text-rose-800'
+                    : currentAudioLevel > 20
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : 'bg-amber-100 text-amber-800'
+                }`}>
+                  {currentAudioLevel > 75 ? 'Peak / Loud' : currentAudioLevel > 20 ? 'Voice Detected' : 'Ambient / Quiet'}
+                </span>
+              </div>
+            </div>
+
+            {/* Visual 24-Segment VU Meter Bar */}
+            <div className="grid grid-cols-24 gap-1 h-4 bg-white/80 p-1 rounded-lg border border-[#ded7cc]">
+              {Array.from({ length: 24 }).map((_, i) => {
+                const threshold = ((i + 1) / 24) * 100;
+                const isLit = (currentAudioLevel || 12) >= threshold;
+                const isPeak = currentMicPeak >= threshold;
+                let color = 'bg-emerald-500';
+                if (i >= 16 && i < 21) color = 'bg-amber-400';
+                if (i >= 21) color = 'bg-rose-500';
+
+                return (
+                  <div
+                    key={i}
+                    className={`h-full rounded-xs transition-all duration-150 ${
+                      isLit
+                        ? color
+                        : isPeak
+                        ? `${color} opacity-40`
+                        : 'bg-stone-200/60'
+                    }`}
+                  />
+                );
+              })}
+            </div>
+
+            <div className="flex justify-between text-[10px] font-mono text-[#8a776a] px-0.5">
+              <span>-60 dB (Silence)</span>
+              <span>-30 dB (Speech Range)</span>
+              <span>-12 dB (Optimal)</span>
+              <span className="text-rose-600 font-semibold">0 dB (Clip)</span>
+            </div>
+          </div>
+
+          {/* 4 Connected Hardware Component Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* INMP441 Microphone */}
+            <div className="p-3.5 rounded-xl border border-[#ded7cc] bg-white space-y-2 shadow-xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Mic className="w-4 h-4 text-[#e9b140]" />
+                  <span className="text-xs font-bold text-[#2b1d16]">INMP441 MEMS Mic</span>
+                </div>
+                <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  I2S_0 (Rx)
+                </span>
+              </div>
+              <p className="text-[11px] text-[#736154]">
+                24-bit MEMS microphone with MSB downsampling (+12dB gain) to 16 kHz 16-bit signed PCM.
+              </p>
+              <div className="text-[10px] font-mono text-[#5c4a3e] bg-[#f7f5f0] p-1.5 rounded-lg border border-[#edeae4] space-y-0.5">
+                <div>SCK: <strong>GPIO 26</strong> · WS: <strong>GPIO 25</strong></div>
+                <div>SD: <strong>GPIO 33</strong> · L/R: <strong>GND (Left)</strong></div>
+              </div>
+            </div>
+
+            {/* MAX98357A Audio Amplifier */}
+            <div className="p-3.5 rounded-xl border border-[#ded7cc] bg-white space-y-2 shadow-xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Volume2 className="w-4 h-4 text-[#e9b140]" />
+                  <span className="text-xs font-bold text-[#2b1d16]">MAX98357A Amp</span>
+                </div>
+                <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  I2S_1 (Tx)
+                </span>
+              </div>
+              <p className="text-[11px] text-[#736154]">
+                Class-D 3.2W DAC streaming directly to 8 Ω 0.5 W speaker with zero audio buffering heap overhead.
+              </p>
+              <div className="text-[10px] font-mono text-[#5c4a3e] bg-[#f7f5f0] p-1.5 rounded-lg border border-[#edeae4] space-y-0.5">
+                <div>BCLK: <strong>GPIO 14</strong> · LRC: <strong>GPIO 27</strong></div>
+                <div>DIN: <strong>GPIO 22</strong> · Gain: <strong>12 dB</strong></div>
+              </div>
+            </div>
+
+            {/* 0.96" OLED Display */}
+            <div className="p-3.5 rounded-xl border border-[#ded7cc] bg-white space-y-2 shadow-xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Activity className="w-4 h-4 text-[#e9b140]" />
+                  <span className="text-xs font-bold text-[#2b1d16]">SSD1306 OLED</span>
+                </div>
+                <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                  I2C (0x3C)
+                </span>
+              </div>
+              <p className="text-[11px] text-[#736154]">
+                128x64 graphical status display for live audio metering, decoded transcript, and translation text.
+              </p>
+              <div className="text-[10px] font-mono text-[#5c4a3e] bg-[#f7f5f0] p-1.5 rounded-lg border border-[#edeae4] space-y-0.5">
+                <div>SDA: <strong>GPIO 21</strong> · SCL: <strong>GPIO 19</strong></div>
+                <div>VCC: <strong>3.3V / 5V</strong> · Rate: <strong>400 kHz</strong></div>
+              </div>
+            </div>
+
+            {/* Tactile Button & Controller */}
+            <div className="p-3.5 rounded-xl border border-[#ded7cc] bg-white space-y-2 shadow-xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Cpu className="w-4 h-4 text-[#e9b140]" />
+                  <span className="text-xs font-bold text-[#2b1d16]">ESP32 & Button</span>
+                </div>
+                <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">
+                  WROOM-32
+                </span>
+              </div>
+              <p className="text-[11px] text-[#736154]">
+                Tactile switch on GPIO 32 with internal pull-up. Press & hold to speak, release to translate.
+              </p>
+              <div className="text-[10px] font-mono text-[#5c4a3e] bg-[#f7f5f0] p-1.5 rounded-lg border border-[#edeae4] space-y-0.5">
+                <div>Button: <strong>GPIO 32</strong> (Active LOW)</div>
+                <div>Power: <strong>5V 2A</strong> · Xtensa Dual-Core</div>
+              </div>
+            </div>
+          </div>
+        </Card>
 
         {/* Live Telemetry Card */}
         <Card variant="light" className="space-y-4">
@@ -651,6 +839,108 @@ export const DeviceDetail: React.FC = () => {
             </Card>
           </div>
         </div>
+
+        {/* Recent IoT Device Voice Utterances & Audio Signals Feed */}
+        <Card variant="light" className="space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-[#ded7cc] gap-2">
+            <div>
+              <div className="flex items-center gap-2">
+                <MessagesSquare className="w-5 h-5 text-[#e9b140]" />
+                <h2 className="text-lg font-bold text-[#2b1d16]">
+                  Recent IoT Voice Translations & Audio Signals
+                </h2>
+              </div>
+              <p className="text-xs text-[#736154]">
+                Speech captured by the INMP441 microphone and synthesized playback returned to the MAX98357A speaker
+              </p>
+            </div>
+            <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full border border-[#ded7cc] bg-[#f7f5f0] text-[#736154]">
+              {utterances.length} turns recorded
+            </span>
+          </div>
+
+          {utterances.length === 0 ? (
+            <div className="text-center py-10 px-4 border border-dashed border-[#ded7cc] rounded-xl bg-[#f7f5f0] space-y-2">
+              <Mic className="w-8 h-8 text-[#8a776a] mx-auto opacity-60" />
+              <p className="text-sm font-semibold text-[#2b1d16]">No voice turns received yet from this device</p>
+              <p className="text-xs text-[#736154] max-w-md mx-auto">
+                Press the physical push button on GPIO 32 to record speech. The ESP32 will transmit the 16 kHz PCM audio to the Paralax API and play back the synthesized translation on the speaker.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {utterances.map((job) => (
+                <div
+                  key={job.job_id || (job as any).id || (job as any).jobId}
+                  className="p-4 rounded-xl border border-[#ded7cc] bg-white space-y-3 shadow-xs hover:border-[#e9b140] transition-colors"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#f0ede6] pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-[#f7f5f0] text-[#2b1d16] border border-[#ded7cc]">
+                        {job.source_language || (job as any).sourceLanguage || 'en-US'}
+                      </span>
+                      <span className="text-xs text-[#8a776a]">→</span>
+                      <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-[#e9b140]/15 text-[#2b1d16] border border-[#e9b140]">
+                        {job.target_language || (job as any).targetLanguage || 'es-US'}
+                      </span>
+                      <span className="text-xs font-mono text-[#8a776a] ml-1">
+                        {formatRelativeTime(job.created_at || (job as any).createdAt)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-[11px] font-mono text-[#736154]">
+                      <span>STT: {job.timings?.stt_ms ?? (job as any).sttMs ?? 0}ms</span>
+                      <span>·</span>
+                      <span>Trans: {job.timings?.translate_ms ?? (job as any).translateMs ?? 0}ms</span>
+                      <span>·</span>
+                      <span>TTS: {job.timings?.synthesize_ms ?? (job as any).synthesizeMs ?? 0}ms</span>
+                      <span>·</span>
+                      <strong className="text-[#2b1d16]">Total: {job.timings?.total_ms ?? (job as any).totalMs ?? 0}ms</strong>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Transcript from Mic */}
+                    <div className="p-3 rounded-lg bg-[#f7f5f0] border border-[#ded7cc]/60 space-y-1">
+                      <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase text-[#736154]">
+                        <Mic className="w-3.5 h-3.5 text-[#2b1d16]" />
+                        <span>Speech Input (INMP441)</span>
+                      </div>
+                      <p className="text-xs text-[#2b1d16] font-medium italic">
+                        "{job.transcript || 'No transcript recorded'}"
+                      </p>
+                    </div>
+
+                    {/* Translation to Speaker */}
+                    <div className="p-3 rounded-lg bg-[#e9b140]/10 border border-[#e9b140]/30 space-y-1">
+                      <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase text-[#736154]">
+                        <Volume2 className="w-3.5 h-3.5 text-[#2b1d16]" />
+                        <span>Audio Output (MAX98357A)</span>
+                      </div>
+                      <p className="text-xs text-[#2b1d16] font-semibold">
+                        "{job.translation || 'No translation available'}"
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Playable audio preview if translated text or audio URL is present */}
+                  <div className="pt-1 flex items-center justify-between">
+                    <AudioPlayer
+                      label="Synthesized Audio Preview"
+                      text={job.translation}
+                      lang={job.target_language || (job as any).targetLanguage || 'es'}
+                      audioUrl={job.audio?.url || (job as any).audioOutputBlobPath}
+                      durationSec={job.duration_sec || 2.5}
+                    />
+                    <span className="text-[10px] font-mono text-[#8a776a]">
+                      ID: {job.job_id || (job as any).id || (job as any).jobId}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
       </div>
 
       {/* Confirmation Modal for Destructive Actions */}
