@@ -92,6 +92,26 @@ E (1119) esp_clock_output: esp_clock_output_start(206): Selected io is already m
 * When `I2S_1` tried to claim GPIO 0 after `I2S_0` already claimed it, ESP-IDF threw an invalid state error.
 * **The Fix**: Both `I2S_0` and `I2S_1` now explicitly set `.mck_io_num = I2S_PIN_NO_CHANGE` (neither INMP441 nor MAX98357A require an external MCLK).
 
+### 3. The `HTTP 422 Unprocessable Entity` & `RMS: 0%` (Silence / Flatline Audio)
+In your Serial Monitor output:
+```text
+[Voice]  0.0s / 2.0s  |  RMS:   0%  [----------------]  |  Peak:   0%
+[Voice]  0.2s / 2.0s  |  RMS:   0%  [----------------]  |  Peak:   0%
+...
+[API] <<< Response Status: HTTP/1.1 422 Unprocessable Entity
+```
+* **Root Cause**: The cloud API validates the audio energy before sending to Whisper STT. When every sample in the 64 KB PCM buffer is pure digital zero (`RMS: 0%`), the server returns HTTP 422 with `{"error":{"code":"no_speech_detected"}}`.
+* **Why INMP441 Read Pure Zeros**:
+  1. The INMP441 has an **`L/R` (Left/Right) channel pin**:
+     - Connected to **GND**: outputs on the **Left** channel.
+     - Connected to **3.3V** or left **Floating**: outputs on the **Right** channel or erratic flatline.
+  2. If the firmware configured `I2S_CHANNEL_FMT_ONLY_LEFT`, but the `L/R` pin wasn't firmly wired to GND, the ESP32 sampled the inactive Right channel and read pure zeros.
+* **The Fix in Firmware v1.2.1**:
+  - Configures `I2S_CHANNEL_FMT_RIGHT_LEFT` (Stereo) to ingest both Left and Right time slots.
+  - Automatically selects whichever channel contains the active speech signal (`(abs(L) > abs(R)) ? L : R`).
+  - Added a boot-time ambient noise check and a live Serial alert reminding you to tie `L/R` to `GND`.
+  - Added saturation clamping (`-32768` to `+32767`) and +12dB digital gain (`>> 14`).
+
 ---
 
 ## 5. Serial Monitor Output (`115200` Baud)
@@ -204,7 +224,8 @@ Copy and paste the code below into your Arduino IDE (`esp32_translator.ino`):
  *    - SD    -> GPIO 33 (I2S0 Serial Data In)
  *    - L/R   -> GND     (Left Channel selected)
  *
- * 2. MAX98357A I2S Class-D Mono Amplifier + Speaker (Voice Output via I2S_NUM_1)
+ * 2. MAX98357A I2S Class-D Mono Amplifier + Speaker (Voice Output via
+ * I2S_NUM_1)
  *    - VIN   -> 5V (or VIN pin of ESP32 for maximum audio loudness)
  *    - GND   -> GND
  *    - BCLK  -> GPIO 14 (I2S1 Bit Clock)
@@ -228,77 +249,81 @@ Copy and paste the code below into your Arduino IDE (`esp32_translator.ino`):
  * ============================================================================
  */
 
+#include <ArduinoJson.h>
+#include <HTTPClient.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
-#include <HTTPClient.h>
 #include <driver/i2s.h>
-#include <ArduinoJson.h>
 #include <math.h>
 
 // ============================================================================
 // USER CONFIGURATION (Wi-Fi Credentials & Paralax Device Key)
 // ============================================================================
-const char* WIFI_SSID     = "Aurora";
-const char* WIFI_PASSWORD = "amalskumar";
+const char *WIFI_SSID = "Aurora";
+const char *WIFI_PASSWORD = "amalskumar";
 
 // Target Paralax production server
-const char* API_HOST      = "paralax.amalskumar.dev";
-const int   API_PORT      = 443;
-const char* TRANSLATE_URL = "https://paralax.amalskumar.dev/api/v1/device/translate";
-const char* HEARTBEAT_URL = "https://paralax.amalskumar.dev/api/v1/device/heartbeat";
-const char* CONFIG_URL    = "https://paralax.amalskumar.dev/api/v1/device/config";
+const char *API_HOST = "paralax.amalskumar.dev";
+const int API_PORT = 443;
+const char *TRANSLATE_URL =
+    "https://paralax.amalskumar.dev/api/v1/device/translate";
+const char *HEARTBEAT_URL =
+    "https://paralax.amalskumar.dev/api/v1/device/heartbeat";
+const char *CONFIG_URL = "https://paralax.amalskumar.dev/api/v1/device/config";
 
 // Paste your device secret key from https://paralax.amalskumar.dev/devices
-const char* DEVICE_KEY    = "key_YOUR_DEVICE_KEY_HERE";
-const char* FIRMWARE_VER  = "1.2.0";
+const char *DEVICE_KEY = "key_ed506f3405ff2002bc61351b37c1322132d36e0a84686a44";
+const char *FIRMWARE_VER = "1.2.1";
 
 // Default Language Pair (Updated dynamically via Heartbeat / Config Sync)
-String currentLanguageA   = "en-US";
-String currentLanguageB   = "es-US";
+String currentLanguageA = "en-US";
+String currentLanguageB = "es-US";
 
 // ============================================================================
 // HARDWARE PIN DEFINITIONS (38-Pin ESP32-WROOM-32)
 // ============================================================================
 // Dual Push Buttons (Connect between GPIO and GND, active LOW)
-#define PIN_BUTTON_A      32    // Button 1: Hold to speak Language A -> translates to Language B
-#define PIN_BUTTON_B      21    // Button 2: Hold to speak Language B -> translates to Language A
-                                // Note: Can be changed to GPIO 18, 19, 23, or 4 if preferred
+#define PIN_BUTTON_A                                                           \
+  32 // Button 1: Hold to speak Language A -> translates to Language B
+#define PIN_BUTTON_B                                                           \
+  21 // Button 2: Hold to speak Language B -> translates to Language A
+     // Note: Can be changed to GPIO 18, 19, 23, or 4 if preferred
 
 // INMP441 Microphone (I2S_NUM_0 - Master RX)
-#define I2S_MIC_SCK       26
-#define I2S_MIC_WS        25
-#define I2S_MIC_SD        33
+#define I2S_MIC_SCK 26
+#define I2S_MIC_WS 25
+#define I2S_MIC_SD 33
 
 // MAX98357A Audio Amplifier (I2S_NUM_1 - Master TX)
-#define I2S_SPK_BCLK      14
-#define I2S_SPK_LRC       27
-#define I2S_SPK_DIN       22
+#define I2S_SPK_BCLK 14
+#define I2S_SPK_LRC 27
+#define I2S_SPK_DIN 22
 
 // Audio Sampling Settings
-#define SAMPLE_RATE       16000   // 16 kHz 16-bit mono PCM = 32,000 bytes/sec
-#define CHUNK_SAMPLES     512     // 512 samples per I2S read chunk
-#define MAX_TARGET_SEC    2.5f    // 2.5 seconds max utterance
-#define TARGET_BUF_BYTES  80000   // 80,000 bytes (safely fits in ESP32 SRAM block)
-#define MIN_SPEECH_BYTES  12800   // Minimum 0.4s speech (12,800 bytes)
+#define SAMPLE_RATE 16000      // 16 kHz 16-bit mono PCM = 32,000 bytes/sec
+#define CHUNK_SAMPLES 512      // 512 samples per I2S read chunk
+#define MAX_TARGET_SEC 2.5f    // 2.5 seconds max utterance
+#define TARGET_BUF_BYTES 80000 // 80,000 bytes (safely fits in ESP32 SRAM block)
+#define MIN_SPEECH_BYTES 12800 // Minimum 0.4s speech (12,800 bytes)
 
 // ============================================================================
 // GLOBAL STATE & BUFFERS
 // ============================================================================
-int16_t* audioRecordBuffer    = NULL;
-size_t   bufferCapacityBytes  = 0;
-float    maxRecordSeconds     = 0.0f;
-size_t   audioRecordedBytes   = 0;
+int16_t *audioRecordBuffer = NULL;
+size_t bufferCapacityBytes = 0;
+float maxRecordSeconds = 0.0f;
+size_t audioRecordedBytes = 0;
 
-int  lastAudioLevelPercent    = 0;
-int  lastMicPeakPercent       = 0;
-int  deviceConfigVersion      = 1;
+int lastAudioLevelPercent = 0;
+int lastMicPeakPercent = 0;
+int deviceConfigVersion = 1;
 unsigned long lastHeartbeatMs = 0;
 const unsigned long HEARTBEAT_INTERVAL_MS = 30000; // 30 seconds
 
 // Function declarations
-void printHeaderBox(const char* title);
+void printHeaderBox(const char *title);
 void printDivider();
-const char* getRssiQuality(int rssi);
+const char *getRssiQuality(int rssi);
 void printAsciiBar(int percent, int width);
 void initI2sMic();
 void initI2sSpeaker();
@@ -309,10 +334,11 @@ void soundWiFiConnected();
 void soundButtonPress(int frequencyHz);
 void soundButtonRelease();
 void soundError();
-void recordAudio(int buttonPin, const char* directionTag);
-void sendTranslationRequest(const char* directionTag);
+void recordAudio(int buttonPin, const char *directionTag);
+void sendTranslationRequest(const char *directionTag);
 void sendHeartbeat();
-void ackCommand(const String& cmdId, const char* status, const char* detail = NULL);
+void ackCommand(const String &cmdId, const char *status,
+                const char *detail = NULL);
 String generateUUID();
 String decodeBase64Url(String input);
 
@@ -326,28 +352,38 @@ void setup() {
   // Initialize Wi-Fi in Station mode first so MAC address and radio are ready
   WiFi.mode(WIFI_STA);
 
-  printHeaderBox("PARALAX IoT Dual-Button AI Voice Translator - Boot Diagnostics");
-  Serial.printf("[System] ESP32 Chip Revision: %d | CPU Freq: %d MHz\n", ESP.getChipRevision(), ESP.getCpuFreqMHz());
-  Serial.printf("[System] Flash Chip Size:     %u MB\n", ESP.getFlashChipSize() / (1024 * 1024));
+  printHeaderBox(
+      "PARALAX IoT Dual-Button AI Voice Translator - Boot Diagnostics");
+  Serial.printf("[System] ESP32 Chip Revision: %d | CPU Freq: %d MHz\n",
+                ESP.getChipRevision(), ESP.getCpuFreqMHz());
+  Serial.printf("[System] Flash Chip Size:     %u MB\n",
+                ESP.getFlashChipSize() / (1024 * 1024));
   Serial.printf("[System] Free Heap at Boot:   %u bytes\n", ESP.getFreeHeap());
-  Serial.printf("[System] Max Contiguous Block: %u bytes\n", ESP.getMaxAllocHeap());
+  Serial.printf("[System] Max Contiguous Block: %u bytes\n",
+                ESP.getMaxAllocHeap());
   Serial.printf("[System] Firmware Version:     %s\n", FIRMWARE_VER);
   Serial.printf("[System] Target Cloud Server:  https://%s\n", API_HOST);
-  Serial.printf("[System] MAC Address:          %s\n", WiFi.macAddress().c_str());
+  Serial.printf("[System] MAC Address:          %s\n",
+                WiFi.macAddress().c_str());
   printDivider();
 
   // 1. Initialize Dual Push-to-Talk Buttons
   pinMode(PIN_BUTTON_A, INPUT_PULLUP);
   pinMode(PIN_BUTTON_B, INPUT_PULLUP);
-  Serial.printf("[Hardware] Button A configured on GPIO %d (INPUT_PULLUP, Active LOW) -> Lang A to B\n", PIN_BUTTON_A);
-  Serial.printf("[Hardware] Button B configured on GPIO %d (INPUT_PULLUP, Active LOW) -> Lang B to A\n", PIN_BUTTON_B);
+  Serial.printf("[Hardware] Button A configured on GPIO %d (INPUT_PULLUP, "
+                "Active LOW) -> Lang A to B\n",
+                PIN_BUTTON_A);
+  Serial.printf("[Hardware] Button B configured on GPIO %d (INPUT_PULLUP, "
+                "Active LOW) -> Lang B to A\n",
+                PIN_BUTTON_B);
   printDivider();
 
   // 2. Audio Buffer Allocation in SRAM (Safe Sizing to prevent malloc crash)
   size_t maxAlloc = ESP.getMaxAllocHeap();
   size_t desiredBytes = TARGET_BUF_BYTES; // 80,000 bytes (2.5s)
 
-  // Ensure at least 40 KB contiguous memory remains for mbedTLS / WiFiClientSecure
+  // Ensure at least 40 KB contiguous memory remains for mbedTLS /
+  // WiFiClientSecure
   if (desiredBytes + 40000 > maxAlloc) {
     desiredBytes = 64000; // 2.0s fallback (64 KB)
   }
@@ -355,31 +391,38 @@ void setup() {
     desiredBytes = 48000; // 1.5s emergency fallback (48 KB)
   }
 
-  Serial.printf("[Memory] Allocating audio recording buffer (%u bytes in SRAM)...\n", desiredBytes);
-  audioRecordBuffer = (int16_t*) malloc(desiredBytes);
+  Serial.printf(
+      "[Memory] Allocating audio recording buffer (%u bytes in SRAM)...\n",
+      desiredBytes);
+  audioRecordBuffer = (int16_t *)malloc(desiredBytes);
   if (!audioRecordBuffer) {
     Serial.println("[Memory] [RETRY] Falling back to 48,000 bytes...");
     desiredBytes = 48000;
-    audioRecordBuffer = (int16_t*) malloc(desiredBytes);
+    audioRecordBuffer = (int16_t *)malloc(desiredBytes);
   }
 
   if (!audioRecordBuffer) {
-    Serial.println("[Memory] [FATAL ERROR] Audio buffer allocation failed! Halting.");
-    while (1) { delay(1000); }
+    Serial.println(
+        "[Memory] [FATAL ERROR] Audio buffer allocation failed! Halting.");
+    while (1) {
+      delay(1000);
+    }
   }
 
   bufferCapacityBytes = desiredBytes;
   maxRecordSeconds = (float)bufferCapacityBytes / (SAMPLE_RATE * 2);
 
-  Serial.printf("[Memory] [SUCCESS] Audio buffer allocated: %u bytes (%.1f seconds max speech)\n",
+  Serial.printf("[Memory] [SUCCESS] Audio buffer allocated: %u bytes (%.1f "
+                "seconds max speech)\n",
                 bufferCapacityBytes, maxRecordSeconds);
-  Serial.printf("[Memory] Free heap remaining: %u bytes | Largest free block: %u bytes\n",
-                ESP.getFreeHeap(), ESP.getMaxAllocHeap());
+  Serial.printf(
+      "[Memory] Free heap remaining: %u bytes | Largest free block: %u bytes\n",
+      ESP.getFreeHeap(), ESP.getMaxAllocHeap());
   printDivider();
 
   // 3. Initialize Dual-I2S Hardware Peripherals
-  initI2sMic();      // INMP441 on I2S_NUM_0
-  initI2sSpeaker();  // MAX98357A on I2S_NUM_1
+  initI2sMic();     // INMP441 on I2S_NUM_0
+  initI2sSpeaker(); // MAX98357A on I2S_NUM_1
   printDivider();
 
   // 4. Connect to Wi-Fi
@@ -396,11 +439,14 @@ void setup() {
   printDivider();
 
   printHeaderBox("SYSTEM READY - DUAL-BUTTON PUSH-TO-TALK ACTIVE");
-  Serial.printf("  [Button A - GPIO %2d]: Hold to speak %s -> Translates to %s\n",
-                PIN_BUTTON_A, currentLanguageA.c_str(), currentLanguageB.c_str());
-  Serial.printf("  [Button B - GPIO %2d]: Hold to speak %s -> Translates to %s\n",
-                PIN_BUTTON_B, currentLanguageB.c_str(), currentLanguageA.c_str());
-  Serial.println("  Audio feedback tones and speech will play through MAX98357A speaker.");
+  Serial.printf(
+      "  [Button A - GPIO %2d]: Hold to speak %s -> Translates to %s\n",
+      PIN_BUTTON_A, currentLanguageA.c_str(), currentLanguageB.c_str());
+  Serial.printf(
+      "  [Button B - GPIO %2d]: Hold to speak %s -> Translates to %s\n",
+      PIN_BUTTON_B, currentLanguageB.c_str(), currentLanguageA.c_str());
+  Serial.println(
+      "  Audio feedback tones and speech will play through MAX98357A speaker.");
   printDivider();
 }
 
@@ -410,7 +456,8 @@ void setup() {
 void loop() {
   // Wi-Fi Auto-Reconnect
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("\n[WiFi] [WARN] Connection lost! Initiating reconnection...");
+    Serial.println(
+        "\n[WiFi] [WARN] Connection lost! Initiating reconnection...");
     soundError();
     connectWiFi();
     soundWiFiConnected();
@@ -427,8 +474,9 @@ void loop() {
   if (digitalRead(PIN_BUTTON_A) == LOW) {
     delay(40); // Debounce
     if (digitalRead(PIN_BUTTON_A) == LOW) {
-      Serial.printf("\n>>> [Button A - GPIO %d] PRESSED: Translating %s -> %s\n",
-                    PIN_BUTTON_A, currentLanguageA.c_str(), currentLanguageB.c_str());
+      Serial.printf(
+          "\n>>> [Button A - GPIO %d] PRESSED: Translating %s -> %s\n",
+          PIN_BUTTON_A, currentLanguageA.c_str(), currentLanguageB.c_str());
       soundButtonPress(1000); // 1000Hz start blip
 
       recordAudio(PIN_BUTTON_A, "a_to_b");
@@ -436,13 +484,15 @@ void loop() {
       if (audioRecordedBytes >= MIN_SPEECH_BYTES) {
         sendTranslationRequest("a_to_b");
       } else {
-        Serial.printf("[Voice] [WARN] Utterance too short (%u bytes < %u bytes required). Discarded.\n",
+        Serial.printf("[Voice] [WARN] Utterance too short (%u bytes < %u bytes "
+                      "required). Discarded.\n",
                       audioRecordedBytes, MIN_SPEECH_BYTES);
         soundError();
       }
 
       delay(400); // Cool-down delay
-      Serial.println("\n[Ready] Ready for next translation. Press Button A or Button B.");
+      Serial.println(
+          "\n[Ready] Ready for next translation. Press Button A or Button B.");
     }
   }
 
@@ -452,8 +502,9 @@ void loop() {
   if (digitalRead(PIN_BUTTON_B) == LOW) {
     delay(40); // Debounce
     if (digitalRead(PIN_BUTTON_B) == LOW) {
-      Serial.printf("\n>>> [Button B - GPIO %d] PRESSED: Translating %s -> %s\n",
-                    PIN_BUTTON_B, currentLanguageB.c_str(), currentLanguageA.c_str());
+      Serial.printf(
+          "\n>>> [Button B - GPIO %d] PRESSED: Translating %s -> %s\n",
+          PIN_BUTTON_B, currentLanguageB.c_str(), currentLanguageA.c_str());
       soundButtonPress(1400); // 1400Hz start blip (higher pitch for Button B)
 
       recordAudio(PIN_BUTTON_B, "b_to_a");
@@ -461,13 +512,15 @@ void loop() {
       if (audioRecordedBytes >= MIN_SPEECH_BYTES) {
         sendTranslationRequest("b_to_a");
       } else {
-        Serial.printf("[Voice] [WARN] Utterance too short (%u bytes < %u bytes required). Discarded.\n",
+        Serial.printf("[Voice] [WARN] Utterance too short (%u bytes < %u bytes "
+                      "required). Discarded.\n",
                       audioRecordedBytes, MIN_SPEECH_BYTES);
         soundError();
       }
 
       delay(400); // Cool-down delay
-      Serial.println("\n[Ready] Ready for next translation. Press Button A or Button B.");
+      Serial.println(
+          "\n[Ready] Ready for next translation. Press Button A or Button B.");
     }
   }
 
@@ -479,26 +532,25 @@ void loop() {
 // ============================================================================
 void initI2sMic() {
   i2s_config_t i2s_config = {
-    .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX),
-    .sample_rate = SAMPLE_RATE,
-    .bits_per_sample = I2S_BITS_PER_SAMPLE_32BIT,
-    .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
-    .communication_format = I2S_COMM_FORMAT_STAND_I2S,
-    .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
-    .dma_buf_count = 4,
-    .dma_buf_len = CHUNK_SAMPLES,
-    .use_apll = false,
-    .tx_desc_auto_clear = false,
-    .fixed_mclk = 0
-  };
+      .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX),
+      .sample_rate = SAMPLE_RATE,
+      .bits_per_sample = I2S_BITS_PER_SAMPLE_32BIT,
+      .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT, // Stereo: Reads Left & Right to support any L/R pin connection
+      .communication_format = I2S_COMM_FORMAT_STAND_I2S,
+      .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
+      .dma_buf_count = 4,
+      .dma_buf_len = CHUNK_SAMPLES,
+      .use_apll = false,
+      .tx_desc_auto_clear = false,
+      .fixed_mclk = 0};
 
   i2s_pin_config_t pin_config = {
-    .mck_io_num   = I2S_PIN_NO_CHANGE, // Explicitly no MCLK to prevent GPIO 0 conflict
-    .bck_io_num   = I2S_MIC_SCK,
-    .ws_io_num    = I2S_MIC_WS,
-    .data_out_num = I2S_PIN_NO_CHANGE,
-    .data_in_num  = I2S_MIC_SD
-  };
+      .mck_io_num =
+          I2S_PIN_NO_CHANGE, // Explicitly no MCLK to prevent GPIO 0 conflict
+      .bck_io_num = I2S_MIC_SCK,
+      .ws_io_num = I2S_MIC_WS,
+      .data_out_num = I2S_PIN_NO_CHANGE,
+      .data_in_num = I2S_MIC_SD};
 
   esp_err_t err = i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
   if (err != ESP_OK) {
@@ -508,33 +560,57 @@ void initI2sMic() {
   if (err != ESP_OK) {
     Serial.printf("[I2S_0] [ERROR] Pin configuration failed: %d\n", err);
   } else {
-    Serial.printf("[I2S_0] [SUCCESS] INMP441 Mic ready on SCK=%d, WS=%d, SD=%d (16kHz 16-bit Mono)\n",
+    i2s_start(I2S_NUM_0);
+    Serial.printf("[I2S_0] [SUCCESS] INMP441 Mic ready on SCK=%d, WS=%d, SD=%d (Stereo Auto-Detect)\n",
                   I2S_MIC_SCK, I2S_MIC_WS, I2S_MIC_SD);
+
+    // Boot hardware diagnostic test
+    delay(50);
+    int32_t testBuf[128];
+    size_t testBytes = 0;
+    i2s_read(I2S_NUM_0, testBuf, sizeof(testBuf), &testBytes, 100 / portTICK_PERIOD_MS);
+    int32_t maxL = 0, maxR = 0;
+    if (testBytes > 0) {
+      size_t testPairs = testBytes / (sizeof(int32_t) * 2);
+      for (size_t i = 0; i < testPairs; i++) {
+        if (abs(testBuf[i * 2]) > maxL) maxL = abs(testBuf[i * 2]);
+        if (abs(testBuf[i * 2 + 1]) > maxR) maxR = abs(testBuf[i * 2 + 1]);
+      }
+    }
+    int16_t noiseFloorL = (int16_t)(maxL >> 14);
+    int16_t noiseFloorR = (int16_t)(maxR >> 14);
+    Serial.printf("[I2S_0] [DIAGNOSTIC] Ambient Noise Check -> Left: %d | Right: %d\n", noiseFloorL, noiseFloorR);
+    if (noiseFloorL == 0 && noiseFloorR == 0) {
+      Serial.println("[I2S_0] [HARDWARE NOTICE] Mic returned 0 on both channels!");
+      Serial.println("        -> Check physical connections: L/R to GND, VDD to 3.3V, SD to GPIO 33, SCK to GPIO 26, WS to GPIO 25.");
+    } else {
+      Serial.printf("[I2S_0] [ACTIVE] Mic signal detected on %s channel!\n",
+                    (noiseFloorL >= noiseFloorR) ? "LEFT (L/R grounded)" : "RIGHT (L/R 3.3V or floating)");
+    }
   }
 }
 
 void initI2sSpeaker() {
-  i2s_config_t i2s_config = {
-    .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX),
-    .sample_rate = SAMPLE_RATE,
-    .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
-    .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
-    .communication_format = I2S_COMM_FORMAT_STAND_I2S,
-    .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
-    .dma_buf_count = 4,
-    .dma_buf_len = CHUNK_SAMPLES,
-    .use_apll = false,
-    .tx_desc_auto_clear = true,
-    .fixed_mclk = 0
-  };
+  i2s_config_t i2s_config = {.mode =
+                                 (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX),
+                             .sample_rate = SAMPLE_RATE,
+                             .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
+                             .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
+                             .communication_format = I2S_COMM_FORMAT_STAND_I2S,
+                             .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
+                             .dma_buf_count = 4,
+                             .dma_buf_len = CHUNK_SAMPLES,
+                             .use_apll = false,
+                             .tx_desc_auto_clear = true,
+                             .fixed_mclk = 0};
 
   i2s_pin_config_t pin_config = {
-    .mck_io_num   = I2S_PIN_NO_CHANGE, // Explicitly no MCLK to prevent GPIO 0 conflict
-    .bck_io_num   = I2S_SPK_BCLK,
-    .ws_io_num    = I2S_SPK_LRC,
-    .data_out_num = I2S_SPK_DIN,
-    .data_in_num  = I2S_PIN_NO_CHANGE
-  };
+      .mck_io_num =
+          I2S_PIN_NO_CHANGE, // Explicitly no MCLK to prevent GPIO 0 conflict
+      .bck_io_num = I2S_SPK_BCLK,
+      .ws_io_num = I2S_SPK_LRC,
+      .data_out_num = I2S_SPK_DIN,
+      .data_in_num = I2S_PIN_NO_CHANGE};
 
   esp_err_t err = i2s_driver_install(I2S_NUM_1, &i2s_config, 0, NULL);
   if (err != ESP_OK) {
@@ -544,7 +620,9 @@ void initI2sSpeaker() {
   if (err != ESP_OK) {
     Serial.printf("[I2S_1] [ERROR] Pin configuration failed: %d\n", err);
   } else {
-    Serial.printf("[I2S_1] [SUCCESS] MAX98357A Amp ready on BCLK=%d, LRC=%d, DIN=%d (16kHz 16-bit Mono)\n",
+    i2s_start(I2S_NUM_1);
+    Serial.printf("[I2S_1] [SUCCESS] MAX98357A Amp ready on BCLK=%d, LRC=%d, "
+                  "DIN=%d (16kHz 16-bit Mono)\n",
                   I2S_SPK_BCLK, I2S_SPK_LRC, I2S_SPK_DIN);
   }
 }
@@ -552,26 +630,49 @@ void initI2sSpeaker() {
 // ============================================================================
 // AUDIO RECORDING & LIVE SERIAL VU METER
 // ============================================================================
-void recordAudio(int buttonPin, const char* directionTag) {
-  int32_t raw_i2s_buffer[CHUNK_SAMPLES];
+void recordAudio(int buttonPin, const char *directionTag) {
+  const size_t STEREO_CHUNK = 256;
+  int32_t raw_stereo[STEREO_CHUNK * 2]; // 256 stereo pairs (2048 bytes)
   size_t bytes_read = 0;
   audioRecordedBytes = 0;
   unsigned long startRecordMs = millis();
   unsigned long lastPrintMs = 0;
+  bool flatlineWarningPrinted = false;
 
   memset(audioRecordBuffer, 0, bufferCapacityBytes);
+  i2s_zero_dma_buffer(I2S_NUM_0); // Flush any stale DMA frames
+
   Serial.println("[Voice] >>> Recording in progress... (keep button pressed, speak clearly)");
 
-  while (digitalRead(buttonPin) == LOW && audioRecordedBytes < bufferCapacityBytes) {
-    esp_err_t res = i2s_read(I2S_NUM_0, raw_i2s_buffer, sizeof(raw_i2s_buffer), &bytes_read, 100 / portTICK_PERIOD_MS);
+  while (digitalRead(buttonPin) == LOW &&
+         audioRecordedBytes < bufferCapacityBytes) {
+    esp_err_t res = i2s_read(I2S_NUM_0, raw_stereo, sizeof(raw_stereo),
+                             &bytes_read, 100 / portTICK_PERIOD_MS);
     if (res == ESP_OK && bytes_read > 0) {
-      size_t samples_read = bytes_read / sizeof(int32_t);
+      size_t pairs_read = bytes_read / (sizeof(int32_t) * 2);
       int64_t sum_squares = 0;
       int16_t peak_val = 0;
+      int32_t max_left_raw = 0;
+      int32_t max_right_raw = 0;
 
-      for (size_t i = 0; i < samples_read; i++) {
-        // Shift right by 14 bits for +12dB digital gain into 16-bit PCM
-        int16_t sample16 = (int16_t)(raw_i2s_buffer[i] >> 14);
+      for (size_t i = 0; i < pairs_read; i++) {
+        int32_t left_sample  = raw_stereo[i * 2];
+        int32_t right_sample = raw_stereo[i * 2 + 1];
+
+        if (abs(left_sample) > max_left_raw) max_left_raw = abs(left_sample);
+        if (abs(right_sample) > max_right_raw) max_right_raw = abs(right_sample);
+
+        // Auto-select whichever channel contains the audio stream:
+        // - L/R pin tied to GND: Left has signal, Right is ~0
+        // - L/R pin tied to 3.3V: Right has signal, Left is ~0
+        // - L/R pin floating: Selects whichever channel has non-zero amplitude
+        int32_t active_sample = (abs(left_sample) > abs(right_sample)) ? left_sample : right_sample;
+
+        // Shift right by 14 bits (+12dB digital gain) with saturation clamping into 16-bit PCM
+        int32_t shifted = active_sample >> 14;
+        if (shifted > 32767) shifted = 32767;
+        if (shifted < -32768) shifted = -32768;
+        int16_t sample16 = (int16_t)shifted;
 
         if (audioRecordedBytes + sizeof(int16_t) <= bufferCapacityBytes) {
           audioRecordBuffer[audioRecordedBytes / 2] = sample16;
@@ -584,43 +685,61 @@ void recordAudio(int buttonPin, const char* directionTag) {
         }
       }
 
-      float rms = sqrt((float)sum_squares / samples_read);
+      float rms = sqrt((float)sum_squares / pairs_read);
       int levelPercent = constrain((int)((rms / 8000.0f) * 100.0f), 0, 100);
-      int peakPercent  = constrain((int)((peak_val / 32767.0f) * 100.0f), 0, 100);
+      int peakPercent =
+          constrain((int)((peak_val / 32767.0f) * 100.0f), 0, 100);
       lastAudioLevelPercent = levelPercent;
-      lastMicPeakPercent    = peakPercent;
+      lastMicPeakPercent = peakPercent;
 
       float elapsedSec = (millis() - startRecordMs) / 1000.0f;
 
       // Print live Serial VU Meter every 200 ms
       if (millis() - lastPrintMs > 200) {
         lastPrintMs = millis();
-        Serial.printf("[Voice]  %.1fs / %.1fs  |  RMS: %3d%%  ", elapsedSec, maxRecordSeconds, levelPercent);
+        Serial.printf("[Voice]  %.1fs / %.1fs  |  RMS: %3d%%  ", elapsedSec,
+                      maxRecordSeconds, levelPercent);
         printAsciiBar(levelPercent, 16);
-        Serial.printf("  |  Peak: %3d%%\n", peakPercent);
+        Serial.printf("  |  Peak: %3d%%  (L: %d, R: %d)\n", peakPercent, max_left_raw >> 14, max_right_raw >> 14);
+
+        if (elapsedSec > 0.6f && peakPercent == 0 && !flatlineWarningPrinted) {
+          flatlineWarningPrinted = true;
+          Serial.println("\n[Voice] [HARDWARE ALERT] INMP441 Microphone is returning all ZEROES!");
+          Serial.println("[Voice] Please verify your physical wiring:");
+          Serial.println("[Voice]   1. L/R pin: MUST be connected to GND (or 3.3V). If floating, connect to GND!");
+          Serial.println("[Voice]   2. VDD pin: MUST be connected to 3.3V (NOT 5V)!");
+          Serial.println("[Voice]   3. GND pin: MUST be connected to ESP32 GND!");
+          Serial.println("[Voice]   4. SCK pin: MUST be connected to GPIO 26!");
+          Serial.println("[Voice]   5. WS pin:  MUST be connected to GPIO 25!");
+          Serial.println("[Voice]   6. SD pin:  MUST be connected to GPIO 33!\n");
+        }
       }
     }
   }
 
   soundButtonRelease(); // 800Hz confirmation click
   float totalSec = (float)audioRecordedBytes / (SAMPLE_RATE * 2);
-  Serial.printf("[Voice] <<< Recording finished: %.2f seconds captured (%u bytes raw PCM)\n",
+  Serial.printf("[Voice] <<< Recording finished: %.2f seconds captured (%u "
+                "bytes raw PCM)\n",
                 totalSec, audioRecordedBytes);
 }
 
 // ============================================================================
 // PARALAX HTTPS API TRANSLATION REQUEST (Comprehensive Serial Trace)
 // ============================================================================
-void sendTranslationRequest(const char* directionTag) {
+void sendTranslationRequest(const char *directionTag) {
   printHeaderBox("HTTPS TRANSLATION REQUEST - PARALAX CLOUD API");
 
   Serial.printf("[API] Target URL:    %s\n", TRANSLATE_URL);
   Serial.printf("[API] Host / Port:   %s : %d\n", API_HOST, API_PORT);
-  Serial.printf("[API] Direction:     %s (%s -> %s)\n",
-                directionTag,
-                (strcmp(directionTag, "a_to_b") == 0) ? currentLanguageA.c_str() : currentLanguageB.c_str(),
-                (strcmp(directionTag, "a_to_b") == 0) ? currentLanguageB.c_str() : currentLanguageA.c_str());
-  Serial.printf("[API] Payload Size:  %u bytes (16 kHz 16-bit Mono PCM)\n", audioRecordedBytes);
+  Serial.printf(
+      "[API] Direction:     %s (%s -> %s)\n", directionTag,
+      (strcmp(directionTag, "a_to_b") == 0) ? currentLanguageA.c_str()
+                                            : currentLanguageB.c_str(),
+      (strcmp(directionTag, "a_to_b") == 0) ? currentLanguageB.c_str()
+                                            : currentLanguageA.c_str());
+  Serial.printf("[API] Payload Size:  %u bytes (16 kHz 16-bit Mono PCM)\n",
+                audioRecordedBytes);
 
   WiFiClientSecure client;
   client.setInsecure(); // SSL connection without manual root CA bundle
@@ -630,8 +749,10 @@ void sendTranslationRequest(const char* directionTag) {
   unsigned long connectStart = millis();
 
   if (!client.connect(API_HOST, API_PORT)) {
-    Serial.println("\n[API] [FATAL ERROR] Failed to connect to Paralax server!");
-    Serial.println("[API] Check your internet connection or verify DNS lookup for paralax.amalskumar.dev.");
+    Serial.println(
+        "\n[API] [FATAL ERROR] Failed to connect to Paralax server!");
+    Serial.println("[API] Check your internet connection or verify DNS lookup "
+                   "for paralax.amalskumar.dev.");
     soundError();
     return;
   }
@@ -665,10 +786,12 @@ void sendTranslationRequest(const char* directionTag) {
   client.println();
 
   // 2. Stream Audio Payload in 1024-byte Chunks
-  Serial.printf("[API] >>> Streaming audio payload (%u bytes in 1024-byte chunks)...\n", audioRecordedBytes);
+  Serial.printf(
+      "[API] >>> Streaming audio payload (%u bytes in 1024-byte chunks)...\n",
+      audioRecordedBytes);
   unsigned long uploadStart = millis();
   const size_t CHUNK_SIZE = 1024;
-  uint8_t* bytePtr = (uint8_t*)audioRecordBuffer;
+  uint8_t *bytePtr = (uint8_t *)audioRecordBuffer;
   size_t bytesLeft = audioRecordedBytes;
   size_t bytesSent = 0;
 
@@ -681,19 +804,24 @@ void sendTranslationRequest(const char* directionTag) {
 
     if (bytesSent % 16384 == 0 || bytesLeft == 0) {
       int progressPct = (int)((bytesSent * 100) / audioRecordedBytes);
-      Serial.printf("[API]     Upload progress: %3d%% (%u / %u bytes)\n", progressPct, bytesSent, audioRecordedBytes);
+      Serial.printf("[API]     Upload progress: %3d%% (%u / %u bytes)\n",
+                    progressPct, bytesSent, audioRecordedBytes);
     }
   }
 
   unsigned long uploadDuration = millis() - uploadStart;
-  float speedKbps = uploadDuration > 0 ? (float)(audioRecordedBytes) / uploadDuration : 0;
-  Serial.printf("[API] Upload complete in %lu ms (%.1f KB/s). Awaiting AI pipeline...\n", uploadDuration, speedKbps);
+  float speedKbps =
+      uploadDuration > 0 ? (float)(audioRecordedBytes) / uploadDuration : 0;
+  Serial.printf(
+      "[API] Upload complete in %lu ms (%.1f KB/s). Awaiting AI pipeline...\n",
+      uploadDuration, speedKbps);
 
   // 3. Read Status Line
   unsigned long waitStart = millis();
   while (!client.available()) {
     if (millis() - waitStart > 15000) {
-      Serial.println("[API] [TIMEOUT ERROR] Server pipeline did not respond within 15 seconds!");
+      Serial.println("[API] [TIMEOUT ERROR] Server pipeline did not respond "
+                     "within 15 seconds!");
       client.stop();
       soundError();
       return;
@@ -704,22 +832,38 @@ void sendTranslationRequest(const char* directionTag) {
   unsigned long waitResponseMs = millis() - waitStart;
   String statusLine = client.readStringUntil('\n');
   statusLine.trim();
-  Serial.printf("[API] <<< Response Status: %s (Wait time: %lu ms)\n", statusLine.c_str(), waitResponseMs);
+  Serial.printf("[API] <<< Response Status: %s (Wait time: %lu ms)\n",
+                statusLine.c_str(), waitResponseMs);
 
   // 4. Handle Non-200 Responses
   if (statusLine.indexOf("200") == -1) {
     Serial.println("[API] [ERROR] Non-200 HTTP Status received from cloud!");
-    Serial.println("[API] <<< Response Headers & Error Payload:");
+    Serial.println("[API] <<< Response Headers:");
 
-    String errorBody = "";
+    // Read headers until blank line
     while (client.connected() || client.available()) {
+      String line = client.readStringUntil('\n');
+      line.trim();
+      if (line.length() == 0) break;
+      Serial.printf("[API]     %s\n", line.c_str());
+    }
+
+    // Read body payload
+    String errorBody = "";
+    unsigned long bodyWait = millis();
+    while ((client.connected() || client.available()) && (millis() - bodyWait < 2000)) {
       if (client.available()) {
-        String line = client.readStringUntil('\n');
-        Serial.printf("[API]     %s\n", line.c_str());
-        errorBody += line;
+        char c = (char)client.read();
+        errorBody += c;
+      } else {
+        delay(5);
       }
     }
     client.stop();
+
+    if (errorBody.length() > 0) {
+      Serial.printf("[API] <<< Error Payload:\n[API]     %s\n", errorBody.c_str());
+    }
 
     if (statusLine.indexOf("401") != -1) {
       Serial.println("[API] [DIAGNOSTIC] HTTP 401 Unauthorized: DEVICE_KEY is invalid or revoked!");
@@ -727,12 +871,14 @@ void sendTranslationRequest(const char* directionTag) {
     } else if (statusLine.indexOf("429") != -1) {
       Serial.println("[API] [DIAGNOSTIC] HTTP 429 Rate Limited / Quota Exceeded for this device.");
     } else if (statusLine.indexOf("422") != -1) {
-      Serial.println("[API] [DIAGNOSTIC] HTTP 422 Unprocessable Audio (Silence or noise threshold not met).");
+      Serial.println("[API] [DIAGNOSTIC] HTTP 422 Unprocessable Audio (Silence / no_speech_detected).");
+      Serial.println("[API] Note: Audio signal was silent (RMS < threshold). Speak clearly after pressing button.");
     } else if (statusLine.indexOf("503") != -1) {
       Serial.println("[API] [DIAGNOSTIC] HTTP 503: Service is currently disabled in dashboard Settings.");
     }
 
     soundError();
+    printDivider();
     return;
   }
 
@@ -746,7 +892,8 @@ void sendTranslationRequest(const char* directionTag) {
   while (client.connected()) {
     String line = client.readStringUntil('\n');
     line.trim();
-    if (line.length() == 0) break; // Blank line = HTTP body start
+    if (line.length() == 0)
+      break; // Blank line = HTTP body start
 
     if (line.startsWith("X-Transcript:")) {
       headerTranscript = decodeBase64Url(line.substring(13));
@@ -758,26 +905,35 @@ void sendTranslationRequest(const char* directionTag) {
       totalMs = line.substring(11).toInt();
       Serial.printf("[API]     [Pipeline Latency] %d ms\n", totalMs);
     } else if (line.startsWith("X-STT-Ms:")) {
-      Serial.printf("[API]     [STT Timing]       %s ms\n", line.substring(9).c_str());
+      Serial.printf("[API]     [STT Timing]       %s ms\n",
+                    line.substring(9).c_str());
     } else if (line.startsWith("X-Translate-Ms:")) {
-      Serial.printf("[API]     [Translate Timing] %s ms\n", line.substring(15).c_str());
+      Serial.printf("[API]     [Translate Timing] %s ms\n",
+                    line.substring(15).c_str());
     } else if (line.startsWith("X-Synthesize-Ms:")) {
-      Serial.printf("[API]     [TTS Timing]       %s ms\n", line.substring(16).c_str());
+      Serial.printf("[API]     [TTS Timing]       %s ms\n",
+                    line.substring(16).c_str());
     } else if (line.startsWith("Content-Length:")) {
       responseContentLength = line.substring(15).toInt();
-      Serial.printf("[API]     [Audio Length]     %u bytes\n", responseContentLength);
+      Serial.printf("[API]     [Audio Length]     %u bytes\n",
+                    responseContentLength);
     }
   }
 
   // 6. Highlighted Transcript and Translation Display
-  Serial.println("\n================================================================================");
+  Serial.println("\n==========================================================="
+                 "=====================");
   Serial.printf(">>> [TRANSCRIPT]  \"%s\"\n", headerTranscript.c_str());
   Serial.printf(">>> [TRANSLATION] \"%s\"\n", headerTranslation.c_str());
-  Serial.printf(">>> [TOTAL TIME]  %d ms (Network + STT + AI Translate + TTS Synthesis)\n", totalMs);
-  Serial.println("================================================================================");
+  Serial.printf(">>> [TOTAL TIME]  %d ms (Network + STT + AI Translate + TTS "
+                "Synthesis)\n",
+                totalMs);
+  Serial.println("============================================================="
+                 "===================");
 
   // 7. Direct HTTP-to-I2S Audio Streaming to MAX98357A Speaker!
-  Serial.println("[Speaker] Streaming synthesized voice directly to MAX98357A amplifier...");
+  Serial.println("[Speaker] Streaming synthesized voice directly to MAX98357A "
+                 "amplifier...");
   uint8_t playBuffer[1024];
   size_t bytesWritten = 0;
   size_t totalAudioPlayed = 0;
@@ -786,10 +942,12 @@ void sendTranslationRequest(const char* directionTag) {
   while (client.connected() || client.available()) {
     int bytesAvailable = client.available();
     if (bytesAvailable > 0) {
-      int toRead = (bytesAvailable > sizeof(playBuffer)) ? sizeof(playBuffer) : bytesAvailable;
+      int toRead = (bytesAvailable > sizeof(playBuffer)) ? sizeof(playBuffer)
+                                                         : bytesAvailable;
       int bytesRead = client.read(playBuffer, toRead);
       if (bytesRead > 0) {
-        i2s_write(I2S_NUM_1, playBuffer, bytesRead, &bytesWritten, portMAX_DELAY);
+        i2s_write(I2S_NUM_1, playBuffer, bytesRead, &bytesWritten,
+                  portMAX_DELAY);
         totalAudioPlayed += bytesWritten;
       }
     } else {
@@ -799,7 +957,8 @@ void sendTranslationRequest(const char* directionTag) {
 
   client.stop();
   unsigned long playbackMs = millis() - playbackStart;
-  Serial.printf("[Speaker] Playback complete: %u bytes rendered through speaker in %lu ms\n",
+  Serial.printf("[Speaker] Playback complete: %u bytes rendered through "
+                "speaker in %lu ms\n",
                 totalAudioPlayed, playbackMs);
   printDivider();
 }
@@ -821,7 +980,8 @@ void sendHeartbeat() {
 
   HTTPClient http;
   if (!http.begin(client, HEARTBEAT_URL)) {
-    Serial.println("[Heartbeat] [ERROR] Failed to initialize HTTP client for heartbeat");
+    Serial.println(
+        "[Heartbeat] [ERROR] Failed to initialize HTTP client for heartbeat");
     return;
   }
 
@@ -830,13 +990,13 @@ void sendHeartbeat() {
 
   StaticJsonDocument<256> doc;
   doc["firmware_version"] = FIRMWARE_VER;
-  doc["rssi"]             = WiFi.RSSI();
-  doc["battery_pct"]      = 100;
-  doc["uptime_sec"]       = (int)(millis() / 1000);
-  doc["free_heap"]        = ESP.getFreeHeap();
-  doc["audio_level"]      = lastAudioLevelPercent;
-  doc["mic_peak"]         = lastMicPeakPercent;
-  doc["config_version"]   = deviceConfigVersion;
+  doc["rssi"] = WiFi.RSSI();
+  doc["battery_pct"] = 100;
+  doc["uptime_sec"] = (int)(millis() / 1000);
+  doc["free_heap"] = ESP.getFreeHeap();
+  doc["audio_level"] = lastAudioLevelPercent;
+  doc["mic_peak"] = lastMicPeakPercent;
+  doc["config_version"] = deviceConfigVersion;
 
   String requestJson;
   serializeJson(doc, requestJson);
@@ -855,32 +1015,42 @@ void sendHeartbeat() {
       // Sync active language pair if provided by cloud config
       if (resDoc.containsKey("config")) {
         JsonObject cfg = resDoc["config"];
-        if (cfg.containsKey("language_a")) currentLanguageA = cfg["language_a"].as<String>();
-        if (cfg.containsKey("language_b")) currentLanguageB = cfg["language_b"].as<String>();
+        if (cfg.containsKey("language_a"))
+          currentLanguageA = cfg["language_a"].as<String>();
+        if (cfg.containsKey("language_b"))
+          currentLanguageB = cfg["language_b"].as<String>();
       }
 
-      Serial.printf("[Heartbeat] [ACK 200] Telemetry synced. Cloud Config v%d | Pair: %s <-> %s\n",
-                    deviceConfigVersion, currentLanguageA.c_str(), currentLanguageB.c_str());
+      Serial.printf("[Heartbeat] [ACK 200] Telemetry synced. Cloud Config v%d "
+                    "| Pair: %s <-> %s\n",
+                    deviceConfigVersion, currentLanguageA.c_str(),
+                    currentLanguageB.c_str());
 
       // Check for remote commands from web dashboard
-      if (resDoc.containsKey("pending_commands") || resDoc.containsKey("commands")) {
-        JsonArray commands = resDoc.containsKey("pending_commands") 
-                                ? resDoc["pending_commands"].as<JsonArray>() 
-                                : resDoc["commands"].as<JsonArray>();
+      if (resDoc.containsKey("pending_commands") ||
+          resDoc.containsKey("commands")) {
+        JsonArray commands = resDoc.containsKey("pending_commands")
+                                 ? resDoc["pending_commands"].as<JsonArray>()
+                                 : resDoc["commands"].as<JsonArray>();
 
         for (JsonObject cmd : commands) {
           String cmdId = cmd["id"].as<String>();
-          String type  = cmd["type"].as<String>();
-          Serial.printf("[Command] Received pending command from cloud: ID='%s', Type='%s'\n",
+          String type = cmd["type"].as<String>();
+          Serial.printf("[Command] Received pending command from cloud: "
+                        "ID='%s', Type='%s'\n",
                         cmdId.c_str(), type.c_str());
 
-          // Step 1: ALWAYS acknowledge the command to the cloud FIRST so it gets removed from the queue!
+          // Step 1: ALWAYS acknowledge the command to the cloud FIRST so it
+          // gets removed from the queue!
           ackCommand(cmdId, "done");
 
-          // Step 2: Handle reboot command (acknowledge to clear queue, no hardware reset)
+          // Step 2: Handle reboot command (acknowledge to clear queue, no
+          // hardware reset)
           if (type == "reboot") {
-            Serial.println("[Command] Remote 'reboot' command acknowledged & cleared from server queue.");
-            Serial.println("[Command] (Note: Automatic reset disabled to keep voice translator online).");
+            Serial.println("[Command] Remote 'reboot' command acknowledged & "
+                           "cleared from server queue.");
+            Serial.println("[Command] (Note: Automatic reset disabled to keep "
+                           "voice translator online).");
           }
         }
       }
@@ -897,23 +1067,27 @@ void sendHeartbeat() {
 // ============================================================================
 // ACKNOWLEDGE REMOTE COMMAND TO CLOUD (Removes it from server queue)
 // ============================================================================
-void ackCommand(const String& cmdId, const char* status, const char* detail) {
-  if (WiFi.status() != WL_CONNECTED || cmdId.length() == 0) return;
+void ackCommand(const String &cmdId, const char *status, const char *detail) {
+  if (WiFi.status() != WL_CONNECTED || cmdId.length() == 0)
+    return;
 
   WiFiClientSecure client;
   client.setInsecure();
   client.setTimeout(5000);
 
   HTTPClient http;
-  String ackUrl = "https://" + String(API_HOST) + "/api/v1/device/commands/" + cmdId + "/ack";
-  if (!http.begin(client, ackUrl)) return;
+  String ackUrl = "https://" + String(API_HOST) + "/api/v1/device/commands/" +
+                  cmdId + "/ack";
+  if (!http.begin(client, ackUrl))
+    return;
 
   http.addHeader("Content-Type", "application/json");
   http.addHeader("X-Device-Key", DEVICE_KEY);
 
   StaticJsonDocument<256> doc;
   doc["status"] = status;
-  if (detail) doc["detail"] = detail;
+  if (detail)
+    doc["detail"] = detail;
 
   String payload;
   serializeJson(doc, payload);
@@ -942,15 +1116,20 @@ void connectWiFi() {
 
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println(" CONNECTED!");
-    Serial.printf("[WiFi] IP Address:   %s\n", WiFi.localIP().toString().c_str());
-    Serial.printf("[WiFi] Gateway IP:   %s\n", WiFi.gatewayIP().toString().c_str());
-    Serial.printf("[WiFi] Subnet Mask:  %s\n", WiFi.subnetMask().toString().c_str());
+    Serial.printf("[WiFi] IP Address:   %s\n",
+                  WiFi.localIP().toString().c_str());
+    Serial.printf("[WiFi] Gateway IP:   %s\n",
+                  WiFi.gatewayIP().toString().c_str());
+    Serial.printf("[WiFi] Subnet Mask:  %s\n",
+                  WiFi.subnetMask().toString().c_str());
     Serial.printf("[WiFi] DNS Server:   %s\n", WiFi.dnsIP().toString().c_str());
     int rssi = WiFi.RSSI();
-    Serial.printf("[WiFi] Signal RSSI:  %d dBm (%s)\n", rssi, getRssiQuality(rssi));
+    Serial.printf("[WiFi] Signal RSSI:  %d dBm (%s)\n", rssi,
+                  getRssiQuality(rssi));
   } else {
     Serial.println("\n[WiFi] [ERROR] Failed to join Wi-Fi network!");
-    Serial.println("[WiFi] Check SSID, password, or ensure 2.4 GHz network is available.");
+    Serial.println(
+        "[WiFi] Check SSID, password, or ensure 2.4 GHz network is available.");
   }
 }
 
@@ -970,9 +1149,11 @@ void playTone(int frequencyHz, int durationMs) {
     for (int i = 0; i < toGenerate; i++) {
       toneBuffer[i] = (int16_t)(sin(phase) * 6000.0f); // Gentle volume
       phase += phaseIncrement;
-      if (phase >= 2.0 * PI) phase -= 2.0 * PI;
+      if (phase >= 2.0 * PI)
+        phase -= 2.0 * PI;
     }
-    i2s_write(I2S_NUM_1, toneBuffer, toGenerate * sizeof(int16_t), &bytesWritten, portMAX_DELAY);
+    i2s_write(I2S_NUM_1, toneBuffer, toGenerate * sizeof(int16_t),
+              &bytesWritten, portMAX_DELAY);
     samplesRemaining -= toGenerate;
   }
 }
@@ -992,13 +1173,9 @@ void soundWiFiConnected() {
   playTone(1568, 120); // G6
 }
 
-void soundButtonPress(int frequencyHz) {
-  playTone(frequencyHz, 50);
-}
+void soundButtonPress(int frequencyHz) { playTone(frequencyHz, 50); }
 
-void soundButtonRelease() {
-  playTone(800, 50);
-}
+void soundButtonRelease() { playTone(800, 50); }
 
 void soundError() {
   playTone(320, 120);
@@ -1009,21 +1186,28 @@ void soundError() {
 // ============================================================================
 // FORMATTING HELPERS & SERIAL ASCII ART
 // ============================================================================
-void printHeaderBox(const char* title) {
-  Serial.println("\n+----------------------------------------------------------------------+");
+void printHeaderBox(const char *title) {
+  Serial.println("\n+----------------------------------------------------------"
+                 "------------+");
   Serial.printf("| %-68s |\n", title);
-  Serial.println("+----------------------------------------------------------------------+");
+  Serial.println("+------------------------------------------------------------"
+                 "----------+");
 }
 
 void printDivider() {
-  Serial.println("------------------------------------------------------------------------");
+  Serial.println("-------------------------------------------------------------"
+                 "-----------");
 }
 
-const char* getRssiQuality(int rssi) {
-  if (rssi >= -50) return "Excellent [||||]";
-  if (rssi >= -65) return "Good      [|||.]";
-  if (rssi >= -75) return "Fair      [||..]";
-  if (rssi >= -85) return "Weak      [|...]";
+const char *getRssiQuality(int rssi) {
+  if (rssi >= -50)
+    return "Excellent [||||]";
+  if (rssi >= -65)
+    return "Good      [|||.]";
+  if (rssi >= -75)
+    return "Fair      [||..]";
+  if (rssi >= -85)
+    return "Weak      [|...]";
   return "Very Weak [....]";
 }
 
@@ -1032,8 +1216,10 @@ void printAsciiBar(int percent, int width) {
   filled = constrain(filled, 0, width);
   Serial.print("[");
   for (int i = 0; i < width; i++) {
-    if (i < filled) Serial.print("#");
-    else Serial.print("-");
+    if (i < filled)
+      Serial.print("#");
+    else
+      Serial.print("-");
   }
   Serial.print("]");
 }
@@ -1042,27 +1228,33 @@ void printAsciiBar(int percent, int width) {
 // UTILITIES: UUID & BASE64URL DECODER
 // ============================================================================
 String generateUUID() {
-  uint32_t r1 = esp_random(), r2 = esp_random(), r3 = esp_random(), r4 = esp_random();
+  uint32_t r1 = esp_random(), r2 = esp_random(), r3 = esp_random(),
+           r4 = esp_random();
   char uuid[37];
-  snprintf(uuid, sizeof(uuid), "%08x-%04x-4%03x-%04x-%08x%04x",
-           r1, (uint16_t)(r2 >> 16), (uint16_t)(r2 & 0x0FFF),
-           (uint16_t)((r3 >> 16) & 0x3FFF) | 0x8000, r4, (uint16_t)(r3 & 0xFFFF));
+  snprintf(uuid, sizeof(uuid), "%08x-%04x-4%03x-%04x-%08x%04x", r1,
+           (uint16_t)(r2 >> 16), (uint16_t)(r2 & 0x0FFF),
+           (uint16_t)((r3 >> 16) & 0x3FFF) | 0x8000, r4,
+           (uint16_t)(r3 & 0xFFFF));
   return String(uuid);
 }
 
 String decodeBase64Url(String input) {
   input.replace('-', '+');
   input.replace('_', '/');
-  while (input.length() % 4 != 0) input += '=';
+  while (input.length() % 4 != 0)
+    input += '=';
 
-  const char b64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  const char b64[] =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   String output = "";
   int val = 0, valb = -8;
   for (size_t i = 0; i < input.length(); i++) {
     char c = input[i];
-    if (c == '=') break;
-    const char* p = strchr(b64, c);
-    if (!p) continue;
+    if (c == '=')
+      break;
+    const char *p = strchr(b64, c);
+    if (!p)
+      continue;
     val = (val << 6) + (p - b64);
     valb += 6;
     if (valb >= 0) {
