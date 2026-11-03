@@ -482,7 +482,17 @@ deviceRoutes.post('/heartbeat', async (c) => {
     mic_peak,
     temperature,
     error_count,
+    acked_commands,
   } = body;
+
+  // If device acknowledged commands in heartbeat, mark them done in Redis
+  if (Array.isArray(acked_commands)) {
+    for (const cmdId of acked_commands) {
+      if (typeof cmdId === 'string' && cmdId.length > 0) {
+        await redis.ackCommand(device.id, cmdId, 'done');
+      }
+    }
+  }
 
   // Check if device applied latest config
   let appliedVersion = device.applied_config_version;

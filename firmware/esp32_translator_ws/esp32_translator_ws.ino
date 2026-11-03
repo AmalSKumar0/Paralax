@@ -328,8 +328,11 @@ void setup() {
   initI2sSpeaker();
 
   // Connect to Wi-Fi
-  Serial.printf("[Network] Connecting to Wi-Fi SSID: %s ", WIFI_SSID);
+  WiFi.disconnect(true);
+  delay(100);
   WiFi.mode(WIFI_STA);
+  WiFi.setTxPower(WIFI_POWER_17dBm); // Prevents current spikes from causing brownout reset
+  Serial.printf("[Network] Connecting to Wi-Fi SSID: %s ", WIFI_SSID);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   int attempts = 0;
   while (WiFi.status() != WL_CONNECTED && attempts < 30) {

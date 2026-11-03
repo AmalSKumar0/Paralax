@@ -818,34 +818,35 @@ void sendHeartbeat() {
                     deviceConfigVersion, currentLanguageA.c_str(),
                     currentLanguageB.c_str());
 
-      // Check for remote commands from web dashboard
-      if (resDoc.containsKey("pending_commands") ||
-          resDoc.containsKey("commands")) {
+      // Collect pending commands
+      struct PendingCmd { String id; String type; };
+      std::vector<PendingCmd> cmdsToProcess;
+
+      if (resDoc.containsKey("pending_commands") || resDoc.containsKey("commands")) {
         JsonArray commands = resDoc.containsKey("pending_commands")
                                  ? resDoc["pending_commands"].as<JsonArray>()
                                  : resDoc["commands"].as<JsonArray>();
 
         for (JsonObject cmd : commands) {
-          String cmdId = cmd["id"].as<String>();
-          String type = cmd["type"].as<String>();
-          Serial.printf("[Command] Received pending command from cloud: "
-                        "ID='%s', Type='%s'\n",
-                        cmdId.c_str(), type.c_str());
-
-          // Step 1: ALWAYS acknowledge the command to the cloud FIRST so it
-          // gets removed from the queue!
-          ackCommand(cmdId, "done");
-
-          // Step 2: Handle reboot command (acknowledge to clear queue, no
-          // hardware reset)
-          if (type == "reboot") {
-            Serial.println("[Command] Remote 'reboot' command acknowledged & "
-                           "cleared from server queue.");
-            Serial.println("[Command] (Note: Automatic reset disabled to keep "
-                           "voice translator online).");
-          }
+          cmdsToProcess.push_back({cmd["id"].as<String>(), cmd["type"].as<String>()});
         }
       }
+
+      // CRITICAL: Close the heartbeat TLS connection FIRST to free 45 KB of SSL buffer
+      http.end();
+      client.stop();
+
+      // Now acknowledge commands sequentially with full free heap
+      for (const auto &cmd : cmdsToProcess) {
+        Serial.printf("[Command] Received pending command from cloud: ID='%s', Type='%s'\n",
+                      cmd.id.c_str(), cmd.type.c_str());
+        ackCommand(cmd.id, "done");
+        if (cmd.type == "reboot") {
+          Serial.println("[Command] Remote 'reboot' command acknowledged & cleared from server queue.");
+          Serial.println("[Command] (Note: Automatic reset disabled to keep voice translator online).");
+        }
+      }
+      return; // Already closed http
     } else {
       Serial.printf("[Heartbeat] JSON parse error: %s\n", jsonErr.c_str());
     }
@@ -863,9 +864,11 @@ void ackCommand(const String &cmdId, const char *status, const char *detail) {
   if (WiFi.status() != WL_CONNECTED || cmdId.length() == 0)
     return;
 
+  delay(50); // Short breather to ensure sockets are cleaned up
+
   WiFiClientSecure client;
   client.setInsecure();
-  client.setTimeout(5000);
+  client.setTimeout(6000);
 
   HTTPClient http;
   String ackUrl = "https://" + String(API_HOST) + "/api/v1/device/commands/" +
@@ -888,13 +891,17 @@ void ackCommand(const String &cmdId, const char *status, const char *detail) {
   Serial.printf("[Command] Acknowledged '%s' (status: %s) -> Server HTTP %d\n",
                 cmdId.c_str(), status, httpCode);
   http.end();
+  client.stop();
 }
 
 // ============================================================================
 // WI-FI CONNECTION & DIAGNOSTICS
 // ============================================================================
 void connectWiFi() {
+  WiFi.disconnect(true);
+  delay(100);
   WiFi.mode(WIFI_STA);
+  WiFi.setTxPower(WIFI_POWER_17dBm); // Prevent peak current spikes from causing brownout reset
   Serial.printf("[WiFi] Initiating connection to SSID: \"%s\"...\n", WIFI_SSID);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
