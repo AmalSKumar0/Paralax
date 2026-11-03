@@ -53,7 +53,27 @@ This directory contains the production-ready Arduino firmware for the **Paralax 
 
 ---
 
-## 3. Arduino IDE Setup Instructions
+## 3. Firmware Versions
+
+### Mode A (Recommended): WebSocket Bidirectional Streaming (`esp32_translator_ws/`)
+- **Folder**: `firmware/esp32_translator_ws/esp32_translator_ws.ino`
+- **Capabilities**:
+  - **No utterance duration limit**: Streams 1 KB PCM frames in real-time while button is held down (eliminates ESP32 SRAM buffering limits).
+  - **Instant round-trip**: Single persistent WebSocket connection eliminates per-translation TLS handshake latency.
+  - **Streaming speaker playback**: Synthesized audio streams directly down to MAX98357A speaker as binary frames arrive.
+- **Required Libraries**:
+  1. **`WebSockets`** by Markus Sattler (v2.4.x+)
+  2. **`ArduinoJson`** by Benoit Blanchon (v6 or v7)
+
+### Mode B: HTTPS REST Mode (`esp32_translator/`)
+- **Folder**: `firmware/esp32_translator/esp32_translator.ino`
+- **Capabilities**: Batched HTTP POST upload (`POST /api/v1/device/translate`) with fallback buffer.
+- **Required Libraries**:
+  1. **`ArduinoJson`** by Benoit Blanchon
+
+---
+
+## 4. Arduino IDE Setup Instructions
 
 ### Step 1: Install ESP32 Board Package
 1. Open **Arduino IDE** (v2.x recommended).
@@ -64,10 +84,11 @@ This directory contains the production-ready Arduino firmware for the **Paralax 
    ```
 4. Open **Tools -> Board -> Boards Manager...**, search for `esp32` by Espressif Systems, and click **Install**.
 
-### Step 2: Install ArduinoJson Library
+### Step 2: Install Libraries
 1. Open **Sketch -> Include Library -> Manage Libraries...** (`Ctrl+Shift+I`).
-2. Search for: **`ArduinoJson`** (by Benoit Blanchon, v6 or v7).
-3. Click **Install**.
+2. Search and install:
+   - **`WebSockets`** (by Markus Sattler)
+   - **`ArduinoJson`** (by Benoit Blanchon, v6 or v7)
 
 ### Step 3: Configure Board Settings
 Under the **Tools** menu, select:
@@ -81,6 +102,6 @@ Under the **Tools** menu, select:
 - **Port**: Select the COM/ttyUSB port corresponding to your CP2102 chip.
 
 ### Step 4: Flash & Monitor
-1. Click **Upload** (`Ctrl+U`).
-2. Open **Tools -> Serial Monitor** (`Ctrl+Shift+M`).
-3. Set baud rate to **`115200 baud`**.
+1. In `firmware/esp32_translator_ws/esp32_translator_ws.ino`, update your `WIFI_SSID`, `WIFI_PASSWORD`, `WS_HOST`, and `DEVICE_KEY`.
+2. Click **Upload** (`Ctrl+U`).
+3. Open **Tools -> Serial Monitor** (`Ctrl+Shift+M`) at **`115200 baud`**.

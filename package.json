@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vercel dev",
+    "start": "tsx server/standalone.ts",
+    "server:ws": "tsx server/standalone.ts",
     "build": "cd frontend && npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -29,11 +31,13 @@
     "jose": "^5.9.6",
     "mpg123-decoder": "^1.0.3",
     "msedge-tts": "^2.1.1",
+    "ws": "^8.22.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.13.8",
+    "@types/ws": "^8.18.2",
     "drizzle-kit": "^0.31.11",
     "msw": "^2.7.3",
     "tsx": "^4.19.3",
