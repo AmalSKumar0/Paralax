@@ -54,16 +54,15 @@
 const char *WIFI_SSID     = "Aurora";
 const char *WIFI_PASSWORD = "amalskumar";
 
-// Backend WebSocket host & port (change to your local IP or domain)
-// If testing locally: e.g. "192.168.1.100", port 3000
-// If using SSL: use webSocket.beginSSL(...) with port 443
-const char *WS_HOST       = "paralax.amalskumar.dev";
-const int   WS_PORT       = 443;
-const bool  WS_USE_SSL    = true; 
+// Backend WebSocket host & port
+// When running locally with 'npm run server:ws', use your computer's local Wi-Fi IP:
+const char *WS_HOST       = "192.168.55.158"; // Local IP on Wi-Fi 'Aurora'
+const int   WS_PORT       = 3000;
+const bool  WS_USE_SSL    = false; 
 
 // Paste your device secret key from https://paralax.amalskumar.dev/devices
 const char *DEVICE_KEY    = "key_ed506f3405ff2002bc61351b37c1322132d36e0a84686a44";
-const char *FIRMWARE_VER  = "2.0.0-ws";
+const char *FIRMWARE_VER  = "2.1.0-ws";
 
 // ============================================================================
 // HARDWARE PIN DEFINITIONS
@@ -113,7 +112,7 @@ void initI2sMicrophone() {
     .mode                 = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX),
     .sample_rate          = SAMPLE_RATE,
     .bits_per_sample      = I2S_BITS_PER_SAMPLE_32BIT, // INMP441 outputs 24-bit in 32-bit slot
-    .channel_format       = I2S_CHANNEL_FMT_ONLY_LEFT,
+    .channel_format       = I2S_CHANNEL_FMT_RIGHT_LEFT, // Stereo: auto-detects Left & Right channels
     .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S),
     .intr_alloc_flags     = ESP_INTR_FLAG_LEVEL1,
     .dma_buf_count        = 4,
@@ -135,7 +134,32 @@ void initI2sMicrophone() {
     Serial.printf("[I2S] [ERROR] Failed to install I2S0 (Mic): 0x%x\n", err);
   }
   i2s_set_pin(I2S_NUM_0, &mic_pins);
-  Serial.println("[Hardware] I2S0 (INMP441 Microphone) initialized at 16 kHz Mono.");
+  Serial.printf("[Hardware] I2S0 (INMP441 Mic) ready on SCK=%d, WS=%d, SD=%d (Stereo Auto-Detect)\n",
+                I2S_MIC_SCK, I2S_MIC_WS, I2S_MIC_SD);
+
+  // Diagnostic Ambient Noise Check
+  delay(50);
+  int32_t testBuf[128];
+  size_t testBytes = 0;
+  i2s_read(I2S_NUM_0, testBuf, sizeof(testBuf), &testBytes, 100 / portTICK_PERIOD_MS);
+  int32_t maxL = 0, maxR = 0;
+  if (testBytes > 0) {
+    size_t testPairs = testBytes / (sizeof(int32_t) * 2);
+    for (size_t i = 0; i < testPairs; i++) {
+      if (abs(testBuf[i * 2]) > maxL) maxL = abs(testBuf[i * 2]);
+      if (abs(testBuf[i * 2 + 1]) > maxR) maxR = abs(testBuf[i * 2 + 1]);
+    }
+  }
+  int16_t noiseFloorL = (int16_t)(maxL >> 14);
+  int16_t noiseFloorR = (int16_t)(maxR >> 14);
+  Serial.printf("[I2S_0] [DIAGNOSTIC] Ambient Noise Check -> Left: %d | Right: %d\n", noiseFloorL, noiseFloorR);
+  if (noiseFloorL == 0 && noiseFloorR == 0) {
+    Serial.println("[I2S_0] [HARDWARE NOTICE] Mic returned 0 amplitude on both channels!");
+    Serial.println("        -> Check physical wiring: VDD->3.3V, GND->GND, SD->GPIO33, SCK->GPIO26, WS->GPIO25, L/R->GND.");
+  } else {
+    Serial.printf("[I2S_0] [ACTIVE] Mic signal detected on %s channel!\n",
+                  (noiseFloorL >= noiseFloorR) ? "LEFT (L/R grounded)" : "RIGHT (L/R 3.3V or floating)");
+  }
 }
 
 void initI2sSpeaker() {
@@ -165,7 +189,8 @@ void initI2sSpeaker() {
     Serial.printf("[I2S] [ERROR] Failed to install I2S1 (Speaker): 0x%x\n", err);
   }
   i2s_set_pin(I2S_NUM_1, &spk_pins);
-  Serial.println("[Hardware] I2S1 (MAX98357A Speaker) initialized at 16 kHz 16-bit Mono.");
+  Serial.printf("[Hardware] I2S1 (MAX98357A Speaker) ready on BCLK=%d, LRC=%d, DIN=%d\n",
+                I2S_SPK_BCLK, I2S_SPK_LRC, I2S_SPK_DIN);
 }
 
 // Tone generator for audio feedback chimes
@@ -192,13 +217,15 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
   switch (type) {
     case WStype_DISCONNECTED:
       wsConnected = false;
-      Serial.println("\n[WebSocket] Disconnected from Paralax server!");
+      Serial.printf("\n[WebSocket] Disconnected from server (ws://%s:%d)!\n", WS_HOST, WS_PORT);
+      Serial.println("  -> Reconnecting in 3s... (Ensure 'npm run server:ws' is running)");
       break;
 
     case WStype_CONNECTED:
       wsConnected = true;
       Serial.println("\n+----------------------------------------------------------------------+");
       Serial.println("| [WebSocket] CONNECTED & AUTHENTICATED WITH PARALAX STREAM GATEWAY    |");
+      Serial.printf("| Server:  ws://%s:%d%s\n", WS_HOST, WS_PORT, (WS_PORT == 3000 ? " (Local Node Server)" : ""));
       Serial.println("+----------------------------------------------------------------------+");
       playTone(880.0f, 100);
       playTone(1760.0f, 120);
@@ -219,7 +246,7 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
         const char *devId = doc["device_id"] | "unknown";
         currentLangA = doc["config"]["language_a"] | "en-US";
         currentLangB = doc["config"]["language_b"] | "es-US";
-        Serial.printf("[WebSocket] Ready! Device: %s | Mode: [%s <-> %s]\n", devId, currentLangA.c_str(), currentLangB.c_str());
+        Serial.printf("[WebSocket] Session Ready! Device: %s | Mode: [%s <-> %s]\n", devId, currentLangA.c_str(), currentLangB.c_str());
       }
       else if (strcmp(msgType, "recording_started") == 0) {
         const char *src = doc["source_language"] | "";
@@ -230,7 +257,7 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
         int bytes = doc["bytes_received"] | 0;
         int durMs = doc["duration_ms"] | 0;
         int rms   = doc["rms"] | 0;
-        Serial.printf("[Pipeline] Server processing: %d bytes (%.1fs), Mic RMS: %d\n", bytes, durMs / 1000.0f, rms);
+        Serial.printf("[Pipeline] Server processing: %d bytes (%.2fs captured), Server RMS: %d\n", bytes, durMs / 1000.0f, rms);
       }
       else if (strcmp(msgType, "transcript") == 0) {
         const char *text = doc["text"] | "";
@@ -285,24 +312,57 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
 // MICROPHONE STREAMING LOOP (Active while button is held)
 // ============================================================================
 void streamMicrophoneChunk() {
-  int32_t rawSampleBuf[DMA_BUFFER_LEN];
+  int32_t rawSampleBuf[DMA_BUFFER_LEN * 2]; // 512 stereo pairs (Left + Right)
   size_t bytesRead = 0;
 
-  // Read 512 32-bit samples from INMP441
   esp_err_t res = i2s_read(I2S_NUM_0, rawSampleBuf, sizeof(rawSampleBuf), &bytesRead, 100 / portTICK_PERIOD_MS);
   if (res != ESP_OK || bytesRead == 0) return;
 
-  int sampleCount = bytesRead / sizeof(int32_t);
-  for (int i = 0; i < sampleCount; i++) {
-    // INMP441 data is left-aligned 24-bit inside 32-bit word -> shift down by 14 for gain boost
-    int32_t sample = rawSampleBuf[i] >> 14;
-    micChunkBuffer[i] = (int16_t)constrain(sample, -32768, 32767);
+  size_t pairsRead = bytesRead / (sizeof(int32_t) * 2);
+  int64_t sumSquares = 0;
+  int16_t peakVal = 0;
+
+  for (size_t i = 0; i < pairsRead; i++) {
+    int32_t leftSample  = rawSampleBuf[i * 2];
+    int32_t rightSample = rawSampleBuf[i * 2 + 1];
+
+    // Pick whichever channel has higher amplitude (handles L/R pin tied to GND or 3.3V)
+    int32_t activeSample = (abs(leftSample) > abs(rightSample)) ? leftSample : rightSample;
+
+    // +12dB digital gain boost with saturation clipping
+    int32_t shifted = activeSample >> 14;
+    if (shifted > 32767) shifted = 32767;
+    if (shifted < -32768) shifted = -32768;
+    int16_t s16 = (int16_t)shifted;
+    micChunkBuffer[i] = s16;
+
+    sumSquares += ((int64_t)s16 * s16);
+    if (abs(s16) > peakVal) peakVal = abs(s16);
   }
 
-  // Stream binary frame directly over WebSocket
-  size_t pcmBytes = sampleCount * sizeof(int16_t);
+  // Stream binary PCM frame directly over WebSocket
+  size_t pcmBytes = pairsRead * sizeof(int16_t);
   webSocket.sendBIN((uint8_t *)micChunkBuffer, pcmBytes);
   bytesStreamed += pcmBytes;
+
+  // Print live VU meter to Serial every 200 ms with visual ASCII bar
+  static uint32_t lastVuMs = 0;
+  if (millis() - lastVuMs > 200) {
+    lastVuMs = millis();
+    float rms = sqrt((float)sumSquares / pairsRead);
+    int levelPct = constrain((int)((rms / 6000.0f) * 100.0f), 0, 100);
+    int peakPct = constrain((int)((peakVal / 32767.0f) * 100.0f), 0, 100);
+    float elapsedSec = (millis() - recordStartTime) / 1000.0f;
+
+    // ASCII VU Bar: [========--------]
+    char bar[17];
+    int filled = (levelPct * 16) / 100;
+    for (int b = 0; b < 16; b++) bar[b] = (b < filled) ? '=' : '-';
+    bar[16] = '\0';
+
+    Serial.printf("[Stream VU] %4.1fs | RMS: %3d%% [%s] | Peak: %3d%% | Sent: %6u B\n",
+                  elapsedSec, levelPct, bar, peakPct, bytesStreamed);
+  }
 }
 
 // ============================================================================
@@ -315,13 +375,15 @@ void setup() {
   Serial.println("\n+----------------------------------------------------------------------+");
   Serial.println("| PARALAX IoT Push-to-Talk AI Voice Translator - WebSocket Client     |");
   Serial.println("+----------------------------------------------------------------------+");
-  Serial.printf("[System] Firmware Version: %s\n", FIRMWARE_VER);
-  Serial.printf("[System] Target Server:    %s:%d\n", WS_HOST, WS_PORT);
+  Serial.printf("[System] ESP32 Chip Revision: %d | CPU Freq: %d MHz\n", ESP.getChipRevision(), ESP.getCpuFreqMHz());
+  Serial.printf("[System] Free Heap:          %u bytes\n", ESP.getFreeHeap());
+  Serial.printf("[System] Firmware Version:   %s\n", FIRMWARE_VER);
+  Serial.printf("[System] Target Server:      ws://%s:%d\n", WS_HOST, WS_PORT);
 
   // Configure Buttons
   pinMode(PIN_BUTTON_A, INPUT_PULLUP);
   pinMode(PIN_BUTTON_B, INPUT_PULLUP);
-  Serial.println("[Hardware] Button A (GPIO 32) & Button B (GPIO 21) configured.");
+  Serial.println("[Hardware] Button A (GPIO 32, Active LOW) & Button B (GPIO 21, Active LOW) configured.");
 
   // Initialize Audio Hardware
   initI2sMicrophone();
@@ -344,6 +406,7 @@ void setup() {
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println("\n[Network] Wi-Fi Connected!");
     Serial.printf("[Network] IP Address:  %s\n", WiFi.localIP().toString().c_str());
+    Serial.printf("[Network] MAC Address: %s\n", WiFi.macAddress().c_str());
     Serial.printf("[Network] Signal RSSI: %d dBm\n", WiFi.RSSI());
   } else {
     Serial.println("\n[Network] [ERROR] Wi-Fi Connection failed. Please check credentials.");
@@ -360,7 +423,9 @@ void setup() {
   webSocket.setReconnectInterval(3000);
   webSocket.enableHeartbeat(15000, 3000, 2);
 
-  Serial.println("[Network] Connecting to Paralax WebSocket stream gateway...");
+  Serial.printf("[Network] Connecting to Paralax WebSocket gateway at ws://%s:%d%s...\n",
+                WS_HOST, WS_PORT, wsUrl.c_str());
+  Serial.println("[Ready] Hold Button A (GPIO 32) to speak Lang A->B, or Button B (GPIO 21) for Lang B->A.\n");
 }
 
 // ============================================================================
@@ -374,39 +439,57 @@ void loop() {
   bool btnAPressed = (digitalRead(PIN_BUTTON_A) == LOW);
   bool btnBPressed = (digitalRead(PIN_BUTTON_B) == LOW);
 
-  // 1. Button Press Event (Start Recording)
-  if (!isRecording && wsConnected) {
-    if (btnAPressed) {
-      isRecording = true;
-      activeButton = 1;
-      recordStartTime = millis();
-      bytesStreamed = 0;
-      Serial.println("\n>>> [Button A - GPIO 32] PRESSED: Streaming Audio (Lang A -> B)...");
-      playTone(1000.0f, 60);
+  // 1. Button Press Event
+  if (!isRecording) {
+    if (btnAPressed || btnBPressed) {
+      if (!wsConnected) {
+        static uint32_t lastWarnMs = 0;
+        if (millis() - lastWarnMs > 1500) {
+          lastWarnMs = millis();
+          Serial.println("\n------------------------------------------------------------------------");
+          Serial.printf("[Button] Button %s PRESSED!\n", btnAPressed ? "A (GPIO 32)" : "B (GPIO 21)");
+          Serial.printf("[Button] [WARN] Cannot stream: WebSocket is DISCONNECTED from %s:%d!\n", WS_HOST, WS_PORT);
+          Serial.println("[Button] -> Make sure your server is running: 'npm run server:ws'");
+          Serial.printf("[Button] -> Current Wi-Fi Status: %s (IP: %s)\n",
+                        (WiFi.status() == WL_CONNECTED) ? "CONNECTED" : "DISCONNECTED",
+                        WiFi.localIP().toString().c_str());
+          Serial.println("------------------------------------------------------------------------");
+          playTone(300.0f, 150);
+        }
+      } else {
+        if (btnAPressed) {
+          isRecording = true;
+          activeButton = 1;
+          recordStartTime = millis();
+          bytesStreamed = 0;
+          Serial.println("\n>>> [Button A - GPIO 32] PRESSED: Streaming Audio (Lang A -> B)...");
+          playTone(1000.0f, 60);
 
-      // Send start control message
-      StaticJsonDocument<128> doc;
-      doc["type"] = "start";
-      doc["direction"] = "a_to_b";
-      String json;
-      serializeJson(doc, json);
-      webSocket.sendTXT(json);
-    }
-    else if (btnBPressed) {
-      isRecording = true;
-      activeButton = 2;
-      recordStartTime = millis();
-      bytesStreamed = 0;
-      Serial.println("\n>>> [Button B - GPIO 21] PRESSED: Streaming Audio (Lang B -> A)...");
-      playTone(1200.0f, 60);
+          // Send start control message
+          StaticJsonDocument<128> doc;
+          doc["type"] = "start";
+          doc["direction"] = "a_to_b";
+          String json;
+          serializeJson(doc, json);
+          webSocket.sendTXT(json);
+        }
+        else if (btnBPressed) {
+          isRecording = true;
+          activeButton = 2;
+          recordStartTime = millis();
+          bytesStreamed = 0;
+          Serial.println("\n>>> [Button B - GPIO 21] PRESSED: Streaming Audio (Lang B -> A)...");
+          playTone(1200.0f, 60);
 
-      // Send start control message
-      StaticJsonDocument<128> doc;
-      doc["type"] = "start";
-      doc["direction"] = "b_to_a";
-      String json;
-      serializeJson(doc, json);
-      webSocket.sendTXT(json);
+          // Send start control message
+          StaticJsonDocument<128> doc;
+          doc["type"] = "start";
+          doc["direction"] = "b_to_a";
+          String json;
+          serializeJson(doc, json);
+          webSocket.sendTXT(json);
+        }
+      }
     }
   }
 
