@@ -179,7 +179,7 @@ export const SystemHealth: React.FC = () => {
                           </span>
                         </div>
                         <p className="text-[11px] font-semibold text-rose-700 mt-0.5">
-                          Unreachable since {formatDateTime(dev.last_seen)}
+                          Unreachable since {dev.last_seen ? formatDateTime(new Date(new Date(dev.last_seen).getTime() + 5 * 60 * 1000).toISOString()) : 'Unknown'}
                         </p>
                       </div>
 

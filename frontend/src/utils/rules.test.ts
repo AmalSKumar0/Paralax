@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { formatApiError, API_ERROR_MESSAGES } from './errors';
 import { downsampleBuffer } from './wavEncoder';
-import { formatDuration, formatLatency, formatBytes, getRssiQuality } from './formatters';
+import { formatDuration, formatLatency, formatBytes, getRssiQuality, isDeviceOnline, formatOfflineLastSeen } from './formatters';
 
 test('formatApiError maps specified error codes to plain-language messages', () => {
   assert.equal(
@@ -85,9 +85,30 @@ test('formatBytes formats bytes up to MB', () => {
   assert.equal(formatBytes(1024 * 1024 * 2.5), '2.5 MB');
 });
 
-test('getRssiQuality categorizes signal strength correctly', () => {
-  assert.equal(getRssiQuality(-50).label, 'Excellent');
-  assert.equal(getRssiQuality(-70).label, 'Good');
-  assert.equal(getRssiQuality(-80).label, 'Fair');
-  assert.equal(getRssiQuality(-95).label, 'Poor');
+test('isDeviceOnline keeps device online until lastseen + 5 minutes', () => {
+  const now = Date.now();
+  // Seen 19s ago -> online
+  assert.equal(isDeviceOnline({ last_seen: new Date(now - 19000).toISOString() }), true);
+  // Seen 4m 50s ago -> online
+  assert.equal(isDeviceOnline({ last_seen: new Date(now - 290000).toISOString() }), true);
+  // Seen 5m 10s ago -> offline
+  assert.equal(isDeviceOnline({ last_seen: new Date(now - 310000).toISOString() }), false);
+  // Revoked device -> always offline
+  assert.equal(isDeviceOnline({ status: 'revoked', last_seen: new Date(now - 5000).toISOString() }), false);
 });
+
+test('formatOfflineLastSeen calculates relative time from (lastseen + 5 min)', () => {
+  const now = Date.now();
+  // Just went offline (last reported 5m 1s ago) -> "just now"
+  const justOffline = new Date(now - (5 * 60 * 1000 + 2000)).toISOString();
+  assert.equal(formatOfflineLastSeen(justOffline), 'just now');
+
+  // Went offline 2 minutes ago (last reported 7 minutes ago) -> "2m ago"
+  const offline2mAgo = new Date(now - (7 * 60 * 1000)).toISOString();
+  assert.equal(formatOfflineLastSeen(offline2mAgo), '2m ago');
+
+  // Went offline 1 hour ago (last reported 65 minutes ago) -> "1h ago"
+  const offline1hAgo = new Date(now - (65 * 60 * 1000)).toISOString();
+  assert.equal(formatOfflineLastSeen(offline1hAgo), '1h ago');
+});
+

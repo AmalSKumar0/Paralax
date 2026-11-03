@@ -35,9 +35,25 @@ export const api = {
   // Devices
   getDevices: async () => {
     const res = await apiClient.request<Device[] | { devices: Device[] }>('/admin/devices');
-    return Array.isArray(res) ? res : (res?.devices || []);
+    const list = Array.isArray(res) ? res : (res?.devices || []);
+    const now = Date.now();
+    const thresholdMs = 5 * 60 * 1000;
+    return list.map((d: any) => ({
+      ...d,
+      device_id: d.device_id || d.id,
+      online: d.status === 'revoked' ? false : (d.last_seen ? (now - new Date(d.last_seen).getTime() <= thresholdMs) : Boolean(d.online)),
+    }));
   },
-  getDevice: (id: string) => apiClient.request<Device>(`/admin/devices/${id}`),
+  getDevice: async (id: string) => {
+    const d = await apiClient.request<any>(`/admin/devices/${id}`);
+    const now = Date.now();
+    const thresholdMs = 5 * 60 * 1000;
+    return {
+      ...d,
+      device_id: d.device_id || d.id,
+      online: d.status === 'revoked' ? false : (d.last_seen ? (now - new Date(d.last_seen).getTime() <= thresholdMs) : Boolean(d.online)),
+    } as Device;
+  },
   registerDevice: async (data: {
     name: string;
     language_a: string;

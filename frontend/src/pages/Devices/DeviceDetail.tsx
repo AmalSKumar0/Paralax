@@ -12,7 +12,7 @@ import { CopySnippet } from '../../components/Common/CopySnippet';
 import { AudioPlayer } from '../../components/Common/AudioPlayer';
 import { TelemetryChart } from '../../components/Charts/TelemetryChart';
 import { useToast } from '../../context/ToastContext';
-import { formatRelativeTime, formatDuration, getRssiQuality, formatBytes } from '../../utils/formatters';
+import { formatRelativeTime, formatDuration, getRssiQuality, formatBytes, isDeviceOnline, formatOfflineLastSeen } from '../../utils/formatters';
 import {
   ArrowLeft,
   Cpu,
@@ -248,7 +248,7 @@ export const DeviceDetail: React.FC = () => {
                 <h1 className="text-2xl font-extrabold tracking-tight text-[#121212]">
                   {device.name}
                 </h1>
-                {device.online ? (
+                {isDeviceOnline(device) ? (
                   <Badge variant="success" size="sm" dot>
                     Online
                   </Badge>
@@ -268,7 +268,10 @@ export const DeviceDetail: React.FC = () => {
                 )}
               </div>
               <p className="text-xs font-semibold text-[#555555] mt-0.5">
-                Last seen {formatRelativeTime(device.last_seen)} · Provisioned on {new Date(device.created_at).toLocaleDateString()}
+                {!isDeviceOnline(device) && (
+                  <>Last seen {formatOfflineLastSeen(device.last_seen)} · </>
+                )}
+                Provisioned on {new Date(device.created_at).toLocaleDateString()}
               </p>
             </div>
           </div>
@@ -327,12 +330,12 @@ export const DeviceDetail: React.FC = () => {
 
             <div className="flex items-center gap-2">
               <span className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold border-2 border-[#121212] shadow-[1.5px_1.5px_0px_#121212] ${
-                device.online
+                isDeviceOnline(device)
                   ? 'bg-[#bbf7d0] text-[#14532d]'
                   : 'bg-[#fbf9f4] text-[#555555]'
               }`}>
-                <span className={`w-2 h-2 rounded-full ${device.online ? 'bg-emerald-600 animate-pulse' : 'bg-gray-400'}`} />
-                {device.online ? 'Hardware Connected' : 'Device Standby'}
+                <span className={`w-2 h-2 rounded-full ${isDeviceOnline(device) ? 'bg-emerald-600 animate-pulse' : 'bg-gray-400'}`} />
+                {isDeviceOnline(device) ? 'Hardware Connected' : 'Device Standby'}
               </span>
               <span className="px-3 py-1 rounded-lg text-xs font-mono font-bold border-2 border-[#121212] bg-white text-[#121212] shadow-[1.5px_1.5px_0px_#121212]">
                 16 kHz / 16-bit Mono L16

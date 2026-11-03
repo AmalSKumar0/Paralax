@@ -6,7 +6,7 @@ import { Topbar } from '../../components/Layout/Topbar';
 import { Button } from '../../components/Common/Button';
 import { Badge } from '../../components/Common/Badge';
 import { RegisterDeviceModal } from './RegisterDeviceModal';
-import { formatRelativeTime, getRssiQuality } from '../../utils/formatters';
+import { formatRelativeTime, getRssiQuality, isDeviceOnline, formatOfflineLastSeen } from '../../utils/formatters';
 import { Plus, Search, Wifi, WifiOff, RefreshCw, Cpu, ChevronRight, CheckCircle2, Clock } from 'lucide-react';
 
 export const DevicesList: React.FC = () => {
@@ -47,8 +47,9 @@ export const DevicesList: React.FC = () => {
 
   // Filtered devices
   const filteredDevices = devices.filter((d) => {
-    if (statusFilter === 'online' && !d.online) return false;
-    if (statusFilter === 'offline' && d.online) return false;
+    const isOnline = isDeviceOnline(d);
+    if (statusFilter === 'online' && !isOnline) return false;
+    if (statusFilter === 'offline' && isOnline) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       return (
@@ -177,7 +178,7 @@ export const DevicesList: React.FC = () => {
 
                         {/* Status */}
                         <td className="py-3.5 px-4">
-                          {device.online ? (
+                          {isDeviceOnline(device) ? (
                             <Badge variant="success" size="sm" dot>
                               Online
                             </Badge>
@@ -190,7 +191,11 @@ export const DevicesList: React.FC = () => {
 
                         {/* Last seen */}
                         <td className="py-3.5 px-4 font-medium text-[#121212]">
-                          {formatRelativeTime(device.last_seen)}
+                          {isDeviceOnline(device) ? (
+                            <span className="text-[#888888] font-normal text-xs">—</span>
+                          ) : (
+                            formatOfflineLastSeen(device.last_seen)
+                          )}
                         </td>
 
                         {/* RSSI */}
@@ -198,7 +203,7 @@ export const DevicesList: React.FC = () => {
                           <span
                             className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border-2 border-[#121212] shadow-[1.5px_1.5px_0px_#121212] text-[11px] font-mono font-bold ${rssiMeta.color}`}
                           >
-                            {device.online ? <Wifi className="w-3 h-3 text-[#121212]" /> : <WifiOff className="w-3 h-3 text-[#121212]" />}
+                            {isDeviceOnline(device) ? <Wifi className="w-3 h-3 text-[#121212]" /> : <WifiOff className="w-3 h-3 text-[#121212]" />}
                             {device.rssi} dBm
                           </span>
                         </td>

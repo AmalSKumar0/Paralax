@@ -560,11 +560,23 @@ class MockBackendState {
 
   // --- Devices ---
   public getDevices(): Device[] {
-    return this.devices;
+    const now = Date.now();
+    const thresholdMs = 5 * 60 * 1000;
+    return this.devices.map((d) => ({
+      ...d,
+      online: d.last_seen ? (now - new Date(d.last_seen).getTime() <= thresholdMs) : Boolean(d.online),
+    }));
   }
 
   public getDevice(id: string): Device | undefined {
-    return this.devices.find((d) => d.device_id === id);
+    const dev = this.devices.find((d) => d.device_id === id);
+    if (!dev) return undefined;
+    const now = Date.now();
+    const thresholdMs = 5 * 60 * 1000;
+    return {
+      ...dev,
+      online: dev.last_seen ? (now - new Date(dev.last_seen).getTime() <= thresholdMs) : Boolean(dev.online),
+    };
   }
 
   public registerDevice(params: {

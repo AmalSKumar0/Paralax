@@ -20,6 +20,41 @@ export function formatBytes(bytes: number): string {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
 
+export const DEVICE_ONLINE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
+
+export function isDeviceOnline(device?: { online?: boolean; last_seen?: string; status?: string }): boolean {
+  if (!device) return false;
+  if (device.status === 'revoked') return false;
+  if (device.last_seen) {
+    return (Date.now() - new Date(device.last_seen).getTime()) <= DEVICE_ONLINE_THRESHOLD_MS;
+  }
+  return Boolean(device.online);
+}
+
+/**
+ * Format relative time for offline devices based on (last_seen + 5 min),
+ * representing the exact moment the device transitioned to offline.
+ */
+export function formatOfflineLastSeen(dateString?: string): string {
+  if (!dateString) return 'never';
+  const lastSeenMs = new Date(dateString).getTime();
+  if (isNaN(lastSeenMs)) return 'never';
+
+  // Transition moment when device actually went offline
+  const offlineSinceMs = lastSeenMs + DEVICE_ONLINE_THRESHOLD_MS;
+  const now = Date.now();
+  const diffInSec = Math.floor((now - offlineSinceMs) / 1000);
+
+  if (diffInSec <= 5) return 'just now';
+  if (diffInSec < 60) return `${diffInSec}s ago`;
+  const diffInMin = Math.floor(diffInSec / 60);
+  if (diffInMin < 60) return `${diffInMin}m ago`;
+  const diffInHours = Math.floor(diffInMin / 60);
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+  const diffInDays = Math.floor(diffInHours / 24);
+  return `${diffInDays}d ago`;
+}
+
 export function formatRelativeTime(dateString: string): string {
   const date = new Date(dateString);
   const now = new Date();

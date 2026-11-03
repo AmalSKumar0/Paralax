@@ -5,10 +5,25 @@ import { postgres } from '../../db/postgres.js';
 
 export const adminDeviceRoutes = new Hono();
 
+// Helper to calculate online status based on 5-minute threshold
+const ONLINE_THRESHOLD_MS = 5 * 60 * 1000;
+function formatDeviceWithStatus(device: DeviceRecord) {
+  const now = Date.now();
+  const isOnline = Boolean(
+    device.status === 'active' &&
+    device.last_seen &&
+    (now - new Date(device.last_seen).getTime() <= ONLINE_THRESHOLD_MS)
+  );
+  return {
+    ...device,
+    online: isOnline,
+  };
+}
+
 // GET /admin/devices
 adminDeviceRoutes.get('/', async (c) => {
   const devices = await redis.listDevices();
-  return c.json({ devices });
+  return c.json({ devices: devices.map(formatDeviceWithStatus) });
 });
 
 // POST /admin/devices
@@ -57,7 +72,7 @@ adminDeviceRoutes.post('/', async (c) => {
 
   return c.json(
     {
-      device: deviceRecord,
+      device: formatDeviceWithStatus(deviceRecord),
       device_key: rawKey, // Only returned once upon creation!
     },
     201
@@ -71,7 +86,7 @@ adminDeviceRoutes.get('/:id', async (c) => {
   if (!device) {
     return c.json({ error: { code: 'device_not_found', message: `Device '${id}' not found` } }, 404);
   }
-  return c.json(device);
+  return c.json(formatDeviceWithStatus(device));
 });
 
 // PATCH /admin/devices/:id
